@@ -1,0 +1,14 @@
+name = "tachi-gateway-cloudflare"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+ENVIRONMENT = "production"
+
+[[env.staging]]
+name = "tachi-gateway-cloudflare-staging"
+vars = { ENVIRONMENT = "staging" }
+
+[[env.development]]
+name = "tachi-gateway-cloudflare-dev"
+vars = { ENVIRONMENT = "development" }

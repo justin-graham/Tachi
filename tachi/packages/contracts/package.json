@@ -1,0 +1,22 @@
+{
+  "name": "@tachi/contracts",
+  "version": "0.1.0",
+  "description": "Smart contracts for tachi infrastructure",
+  "private": true,
+  "scripts": {
+    "build": "forge build && npx hardhat compile",
+    "test": "forge test && npx hardhat test",
+    "deploy": "forge script script/Deploy.s.sol:DeployScript --rpc-url $RPC_URL --broadcast",
+    "clean": "forge clean && npx hardhat clean",
+    "format": "forge fmt"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-foundry": "^1.1.4",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "ethers": "^6.0.0",
+    "hardhat": "^2.19.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.0"
+  }
+}

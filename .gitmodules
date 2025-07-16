@@ -1,0 +1,6 @@
+[submodule "tachi/packages/contracts/lib/forge-std"]
+	path = tachi/packages/contracts/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "tachi/packages/contracts/lib/openzeppelin-contracts"]
+	path = tachi/packages/contracts/lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts

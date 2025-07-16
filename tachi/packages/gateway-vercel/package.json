@@ -1,0 +1,28 @@
+{
+  "name": "@tachi/gateway-vercel",
+  "version": "0.1.0",
+  "description": "Vercel Edge Functions wrapper for tachi gateway",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "vercel dev",
+    "deploy": "vercel --prod",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist .vercel",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.0.0",
+    "@types/node": "^20.19.8",
+    "@vercel/node": "^3.0.0",
+    "jest": "^29.0.0",
+    "typescript": "^5.0.0",
+    "vercel": "^32.0.0"
+  },
+  "dependencies": {
+    "@tachi/gateway-core": "workspace:*",
+    "next": "15.4.1"
+  }
+}
