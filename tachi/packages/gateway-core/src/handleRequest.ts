@@ -32,6 +32,26 @@ export class GatewayCore {
         };
       }
 
+      // Check for payment/authentication
+      const paymentToken = request.headers?.['x-tachi-payment'] || request.headers?.['authorization'];
+      if (!paymentToken) {
+        return {
+          success: false,
+          error: 'Payment required - Missing payment token',
+          statusCode: 402,
+        };
+      }
+
+      // Verify payment (placeholder implementation)
+      const isPaymentValid = await this.verifyPayment(paymentToken, BigInt(100000));
+      if (!isPaymentValid) {
+        return {
+          success: false,
+          error: 'Payment required - Invalid or insufficient payment',
+          statusCode: 402,
+        };
+      }
+
       // Perform the crawl request
       const response = await this.performCrawl(request);
       
@@ -74,10 +94,12 @@ export class GatewayCore {
   }
 
   // Helper method to verify payment/authentication
-  async verifyPayment(_address: string, _amount: bigint): Promise<boolean> {
+  async verifyPayment(paymentToken: string, _amount: bigint): Promise<boolean> {
     // This would integrate with your smart contract
-    // For now, return true as a placeholder
-    return true;
+    // For demo purposes, always return false to show 402 response
+    // In production, this would verify the payment on-chain
+    console.log(`Verifying payment token: ${paymentToken}`);
+    return false;
   }
 }
 
