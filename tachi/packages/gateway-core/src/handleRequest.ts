@@ -3,6 +3,7 @@ export interface CrawlRequest {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   headers?: Record<string, string>;
   body?: string;
+  publisherAddress?: string; // Publisher's wallet address for license verification
 }
 
 export interface CrawlResponse {
@@ -14,11 +15,16 @@ export interface CrawlResponse {
 
 export class GatewayCore {
   private rpcUrl: string;
+  private crawlNFTAddress?: string;
 
-  constructor(rpcUrl?: string) {
+  constructor(rpcUrl?: string, crawlNFTAddress?: string) {
     // Store RPC URL for future blockchain integration
     this.rpcUrl = rpcUrl || 'https://eth-mainnet.g.alchemy.com/v2/demo';
+    this.crawlNFTAddress = crawlNFTAddress;
     console.log(`Gateway initialized with RPC URL: ${this.rpcUrl}`);
+    if (crawlNFTAddress) {
+      console.log(`CrawlNFT contract address: ${crawlNFTAddress}`);
+    }
   }
 
   async handleRequest(request: CrawlRequest): Promise<CrawlResponse> {
@@ -50,6 +56,18 @@ export class GatewayCore {
           error: 'Payment required - Invalid or insufficient payment',
           statusCode: 402,
         };
+      }
+
+      // Check if publisher has a valid license (if publisherAddress is provided)
+      if (request.publisherAddress) {
+        const hasValidLicense = await this.verifyPublisherLicense(request.publisherAddress);
+        if (!hasValidLicense) {
+          return {
+            success: false,
+            error: 'Publisher license required - No valid CrawlNFT license found',
+            statusCode: 403, // Forbidden
+          };
+        }
       }
 
       // Perform the crawl request
@@ -100,6 +118,31 @@ export class GatewayCore {
     // In production, this would verify the payment on-chain
     console.log(`Verifying payment token: ${paymentToken}`);
     return false;
+  }
+
+  // Helper method to verify publisher has a valid CrawlNFT license
+  async verifyPublisherLicense(publisherAddress: string): Promise<boolean> {
+    // This would integrate with the CrawlNFT contract
+    // For demo purposes, simulate license verification
+    console.log(`Verifying publisher license for: ${publisherAddress}`);
+    
+    if (!this.crawlNFTAddress) {
+      console.log('CrawlNFT contract address not set, skipping license verification');
+      return true; // Allow if no NFT contract is configured
+    }
+    
+    // In production, this would:
+    // 1. Connect to the CrawlNFT contract using this.crawlNFTAddress
+    // 2. Call hasLicense(publisherAddress) to check if they have a license
+    // 3. Optionally verify the license terms are still valid
+    
+    // For demo, return true for specific addresses, false for others
+    const validPublishers = [
+      '0x1234567890123456789012345678901234567890',
+      '0x742d35Cc6634C0532925a3b8D427E3c8e3e7e7e7'
+    ];
+    
+    return validPublishers.includes(publisherAddress.toLowerCase());
   }
 }
 
