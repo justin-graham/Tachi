@@ -16,14 +16,19 @@ export interface CrawlResponse {
 export class GatewayCore {
   private rpcUrl: string;
   private crawlNFTAddress?: string;
+  private paymentProcessorAddress?: string;
 
-  constructor(rpcUrl?: string, crawlNFTAddress?: string) {
+  constructor(rpcUrl?: string, crawlNFTAddress?: string, paymentProcessorAddress?: string) {
     // Store RPC URL for future blockchain integration
     this.rpcUrl = rpcUrl || 'https://eth-mainnet.g.alchemy.com/v2/demo';
     this.crawlNFTAddress = crawlNFTAddress;
+    this.paymentProcessorAddress = paymentProcessorAddress;
     console.log(`Gateway initialized with RPC URL: ${this.rpcUrl}`);
     if (crawlNFTAddress) {
       console.log(`CrawlNFT contract address: ${crawlNFTAddress}`);
+    }
+    if (paymentProcessorAddress) {
+      console.log(`PaymentProcessor contract address: ${paymentProcessorAddress}`);
     }
   }
 
@@ -112,12 +117,32 @@ export class GatewayCore {
   }
 
   // Helper method to verify payment/authentication
-  async verifyPayment(paymentToken: string, _amount: bigint): Promise<boolean> {
+  async verifyPayment(paymentToken: string, amount: bigint): Promise<boolean> {
     // This would integrate with your smart contract
     // For demo purposes, always return false to show 402 response
     // In production, this would verify the payment on-chain
-    console.log(`Verifying payment token: ${paymentToken}`);
-    return false;
+    console.log(`Verifying payment token: ${paymentToken} for amount: ${amount}`);
+    
+    if (!this.paymentProcessorAddress) {
+      console.log('PaymentProcessor contract address not set, skipping payment verification');
+      return false; // Require payment processor for payment verification
+    }
+    
+    // In production, this would:
+    // 1. Parse the payment token to extract transaction hash or payment details
+    // 2. Verify the payment was made to the PaymentProcessor contract
+    // 3. Check that the payment amount matches the required amount
+    // 4. Verify the payment was made by the correct crawler address
+    // 5. Ensure the payment hasn't been used before (prevent double-spending)
+    
+    // For demo, simulate payment verification logic
+    const validPaymentTokens = [
+      'payment_tx_0x1234567890abcdef', // Example payment transaction hash
+      'payment_token_valid_demo_key',
+      'usdc_payment_confirmed_123'
+    ];
+    
+    return validPaymentTokens.includes(paymentToken);
   }
 
   // Helper method to verify publisher has a valid CrawlNFT license
