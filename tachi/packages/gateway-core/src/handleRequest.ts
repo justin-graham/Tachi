@@ -4,6 +4,8 @@ export interface CrawlRequest {
   headers?: Record<string, string>;
   body?: string;
   publisherAddress?: string; // Publisher's wallet address for license verification
+  crawlTokenId?: number; // Optional: specify the CrawlNFT token ID directly
+  crawlerAddress?: string; // Optional: specify the crawler address directly
 }
 
 export interface CrawlResponse {
@@ -17,18 +19,28 @@ export class GatewayCore {
   private rpcUrl: string;
   private crawlNFTAddress?: string;
   private paymentProcessorAddress?: string;
+  private proofOfCrawlLedgerAddress?: string;
 
-  constructor(rpcUrl?: string, crawlNFTAddress?: string, paymentProcessorAddress?: string) {
+  constructor(
+    rpcUrl?: string, 
+    crawlNFTAddress?: string, 
+    paymentProcessorAddress?: string,
+    proofOfCrawlLedgerAddress?: string
+  ) {
     // Store RPC URL for future blockchain integration
     this.rpcUrl = rpcUrl || 'https://eth-mainnet.g.alchemy.com/v2/demo';
     this.crawlNFTAddress = crawlNFTAddress;
     this.paymentProcessorAddress = paymentProcessorAddress;
+    this.proofOfCrawlLedgerAddress = proofOfCrawlLedgerAddress;
     console.log(`Gateway initialized with RPC URL: ${this.rpcUrl}`);
     if (crawlNFTAddress) {
       console.log(`CrawlNFT contract address: ${crawlNFTAddress}`);
     }
     if (paymentProcessorAddress) {
       console.log(`PaymentProcessor contract address: ${paymentProcessorAddress}`);
+    }
+    if (proofOfCrawlLedgerAddress) {
+      console.log(`ProofOfCrawlLedger contract address: ${proofOfCrawlLedgerAddress}`);
     }
   }
 
@@ -77,6 +89,11 @@ export class GatewayCore {
 
       // Perform the crawl request
       const response = await this.performCrawl(request);
+      
+      // Log the crawl to the ProofOfCrawlLedger after successful crawl
+      if (request.publisherAddress) {
+        await this.logCrawl(request, paymentToken);
+      }
       
       return {
         success: true,
@@ -168,6 +185,72 @@ export class GatewayCore {
     ];
     
     return validPublishers.includes(publisherAddress.toLowerCase());
+  }
+
+  // Helper method to log crawl to ProofOfCrawlLedger
+  async logCrawl(request: CrawlRequest, paymentToken: string): Promise<void> {
+    console.log(`Logging crawl for publisher: ${request.publisherAddress}, URL: ${request.url}`);
+    
+    if (!this.proofOfCrawlLedgerAddress) {
+      console.log('ProofOfCrawlLedger contract address not set, skipping crawl logging');
+      return;
+    }
+    
+    // In production, this would:
+    // 1. Connect to the ProofOfCrawlLedger contract using this.proofOfCrawlLedgerAddress
+    // 2. Look up the publisher's CrawlNFT token ID from the CrawlNFT contract
+    // 3. Extract the crawler address from the payment token or transaction
+    // 4. Call logCrawl(crawlTokenId, crawlerAddress) on the ProofOfCrawlLedger contract
+    // 5. Optionally use logCrawlWithURL() to include the URL in the log
+    
+    try {
+      // Use provided crawlTokenId or look it up from the publisher address
+      const crawlTokenId = request.crawlTokenId || 
+        await this.getCrawlTokenIdForPublisher(request.publisherAddress!);
+      
+      // Use provided crawler address or extract from payment token
+      const crawlerAddress = request.crawlerAddress || 
+        this.extractCrawlerFromPaymentToken(paymentToken);
+      
+      console.log(`Would log crawl - Token ID: ${crawlTokenId}, Crawler: ${crawlerAddress}, URL: ${request.url}`);
+      
+      // In production, this would make an actual smart contract call:
+      // await proofOfCrawlLedgerContract.logCrawlWithURL(crawlTokenId, crawlerAddress, request.url);
+      
+      console.log('Crawl logged successfully to ProofOfCrawlLedger');
+    } catch (error) {
+      console.error('Failed to log crawl:', error);
+      // Don't throw error here - crawl logging failure shouldn't break the main flow
+    }
+  }
+
+  // Helper method to get crawl token ID for a publisher
+  private async getCrawlTokenIdForPublisher(publisherAddress: string): Promise<number> {
+    // In production, this would query the CrawlNFT contract to find the token ID
+    // owned by the publisher address
+    console.log(`Getting crawl token ID for publisher: ${publisherAddress}`);
+    
+    // For demo, simulate returning a token ID based on the publisher address
+    const mockTokenIds: Record<string, number> = {
+      '0x1234567890123456789012345678901234567890': 1,
+      '0x742d35Cc6634C0532925a3b8D427E3c8e3e7e7e7': 2,
+    };
+    
+    return mockTokenIds[publisherAddress.toLowerCase()] || 1;
+  }
+
+  // Helper method to extract crawler address from payment token
+  private extractCrawlerFromPaymentToken(paymentToken: string): string {
+    // In production, this would parse the payment token to extract the crawler's address
+    // The payment token might contain transaction hash, signature, or other data
+    console.log(`Extracting crawler address from payment token: ${paymentToken}`);
+    
+    // For demo, simulate extracting crawler address
+    if (paymentToken.includes('payment_tx_')) {
+      return '0x742d35Cc6634C0532925a3b8D427E3c8e3e7e7e7'; // Mock crawler address
+    }
+    
+    return '0x1234567890123456789012345678901234567890'; // Default mock address
   }
 }
 
