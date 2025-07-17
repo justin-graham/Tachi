@@ -1,0 +1,7 @@
+{
+  "name": "tachi-monorepo",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter tachi-publisher-dashboard dev"
+  }
+}
