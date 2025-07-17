@@ -9,18 +9,21 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "test": "jest",
+    "test:gateway": "node test-gateway.mjs",
+    "test:local": "wrangler dev --local & sleep 3 && TEST_URL=http://localhost:8787 node test-gateway.mjs",
     "lint": "eslint src --ext .ts",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
+    "@jest/globals": "^29.0.0",
     "@types/jest": "^29.0.0",
     "jest": "^29.0.0",
     "typescript": "^5.0.0",
     "wrangler": "^4.24.4"
   },
   "dependencies": {
-    "@tachi/gateway-core": "workspace:*"
+    "viem": "^2.21.0"
   }
 }

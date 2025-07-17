@@ -36,6 +36,15 @@ importers:
       '@nomicfoundation/hardhat-toolbox':
         specifier: ^4.0.0
         version: 4.0.0(@nomicfoundation/hardhat-chai-matchers@2.0.9)(@nomicfoundation/hardhat-ethers@3.0.9)(@nomicfoundation/hardhat-network-helpers@1.0.13)(@nomicfoundation/hardhat-verify@2.0.14)(@typechain/ethers-v6@0.5.1)(@typechain/hardhat@9.1.0)(@types/chai@4.3.20)(@types/mocha@10.0.10)(@types/node@20.19.8)(chai@4.5.0)(ethers@6.15.0)(hardhat-gas-reporter@1.0.10)(hardhat@2.25.0)(solidity-coverage@0.8.16)(ts-node@10.9.2)(typechain@8.3.2)(typescript@5.8.3)
+      '@nomicfoundation/hardhat-verify':
+        specifier: ^2.0.0
+        version: 2.0.14(hardhat@2.25.0)
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.8
+      dotenv:
+        specifier: ^16.0.0
+        version: 16.6.1
       ethers:
         specifier: ^6.0.0
         version: 6.15.0
@@ -109,13 +118,16 @@ importers:
 
   packages/gateway-cloudflare:
     dependencies:
-      '@tachi/gateway-core':
-        specifier: workspace:*
-        version: link:../gateway-core
+      viem:
+        specifier: ^2.21.0
+        version: 2.32.0(typescript@5.8.3)(zod@3.22.4)
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.0.0
         version: 4.20250715.0
+      '@jest/globals':
+        specifier: ^29.0.0
+        version: 29.7.0
       '@types/jest':
         specifier: ^29.0.0
         version: 29.5.14
@@ -7264,6 +7276,11 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       esutils: 2.0.3
+    dev: true
+
+  /dotenv@16.6.1:
+    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+    engines: {node: '>=12'}
     dev: true
 
   /dunder-proto@1.0.1:

@@ -4,11 +4,42 @@ compatibility_date = "2024-01-01"
 
 [vars]
 ENVIRONMENT = "production"
+# Base network configuration
+BASE_RPC_URL = "https://base-mainnet.alchemyapi.io/v2/your-api-key"
+USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+PRICE_USDC = "0.001"
+
+# Contract addresses (to be updated after deployment)
+PAYMENT_PROCESSOR_ADDRESS = "0x..."
+PROOF_OF_CRAWL_LEDGER_ADDRESS = "0x..."
+CRAWL_TOKEN_ID = "1"
+PUBLISHER_ADDRESS = "0x..."
+
+# Secrets (set via wrangler secret put command)
+# PRIVATE_KEY = "..." (set via: wrangler secret put PRIVATE_KEY)
 
 [[env.staging]]
 name = "tachi-gateway-cloudflare-staging"
-vars = { ENVIRONMENT = "staging" }
+vars = { 
+  ENVIRONMENT = "staging",
+  BASE_RPC_URL = "https://base-sepolia.alchemyapi.io/v2/your-api-key",
+  USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+  PRICE_USDC = "0.001",
+  PAYMENT_PROCESSOR_ADDRESS = "0x...",
+  PROOF_OF_CRAWL_LEDGER_ADDRESS = "0x...",
+  CRAWL_TOKEN_ID = "1",
+  PUBLISHER_ADDRESS = "0x..."
+}
 
 [[env.development]]
 name = "tachi-gateway-cloudflare-dev"
-vars = { ENVIRONMENT = "development" }
+vars = { 
+  ENVIRONMENT = "development",
+  BASE_RPC_URL = "https://base-sepolia.alchemyapi.io/v2/your-api-key",
+  USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+  PRICE_USDC = "0.001",
+  PAYMENT_PROCESSOR_ADDRESS = "0x...",
+  PROOF_OF_CRAWL_LEDGER_ADDRESS = "0x...",
+  CRAWL_TOKEN_ID = "1",
+  PUBLISHER_ADDRESS = "0x..."
+}

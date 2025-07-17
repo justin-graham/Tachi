@@ -1,0 +1,31 @@
+{
+  "network": "Local Development",
+  "chainId": 31337,
+  "timestamp": "2025-07-16T23:19:18.114Z",
+  "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "gasUsed": {
+    "crawlNFT": "1478388",
+    "paymentProcessor": "832866",
+    "proofOfCrawlLedger": "809873",
+    "total": "3750410",
+    "mockUSDC": "629283"
+  },
+  "contracts": {
+    "crawlNFT": {
+      "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+      "transactionHash": "0xb4808da132801db00dd4d68a6ca9f8963dbecc4d29d6508965cbd5e62c829943"
+    },
+    "paymentProcessor": {
+      "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+      "transactionHash": "0x5c2371800693bb8755c72c6e43a2ffc19d196acc14ea2a857685f4bd805f87b1"
+    },
+    "proofOfCrawlLedger": {
+      "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+      "transactionHash": "0xc87d5f9831e198a12a3c8fa956dd0c57c7c5d7d179f1afa49e3b0960530e64de"
+    },
+    "mockUSDC": {
+      "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      "transactionHash": "0xbbf921e024b03c2a3f70b92c52344aa1b3f14f92df3b0afeb1aae7581daad764"
+    }
+  }
+}
