@@ -305,9 +305,7 @@ export function PublisherDashboard({ data, onStartOver }: PublisherDashboardProp
                 <div>
                   <GaslessPayment
                     publisherAddress={data.walletAddress as Address}
-                    crawlNFTAddress={('0x1234567890123456789012345678901234567890') as Address} // Mock NFT address
                     tokenId={data.licenseData.tokenId || BigInt(0)}
-                    usdcAddress={'0xA0b86a33E6417c3B1C9642dA2c5b4B0d7E3fF4e5' as Address} // Mock USDC address for Base Sepolia
                     defaultAmount={data.pricingData.pricePerCrawl}
                     onPaymentSuccess={(txHash) => {
                       console.log('Payment successful:', txHash)

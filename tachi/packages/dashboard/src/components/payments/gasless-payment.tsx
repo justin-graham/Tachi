@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { type Address } from 'viem'
+import { useChainId } from 'wagmi'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -13,13 +14,12 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, CheckCircle, AlertCircle, Wallet, Send, DollarSign } from 'lucide-react'
 import { useAlchemyAAPayment, type PaymentRequest } from '@/hooks/use-alchemy-aa'
+import { tachiConfig } from '@/config'
 
 interface GaslessPaymentProps {
   publisherAddress: Address
-  crawlNFTAddress: Address
+  crawlNFTAddress?: Address
   tokenId: bigint
-  usdcAddress: Address
-  paymentProcessorAddress?: Address
   defaultAmount?: number
   onPaymentSuccess?: (txHash: string) => void
   onPaymentError?: (error: string) => void
@@ -32,12 +32,18 @@ export function GaslessPayment({
   publisherAddress,
   crawlNFTAddress,
   tokenId,
-  usdcAddress,
-  paymentProcessorAddress,
   defaultAmount = 1.0,
   onPaymentSuccess,
   onPaymentError,
 }: GaslessPaymentProps) {
+  const chainId = useChainId()
+  const contractAddresses = tachiConfig.getContractAddresses(chainId)
+  
+  // Use deployed contract addresses or fallback to props
+  const usdcAddress = ((contractAddresses as any).usdc || (contractAddresses as any).mockUSDC) as Address
+  const resolvedCrawlNFTAddress = crawlNFTAddress || (contractAddresses as any).crawlNFT as Address
+  const paymentProcessorAddress = (contractAddresses as any).paymentProcessor as Address
+
   const {
     // State
     isInitializing,
@@ -89,13 +95,13 @@ export function GaslessPayment({
    * Handle payment execution
    */
   const handlePayment = async () => {
-    if (!isReady || !smartAccountAddress) {
+    if (!isReady || !smartAccountAddress || !resolvedCrawlNFTAddress) {
       return
     }
 
     const paymentRequest: PaymentRequest = {
       publisherAddress,
-      crawlNFTAddress,
+      crawlNFTAddress: resolvedCrawlNFTAddress,
       tokenId,
       amountUSD: paymentAmount,
       usdcAddress,

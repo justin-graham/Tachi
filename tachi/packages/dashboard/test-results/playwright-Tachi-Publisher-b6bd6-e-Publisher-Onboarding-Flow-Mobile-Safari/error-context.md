@@ -1,0 +1,50 @@
+# Page snapshot
+
+```yaml
+- alert
+- main:
+  - heading "Welcome to Tachi" [level=3]
+  - paragraph: Set up your pay-per-crawl website in just a few steps
+  - img
+  - text: Connect Wallet Connect your Ethereum wallet
+  - img
+  - text: Site Details Configure your website details
+  - img
+  - text: Pricing Setup Set your crawl pricing
+  - img
+  - text: Create License Mint your CrawlNFT license
+  - img
+  - text: Deploy Worker Deploy your Cloudflare Worker
+  - tabpanel:
+    - img
+    - heading "Connect Your Wallet" [level=3]
+    - paragraph: Connect your Ethereum wallet to get started with Tachi. You'll need to be on the Base Sepolia network.
+    - text: "Connection Status: Not Connected"
+    - button "Connect Wallet"
+    - heading "Getting Started:" [level=4]
+    - list:
+      - listitem: • Click "Connect Wallet" to open the wallet selection modal
+      - listitem: • Choose your preferred wallet (MetaMask, WalletConnect, etc.)
+      - listitem: • Approve the connection in your wallet
+      - listitem: • Switch to Base Sepolia network if prompted
+- dialog "Connect a Wallet":
+  - document:
+    - heading "Connect a Wallet" [level=1]
+    - button "Close"
+    - button "Rainbow":
+      - img
+      - heading "Rainbow" [level=2]
+    - button "Coinbase":
+      - img
+      - heading "Coinbase" [level=2]
+    - button "MetaMask":
+      - img
+      - heading "MetaMask" [level=2]
+    - button "WalletConnect":
+      - img
+      - heading "WalletConnect" [level=2]
+    - text: What is a Wallet? A wallet is used to send, receive, store, and display digital assets. It's also a new way to log in, without needing to create new accounts and passwords on every website.
+    - button "Get a Wallet"
+    - link "Learn More":
+      - /url: https://learn.rainbow.me/understanding-web3?utm_source=rainbowkit&utm_campaign=learnmore
+```
