@@ -3,8 +3,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CheckCircle, Copy, ExternalLink, Activity, DollarSign, FileText, Globe, Wallet } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { CheckCircle, Copy, ExternalLink, Activity, DollarSign, FileText, Globe, Wallet, CreditCard, Zap } from 'lucide-react'
 import { useState } from 'react'
+import { GaslessPayment, QuickPayButton } from '@/components/payments/gasless-payment'
+import { type Address } from 'viem'
 
 interface DashboardData {
   walletAddress: string
@@ -269,6 +272,150 @@ export function PublisherDashboard({ data, onStartOver }: PublisherDashboardProp
               </Button>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Gasless Payment Demo */}
+      <Card className="border-2 border-dashed border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-purple-800">
+            <Zap className="h-5 w-5" />
+            Gasless Payment Demo
+          </CardTitle>
+          <CardDescription className="text-purple-600">
+            Test how AI crawlers will pay for access to your content without gas fees
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="demo" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="demo" className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Payment Demo
+              </TabsTrigger>
+              <TabsTrigger value="stats" className="flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                Payment Stats
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="demo" className="mt-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Payment Component */}
+                <div>
+                  <GaslessPayment
+                    publisherAddress={data.walletAddress as Address}
+                    crawlNFTAddress={('0x1234567890123456789012345678901234567890') as Address} // Mock NFT address
+                    tokenId={data.licenseData.tokenId || BigInt(0)}
+                    usdcAddress={'0xA0b86a33E6417c3B1C9642dA2c5b4B0d7E3fF4e5' as Address} // Mock USDC address for Base Sepolia
+                    defaultAmount={data.pricingData.pricePerCrawl}
+                    onPaymentSuccess={(txHash) => {
+                      console.log('Payment successful:', txHash)
+                      // You could track this payment or update UI
+                    }}
+                    onPaymentError={(error) => {
+                      console.error('Payment failed:', error)
+                    }}
+                  />
+                </div>
+
+                {/* Info Panel */}
+                <div className="space-y-4">
+                  <div className="p-4 bg-white rounded-lg border">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Wallet className="h-4 w-4" />
+                      How It Works
+                    </h4>
+                    <ul className="space-y-2 text-sm text-gray-600">
+                      <li className="flex items-start gap-2">
+                        <span className="text-purple-500 font-bold">1.</span>
+                        AI crawler connects using Account Abstraction
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-purple-500 font-bold">2.</span>
+                        Payment is processed without gas fees
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-purple-500 font-bold">3.</span>
+                        You receive USDC directly in your wallet
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-purple-500 font-bold">4.</span>
+                        Crawler gains access to protected content
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                    <h4 className="font-semibold mb-2 text-amber-800">Demo Mode</h4>
+                    <p className="text-sm text-amber-700">
+                      This is a demonstration using testnet tokens. In production, 
+                      crawlers will use real USDC on Base network.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <QuickPayButton
+                      publisherAddress={data.walletAddress as Address}
+                      crawlNFTAddress={'0x1234567890123456789012345678901234567890' as Address}
+                      tokenId={data.licenseData.tokenId || BigInt(0)}
+                      usdcAddress={'0xA0b86a33E6417c3B1C9642dA2c5b4B0d7E3fF4e5' as Address}
+                      amount={data.pricingData.pricePerCrawl}
+                      className="flex-1"
+                      onSuccess={(txHash) => console.log('Quick payment:', txHash)}
+                      onError={(error) => console.error('Quick payment error:', error)}
+                    />
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="stats" className="mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Payments</p>
+                        <p className="text-2xl font-bold">$0.00</p>
+                      </div>
+                      <DollarSign className="h-8 w-8 text-green-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Crawl Requests</p>
+                        <p className="text-2xl font-bold">0</p>
+                      </div>
+                      <Activity className="h-8 w-8 text-blue-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Gas Saved</p>
+                        <p className="text-2xl font-bold">$0.00</p>
+                      </div>
+                      <Zap className="h-8 w-8 text-purple-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600 text-center">
+                  Payment statistics will appear here once crawlers start accessing your content.
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
