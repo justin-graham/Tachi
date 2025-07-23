@@ -1,22 +1,39 @@
 'use client'
 
-import { WagmiProvider, createConfig, http } from 'wagmi'
-import { base, baseSepolia } from 'wagmi/chains'
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
-import { RainbowKitProvider, getDefaultConfig } from '@rainbow-me/rainbowkit'
-import { useMemo } from 'react'
+import { getDefaultConfig, RainbowKitProvider } from '@rainbow-me/rainbowkit'
+import { WagmiProvider } from 'wagmi'
+import { base, baseSepolia, hardhat } from 'wagmi/chains'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ReactNode, useMemo } from 'react'
 import '@rainbow-me/rainbowkit/styles.css'
 
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'tachi-dashboard-dev'
+// Define chains
+const chains = [base, baseSepolia, hardhat] as const
 
-export function Providers({ children }: { children: React.ReactNode }) {
-  // Create RainbowKit configuration
+export function Providers({ children }: { children: ReactNode }) {
+  // Create config - only initialize on client side
   const config = useMemo(() => {
+    if (typeof window === 'undefined') {
+      // Return minimal config for SSR
+      return getDefaultConfig({
+        appName: 'Tachi Publisher Dashboard',
+        projectId: 'fallback-dev-id',
+        chains: [hardhat],
+        ssr: true,
+      })
+    }
+
+    // Full config for client-side
+    const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+    const hasValidProjectId = walletConnectProjectId && 
+                             walletConnectProjectId !== 'your-project-id' && 
+                             walletConnectProjectId.length > 10
+
     return getDefaultConfig({
       appName: 'Tachi Publisher Dashboard',
-      projectId,
-      chains: [base, baseSepolia],
-      ssr: false, // Disable SSR to avoid hydration issues
+      projectId: hasValidProjectId ? walletConnectProjectId! : 'fallback-dev-id',
+      chains,
+      ssr: false,
     })
   }, [])
 
@@ -24,7 +41,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     defaultOptions: {
       queries: {
         staleTime: 1000 * 60 * 5, // 5 minutes
-        gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
+        retry: false, // Disable retries in development
       },
     },
   }), [])

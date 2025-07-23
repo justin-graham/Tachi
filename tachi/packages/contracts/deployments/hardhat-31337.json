@@ -1,7 +1,7 @@
 {
   "network": "Local Development",
   "chainId": 31337,
-  "timestamp": "2025-07-17T20:59:03.612Z",
+  "timestamp": "2025-07-21T18:07:02.048Z",
   "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
   "gasUsed": {
     "crawlNFT": "1478388",
