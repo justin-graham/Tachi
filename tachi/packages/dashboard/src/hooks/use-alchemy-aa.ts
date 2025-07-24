@@ -76,7 +76,7 @@ export function useAlchemyAA(config: UseAlchemyAAConfig) {
     try {
       const aaClient = createTachiAAClient(
         config.apiKey,
-        chainId,
+        chainId!,
         config.gasManagerPolicyId
       )
 

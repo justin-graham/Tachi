@@ -47,7 +47,7 @@ export const crawlNftAbi = [
 
 // Contract addresses by network
 export const crawlNftAddresses: Record<number, Address> = {
-  31337: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512', // Local hardhat
+  31337: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512', // Local hardhat - deployed CrawlNFT
   84532: '0x...', // Base Sepolia (to be deployed)
   8453: '0x...', // Base Mainnet (to be deployed)
 }

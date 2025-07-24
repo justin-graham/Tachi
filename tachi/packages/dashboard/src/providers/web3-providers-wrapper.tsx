@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import { ReactNode } from 'react'
 
-// Dynamic import with no SSR to avoid IndexedDB issues
+// Dynamic import with no SSR to prevent initialization issues
 const Web3ProviderComponent = dynamic(
   () => import('./web3-provider').then(mod => ({ default: mod.Providers })),
   {
@@ -20,5 +20,9 @@ const Web3ProviderComponent = dynamic(
 )
 
 export function Web3Providers({ children }: { children: ReactNode }) {
-  return <Web3ProviderComponent>{children}</Web3ProviderComponent>
+  return (
+    <Web3ProviderComponent>
+      {children}
+    </Web3ProviderComponent>
+  )
 }

@@ -215,6 +215,7 @@ export function OnboardingWizard() {
         <TabsContent value="license" className="mt-6">
           <LicenseCreationStep
             siteDetails={stepData.siteDetails}
+            walletAddress={stepData.walletAddress}
             onComplete={(data) => handleStepComplete('license', data)}
             isComplete={steps.find(step => step.id === 'license')?.completed || false}
           />

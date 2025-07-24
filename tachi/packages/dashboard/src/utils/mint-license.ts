@@ -1,13 +1,13 @@
 import { createWalletClient, createPublicClient, http, type Address } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { base, baseSepolia, localhost } from 'viem/chains'
+import { base, baseSepolia, hardhat } from 'viem/chains'
 import { crawlNftAbi, getCrawlNftAddress } from '@/contracts/crawl-nft'
 
 // Get the appropriate chain for the given chainId
 function getChain(chainId: number) {
   switch (chainId) {
     case 31337:
-      return localhost
+      return hardhat
     case 84532:
       return baseSepolia
     case 8453:
@@ -39,10 +39,13 @@ export async function mintLicenseAsOwner(
   const chain = getChain(chainId)
   const account = privateKeyToAccount(deployerPrivateKey as `0x${string}`)
   
+  // Get the RPC URL for the chain
+  const rpcUrl = chainId === 31337 ? 'http://127.0.0.1:8545' : undefined
+  
   const walletClient = createWalletClient({
     account,
     chain,
-    transport: http()
+    transport: http(rpcUrl)
   })
 
   // Call mintLicense function
@@ -70,9 +73,12 @@ export async function checkHasLicense(
 
   const chain = getChain(chainId)
   
+  // Get the RPC URL for the chain
+  const rpcUrl = chainId === 31337 ? 'http://127.0.0.1:8545' : undefined
+  
   const publicClient = createPublicClient({
     chain,
-    transport: http()
+    transport: http(rpcUrl)
   })
 
   const result = await publicClient.readContract({

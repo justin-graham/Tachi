@@ -52,9 +52,12 @@ export function SiteDetailsStep({ onComplete, isComplete }: SiteDetailsStepProps
 
   const formData = watch()
 
+  // Check if basic site details are complete for generating terms
+  const canGenerateTerms = formData.domain && formData.websiteName && formData.companyName && formData.contactEmail && formData.description
+
   // Generate terms when form data changes
   const handleGenerateTerms = async () => {
-    if (formData.domain && formData.websiteName && formData.companyName && formData.contactEmail) {
+    if (canGenerateTerms) {
       const terms = generateDefaultTermsOfService({
         companyName: formData.companyName,
         websiteName: formData.websiteName,
@@ -264,15 +267,15 @@ export function SiteDetailsStep({ onComplete, isComplete }: SiteDetailsStepProps
 
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-2">
-                <Badge variant={isFormValid ? "default" : "outline"} className={isFormValid ? "bg-green-100 text-green-800" : ""}>
-                  {isFormValid ? "✓ Valid" : "Incomplete"}
+                <Badge variant={canGenerateTerms ? "default" : "outline"} className={canGenerateTerms ? "bg-green-100 text-green-800" : ""}>
+                  {canGenerateTerms ? "✓ Ready" : "Incomplete"}
                 </Badge>
-                {isFormValid && (
+                {canGenerateTerms && (
                   <span className="text-sm text-green-600">
-                    All required fields completed
+                    Ready to generate terms
                   </span>
                 )}
-                {Object.keys(errors).length > 0 && (
+                {!canGenerateTerms && Object.keys(errors).length > 0 && (
                   <span className="text-sm text-red-600">
                     {Object.keys(errors).length} error(s) to fix
                   </span>
@@ -281,7 +284,7 @@ export function SiteDetailsStep({ onComplete, isComplete }: SiteDetailsStepProps
               
               <Button
                 onClick={handleGenerateTerms}
-                disabled={!isFormValid}
+                disabled={!canGenerateTerms}
                 className="flex items-center space-x-2"
               >
                 <FileText className="h-4 w-4" />

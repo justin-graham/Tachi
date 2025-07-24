@@ -1,8 +1,8 @@
 "use client"
 
-import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { useAccount, useChainId, useSwitchChain } from 'wagmi'
+import { useAccount, useChainId, useSwitchChain, useConnect, useDisconnect } from 'wagmi'
 import { base, baseSepolia, hardhat } from 'wagmi/chains'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -22,7 +22,7 @@ export function ConnectWalletStep({ onComplete, isComplete }: ConnectWalletStepP
   // Test mode for automated testing
   const isTestMode = typeof window !== 'undefined' && window.location.search.includes('test=true')
   const [testWalletConnected, setTestWalletConnected] = useState(false)
-  const testAddress = '0x1234567890123456789012345678901234567890'
+  const testAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' // Hardhat Account #0 with proper checksum
   
   // Determine preferred chain based on environment
   const preferredChain = (() => {
