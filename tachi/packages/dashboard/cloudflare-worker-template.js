@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Tachi Protocol Cloudflare Worker
  * Generated from Publisher Dashboard
@@ -15,7 +16,7 @@ export default {
       tokenId: "{{TOKEN_ID}}", // Will be replaced with actual token ID
       publisher: "{{PUBLISHER_ADDRESS}}", // Publisher wallet address
       domain: "{{DOMAIN}}", // Publisher domain
-      pricing: {{PRICING}}, // Price in USD (e.g., 1.50)
+      pricing: "{{PRICING}}", // Price in USD (e.g., 1.50)
       contracts: {
         crawlNFT: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
         paymentProcessor: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
