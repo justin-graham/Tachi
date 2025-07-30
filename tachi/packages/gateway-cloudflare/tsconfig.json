@@ -28,6 +28,16 @@
     "node_modules",
     "dist",
     "test/**/*",
-    "examples/**/*"
+    "examples/**/*",
+    "build",
+    "coverage",
+    ".nyc_output",
+    "test-results",
+    "*.log",
+    ".cache",
+    ".temp",
+    ".tmp",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ]
 }

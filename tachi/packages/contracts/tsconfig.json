@@ -7,5 +7,22 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true
-  }
+  },
+  "include": ["scripts/**/*", "test/**/*", "contracts/**/*", "*.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "artifacts/**/*",
+    "cache/**/*",
+    ".hardhat/**/*",
+    "typechain/**/*",
+    "typechain-types/**/*",
+    "coverage/**/*",
+    ".nyc_output/**/*",
+    "*.log",
+    ".cache/**/*",
+    ".temp/**/*",
+    ".tmp/**/*"
+  ]
 }
