@@ -1,88 +1,63 @@
-import { useWriteContract, useReadContract, useChainId, useWaitForTransactionReceipt } from 'wagmi'
-import { crawlNftAbi, getCrawlNftAddress } from '@/contracts/crawl-nft'
-import { type Address } from 'viem'
+"use client"
 
+import { useWriteContract, useReadContract, useAccount, useChainId } from 'wagmi'
+import { CRAWL_NFT_CONTRACT } from '@/contracts/crawl-nft'
+import { Abi } from 'viem'
+
+/**
+ * Hook for minting a new license NFT.
+ * It encapsulates the write interaction with the CrawlNFT contract.
+ */
 export function useMintLicense() {
+  const { address } = useAccount()
   const chainId = useChainId()
-  const contractAddress = getCrawlNftAddress(chainId)
+  const { data: hash, isPending, error, writeContract, status } = useWriteContract()
 
-  const { 
-    writeContract, 
-    data: hash, 
-    isPending, 
-    error 
-  } = useWriteContract()
-
-  const { 
-    isLoading: isConfirming, 
-    isSuccess: isConfirmed 
-  } = useWaitForTransactionReceipt({
-    hash,
-  })
-
-  const mintLicense = async (publisher: Address, termsURI: string) => {
-    if (!contractAddress) {
-      throw new Error(`CrawlNFT contract not deployed on chain ${chainId}`)
+  const mintLicense = (publisher: `0x${string}`, termsURI: string) => {
+    if (!chainId || !CRAWL_NFT_CONTRACT.address[chainId]) {
+      console.error("Chain ID not supported or contract address not found.");
+      return;
     }
+    
+    console.log('useMintLicense: Preparing to mint...', {
+      contractAddress: CRAWL_NFT_CONTRACT.address[chainId],
+      args: [publisher, termsURI],
+      account: address,
+    })
 
     writeContract({
-      address: contractAddress,
-      abi: crawlNftAbi,
+      address: CRAWL_NFT_CONTRACT.address[chainId],
+      abi: CRAWL_NFT_CONTRACT.abi as Abi,
       functionName: 'mintLicense',
       args: [publisher, termsURI],
     })
   }
 
-  return {
-    mintLicense,
-    hash,
-    isPending,
-    isConfirming,
-    isConfirmed,
-    error
+  return { 
+    mintLicense, 
+    hash, 
+    isPending, 
+    isConfirming: status === 'pending',
+    isConfirmed: status === 'success',
+    error 
   }
 }
 
-export function useHasLicense(publisher?: Address) {
-  const chainId = useChainId()
-  const contractAddress = getCrawlNftAddress(chainId)
+/**
+ * Hook to check if a given address already has a license.
+ * @returns A wagmi read hook result object.
+ */
+export function useHasLicense() {
+    const { address } = useAccount()
+    const chainId = useChainId()
 
-  return useReadContract({
-    address: contractAddress,
-    abi: crawlNftAbi,
-    functionName: 'hasLicense',
-    args: publisher ? [publisher] : undefined,
-    query: {
-      enabled: !!publisher && !!contractAddress,
-    },
-  })
-}
-
-export function useGetPublisherTokenId(publisher?: Address) {
-  const chainId = useChainId()
-  const contractAddress = getCrawlNftAddress(chainId)
-
-  return useReadContract({
-    address: contractAddress,
-    abi: crawlNftAbi,
-    functionName: 'getPublisherTokenId',
-    args: publisher ? [publisher] : undefined,
-    query: {
-      enabled: !!publisher && !!contractAddress,
-    },
-  })
-}
-
-export function useTotalSupply() {
-  const chainId = useChainId()
-  const contractAddress = getCrawlNftAddress(chainId)
-
-  return useReadContract({
-    address: contractAddress,
-    abi: crawlNftAbi,
-    functionName: 'totalSupply',
-    query: {
-      enabled: !!contractAddress,
-    },
-  })
+    return useReadContract({
+        address: CRAWL_NFT_CONTRACT.address[chainId],
+        abi: CRAWL_NFT_CONTRACT.abi as Abi,
+        functionName: 'hasLicense',
+        args: [address],
+        query: {
+            enabled: !!address && !!chainId, // Only run query if address and chainId are available
+        },
+    })
 }

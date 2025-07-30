@@ -47,12 +47,12 @@ export const crawlNftAbi = [
 
 // Contract addresses by network
 export const crawlNftAddresses: Record<number, Address> = {
-  31337: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512', // Local hardhat - deployed CrawlNFT
-  84532: '0x...', // Base Sepolia (to be deployed)
-  8453: '0x...', // Base Mainnet (to be deployed)
+  31337: '0x5FbDB2315678afecb367f032d93F642f64180aa3', // Local hardhat - deployed CrawlNFT
+  84532: process.env.NEXT_PUBLIC_CRAWLNFT_ADDRESS_BASE_SEPOLIA as Address, // Base Sepolia
+  8453: process.env.NEXT_PUBLIC_CRAWLNFT_ADDRESS_BASE_MAINNET as Address, // Base Mainnet
 }
 
-// Get contract address for current chain
-export function getCrawlNftAddress(chainId: number): Address | undefined {
-  return crawlNftAddresses[chainId]
+export const CRAWL_NFT_CONTRACT = {
+  abi: crawlNftAbi,
+  address: crawlNftAddresses,
 }

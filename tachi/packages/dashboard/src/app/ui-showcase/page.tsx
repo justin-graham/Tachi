@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { ArrowRight, Shield, Zap, Globe, CheckCircle, Users, BarChart3, Clock } from 'lucide-react';
 
 export default function UIShowcase() {
   // Reusable Progress Stepper Component
@@ -948,6 +949,119 @@ export default function UIShowcase() {
           <p className="text-muted-foreground">Complete page-by-page navigation flow as users experience the actual Tachi Pay-Per-Crawl dashboard</p>
           
           <div className="space-y-8">
+            
+            {/* Landing Page */}
+            <div className="space-y-6">
+              <div className="text-center mb-4">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Landing Page</h3>
+                <p className="text-sm text-gray-600">The main marketing page showcasing Tachi's value proposition</p>
+              </div>
+              
+              <div className="border rounded-lg overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+                {/* Header */}
+                <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 p-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-xs">T</span>
+                      </div>
+                      <span className="text-lg font-bold text-gray-900">Tachi</span>
+                    </div>
+                    <Button size="sm">Sign In</Button>
+                  </div>
+                </header>
+
+                {/* Hero Section - Condensed */}
+                <section className="p-8 text-center">
+                  <Badge variant="outline" className="mb-4 px-3 py-1 text-xs">
+                    🚀 Revolutionary Web Crawling Protocol
+                  </Badge>
+                  <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                    <span className="text-blue-600">Pay</span>-Per-
+                    <span className="text-green-500">Crawl</span>
+                    <span className="text-orange-500">.</span>
+                  </h1>
+                  <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
+                    Web crawling has never been so fair.<br />
+                    Publishers get paid. Crawlers get access. Everyone wins.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button className="px-6 py-2">
+                      Get Started
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" className="px-6 py-2">Learn More</Button>
+                  </div>
+                </section>
+
+                {/* Features Section - Condensed */}
+                <section className="p-8 bg-gray-50">
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-3">Three Pillars of Innovation</h2>
+                    <p className="text-gray-600">Choose from hundreds of features, easy peasy with Tachi.</p>
+                  </div>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <Card className="text-center p-4">
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Zap className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <h3 className="font-semibold text-blue-600 mb-2">Instant</h3>
+                      <p className="text-sm text-gray-600">Crawl data in seconds</p>
+                    </Card>
+                    <Card className="text-center p-4">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Globe className="h-6 w-6 text-green-600" />
+                      </div>
+                      <h3 className="font-semibold text-green-600 mb-2">Global</h3>
+                      <p className="text-sm text-gray-600">Access all domains instantly</p>
+                    </Card>
+                    <Card className="text-center p-4">
+                      <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Shield className="h-6 w-6 text-orange-600" />
+                      </div>
+                      <h3 className="font-semibold text-orange-600 mb-2">Secure</h3>
+                      <p className="text-sm text-gray-600">Never lose content again</p>
+                    </Card>
+                  </div>
+                </section>
+
+                {/* CTA Section - Condensed */}
+                <section className="p-8 text-center">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Publish, earn, scale, right now.</h2>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                    <Card className="p-3 text-center">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                        <Users className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <h4 className="text-xs font-semibold mb-1">Publishers</h4>
+                      <p className="text-xs text-gray-600">Monetize content</p>
+                    </Card>
+                    <Card className="p-3 text-center">
+                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                        <BarChart3 className="h-4 w-4 text-green-600" />
+                      </div>
+                      <h4 className="text-xs font-semibold mb-1">Analytics</h4>
+                      <p className="text-xs text-gray-600">Track earnings</p>
+                    </Card>
+                    <Card className="p-3 text-center">
+                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                        <Clock className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <h4 className="text-xs font-semibold mb-1">Instant</h4>
+                      <p className="text-xs text-gray-600">Auto payments</p>
+                    </Card>
+                    <Card className="p-3 text-center">
+                      <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                        <CheckCircle className="h-4 w-4 text-orange-600" />
+                      </div>
+                      <h4 className="text-xs font-semibold mb-1">Reliable</h4>
+                      <p className="text-xs text-gray-600">Blockchain-backed</p>
+                    </Card>
+                  </div>
+                  <Button className="px-8 py-2">Get Started</Button>
+                </section>
+              </div>
+            </div>
             
             {/* Step 1: Connect Wallet */}
             <div className="space-y-6">

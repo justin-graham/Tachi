@@ -9,7 +9,10 @@ import '@rainbow-me/rainbowkit/styles.css'
 
 const config = getDefaultConfig({
   appName: 'Tachi Publisher Dashboard',
-  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'fallback-dev-id',
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || (() => {
+    console.warn('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID not found. Get your project ID from https://cloud.walletconnect.com/')
+    return '2f05a7c0b1e6d7a8b9c8d7e6f5a4b3c2' // Development fallback ID
+  })(),
   chains: [base, baseSepolia, hardhat],
   ssr: false, // Disable SSR to prevent indexedDB issues
 })
