@@ -1,0 +1,77 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "incremental": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "tsBuildInfoFile": ".tsbuildinfo"
+  },
+  "references": [
+    {
+      "path": "./tachi/packages/sdk-js"
+    },
+    {
+      "path": "./tachi/packages/gateway-core"
+    },
+    {
+      "path": "./tachi/packages/gateway-cloudflare"
+    },
+    {
+      "path": "./tachi/packages/gateway-vercel"
+    },
+    {
+      "path": "./tachi/packages/dashboard"
+    },
+    {
+      "path": "./tachi/packages/contracts"
+    }
+  ],
+  "files": [],
+  "include": [],
+  "exclude": [
+    "**/node_modules",
+    "**/dist",
+    "**/build",
+    "**/.next",
+    "**/out",
+    "**/.cache",
+    "**/coverage",
+    "**/.nyc_output",
+    "**/lib",
+    "**/artifacts",
+    "**/cache",
+    "**/.hardhat",
+    "**/typechain",
+    "**/typechain-types",
+    "**/.storybook-static",
+    "**/storybook-static",
+    "**/.playwright",
+    "**/test-results",
+    "**/playwright-report",
+    "**/*.log",
+    "**/pnpm-debug.log*",
+    "**/npm-debug.log*",
+    "**/yarn-debug.log*",
+    "**/yarn-error.log*",
+    "**/.DS_Store",
+    "**/Thumbs.db",
+    "**/*.min.js",
+    "**/*.min.css",
+    "**/*.map",
+    "**/temp",
+    "**/tmp",
+    "**/.temp",
+    "**/.tmp"
+  ]
+}

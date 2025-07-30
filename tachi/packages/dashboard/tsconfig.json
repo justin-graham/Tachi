@@ -23,5 +23,28 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/types/**/*.d.ts"],
-  "exclude": ["node_modules", "**/*.broken.ts", "**/*.broken.tsx", "**/cloudflare-worker-template.js"]
+  "exclude": [
+    "node_modules",
+    "**/*.broken.ts",
+    "**/*.broken.tsx", 
+    "**/cloudflare-worker-template.js",
+    ".next/**/*",
+    "out/**/*",
+    "dist/**/*",
+    "build/**/*",
+    "coverage/**/*",
+    ".nyc_output/**/*",
+    "test-results/**/*",
+    "playwright-report/**/*",
+    ".storybook-static/**/*",
+    "storybook-static/**/*",
+    "*.log",
+    ".cache/**/*",
+    ".temp/**/*",
+    ".tmp/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
+  ]
 }

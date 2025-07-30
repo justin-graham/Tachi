@@ -25,6 +25,16 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "build",
+    "coverage",
+    ".nyc_output",
+    "test-results",
+    "*.log",
+    ".cache",
+    ".temp",
+    ".tmp",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ]
 }

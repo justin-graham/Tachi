@@ -1,0 +1,214 @@
+{
+  "folders": [
+    {
+      "name": "📁 Tachi Root",
+      "path": "."
+    },
+    {
+      "name": "🎛️ Dashboard (Next.js)",
+      "path": "./tachi/packages/dashboard"
+    },
+    {
+      "name": "📦 SDK JavaScript",
+      "path": "./tachi/packages/sdk-js"
+    },
+    {
+      "name": "🌐 Gateway Core",
+      "path": "./tachi/packages/gateway-core"
+    },
+    {
+      "name": "☁️ Gateway Cloudflare",
+      "path": "./tachi/packages/gateway-cloudflare"
+    },
+    {
+      "name": "🔗 Gateway Vercel",
+      "path": "./tachi/packages/gateway-vercel"
+    },
+    {
+      "name": "📋 Smart Contracts",
+      "path": "./tachi/packages/contracts"
+    },
+    {
+      "name": "🐍 SDK Python",
+      "path": "./tachi/packages/sdk-python"
+    }
+  ],
+  "settings": {
+    "typescript.preferences.includePackageJsonAutoImports": "off",
+    "typescript.suggest.autoImports": false,
+    "typescript.disableAutomaticTypeAcquisition": true,
+    "typescript.workspaceSymbols.scope": "currentProject",
+    "typescript.preferences.useLabelDetailsInCompletionEntries": true,
+    "typescript.suggest.completeFunctionCalls": false,
+    "typescript.suggest.paths": false,
+    "search.useRipgrep": true,
+    "search.followSymlinks": false,
+    "search.smartCase": true,
+    "files.associations": {
+      "*.env.example": "env",
+      "*.env.local": "env",
+      "*.env.development": "env",
+      "*.env.production": "env"
+    },
+    "workbench.editor.limit.enabled": true,
+    "workbench.editor.limit.value": 10,
+    "workbench.editor.limit.perEditorGroup": true,
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    "terminal.integrated.splitCwd": "workspaceRoot"
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Install Dependencies",
+        "type": "shell",
+        "command": "pnpm",
+        "args": ["install"],
+        "group": "build",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Build All Packages",
+        "type": "shell",
+        "command": "pnpm",
+        "args": ["run", "build"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "options": {
+          "cwd": "${workspaceFolder}/tachi"
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "problemMatcher": ["$tsc"]
+      },
+      {
+        "label": "Run Dashboard Dev",
+        "type": "shell",
+        "command": "pnpm",
+        "args": ["run", "dashboard:dev"],
+        "group": "build",
+        "options": {
+          "cwd": "${workspaceFolder}/tachi"
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Lint All Packages",
+        "type": "shell",
+        "command": "pnpm",
+        "args": ["run", "lint"],
+        "group": "test",
+        "options": {
+          "cwd": "${workspaceFolder}/tachi"
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "problemMatcher": ["$eslint-stylish"]
+      },
+      {
+        "label": "Test All Packages",
+        "type": "shell",
+        "command": "pnpm",
+        "args": ["run", "test"],
+        "group": {
+          "kind": "test",
+          "isDefault": true
+        },
+        "options": {
+          "cwd": "${workspaceFolder}/tachi"
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "TypeCheck All Packages",
+        "type": "shell",
+        "command": "pnpm",
+        "args": ["run", "typecheck"],
+        "group": "test",
+        "options": {
+          "cwd": "${workspaceFolder}/tachi"
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "problemMatcher": ["$tsc"]
+      }
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug Dashboard",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/tachi/packages/dashboard/node_modules/.bin/next",
+        "args": ["dev", "--port", "3003"],
+        "cwd": "${workspaceFolder}/tachi/packages/dashboard",
+        "env": {
+          "NODE_ENV": "development"
+        },
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen"
+      },
+      {
+        "name": "Debug Node.js Package",
+        "type": "node",
+        "request": "launch",
+        "program": "${file}",
+        "cwd": "${fileDirname}",
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen"
+      }
+    ]
+  },
+  "extensions": {
+    "recommendations": [
+      "esbenp.prettier-vscode",
+      "bradlc.vscode-tailwindcss",
+      "ms-vscode.vscode-typescript-next",
+      "usernamehw.errorlens",
+      "christian-kohler.path-intellisense",
+      "formulahendry.auto-rename-tag",
+      "ms-playwright.playwright",
+      "NomicFoundation.hardhat-solidity"
+    ],
+    "unwantedRecommendations": [
+      "ms-vscode.vscode-json"
+    ]
+  }
+}
