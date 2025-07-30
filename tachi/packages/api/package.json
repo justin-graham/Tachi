@@ -1,0 +1,43 @@
+{
+  "name": "tachi-api",
+  "version": "1.0.0",
+  "description": "Tachi Pay-Per-Crawl API Server",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "build": "echo 'No build step needed'",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "dotenv": "^16.3.1",
+    "express-rate-limit": "^7.1.5",
+    "pg": "^8.11.3",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "joi": "^17.11.0",
+    "axios": "^1.6.2",
+    "viem": "^2.0.0",
+    "@supabase/supabase-js": "^2.38.5",
+    "stripe": "^14.9.0",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "@types/node": "^20.10.4"
+  },
+  "keywords": [
+    "web3",
+    "crawling",
+    "api",
+    "blockchain",
+    "pay-per-crawl"
+  ],
+  "author": "Tachi Team",
+  "license": "MIT"
+}

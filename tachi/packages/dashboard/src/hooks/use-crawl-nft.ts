@@ -44,6 +44,45 @@ export function useMintLicense() {
 }
 
 /**
+ * Hook for self-minting a license NFT (convenience function).
+ * Uses the new mintMyLicense function for better UX.
+ */
+export function useMintMyLicense() {
+  const { address } = useAccount()
+  const chainId = useChainId()
+  const { data: hash, isPending, error, writeContract, status } = useWriteContract()
+
+  const mintMyLicense = (termsURI: string) => {
+    if (!chainId || !CRAWL_NFT_CONTRACT.address[chainId]) {
+      console.error("Chain ID not supported or contract address not found.");
+      return;
+    }
+    
+    console.log('useMintMyLicense: Preparing to self-mint...', {
+      contractAddress: CRAWL_NFT_CONTRACT.address[chainId],
+      args: [termsURI],
+      account: address,
+    })
+
+    writeContract({
+      address: CRAWL_NFT_CONTRACT.address[chainId],
+      abi: CRAWL_NFT_CONTRACT.abi as Abi,
+      functionName: 'mintMyLicense',
+      args: [termsURI],
+    })
+  }
+
+  return { 
+    mintMyLicense, 
+    hash, 
+    isPending, 
+    isConfirming: status === 'pending',
+    isConfirmed: status === 'success',
+    error 
+  }
+}
+
+/**
  * Hook to check if a given address already has a license.
  * @returns A wagmi read hook result object.
  */

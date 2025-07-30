@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, CheckCircle, XCircle, ExternalLink, AlertTriangle } from 'lucide-react'
 import { useAccount, useChainId } from 'wagmi'
-import { useMintLicense, useHasLicense } from '@/hooks/use-crawl-nft'
+import { useMintMyLicense, useHasLicense } from '@/hooks/use-crawl-nft'
 import { SiteDetailsStepData } from '@/schemas/site-details'
 
 interface LicenseCreationStepProps {
@@ -20,13 +20,13 @@ export function LicenseCreationStep({ siteDetails, walletAddress, onComplete, is
   const { address } = useAccount()
   const chainId = useChainId()
   const { 
-    mintLicense, 
+    mintMyLicense, 
     hash, 
     isPending: isMinting, 
     isConfirming, 
     isConfirmed, 
     error: mintHookError 
-  } = useMintLicense()
+  } = useMintMyLicense()
   const { data: hasExistingLicense, isLoading: checkingLicense } = useHasLicense()
   
   const effectiveAddress = walletAddress || address
@@ -48,7 +48,7 @@ export function LicenseCreationStep({ siteDetails, walletAddress, onComplete, is
       return
     }
     setMintError(null)
-    mintLicense(effectiveAddress as `0x${string}`, siteDetails.termsURI)
+    mintMyLicense(siteDetails.termsURI)
   }
 
   // React to hook state changes for completion and errors

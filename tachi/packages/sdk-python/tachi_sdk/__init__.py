@@ -13,7 +13,7 @@ import logging
 
 import requests
 from web3 import Web3
-from web3.middleware import geth_poa_middleware
+# from web3.middleware import geth_poa_middleware  # This import might not be available in newer versions
 from eth_account import Account
 from eth_typing import ChecksumAddress
 
@@ -179,8 +179,8 @@ class TachiSDK:
         """Initialize Web3 connection"""
         self.w3 = Web3(Web3.HTTPProvider(self.config.rpc_url))
         
-        # Add PoA middleware for Base network
-        self.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        # Add PoA middleware for Base network (commented out due to web3.py version compatibility)
+        # self.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
         
         if not self.w3.is_connected():
             raise NetworkError(f"Failed to connect to RPC endpoint: {self.config.rpc_url}")
@@ -450,6 +450,153 @@ class TachiSDK:
     def get_account_address(self) -> Optional[ChecksumAddress]:
         """Get account address"""
         return self.account.address if self.account else None
+
+    # === Tachi API Integration Methods ===
+
+    def register_crawler(self, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Register crawler with Tachi API"""
+        api_url = getattr(self.config, 'api_url', 'http://localhost:3001')
+        
+        registration_data = {
+            'name': 'AI Crawler',
+            'contact': 'crawler@example.com',
+            'description': 'Automated content crawler',
+            'companyName': 'AI Company',
+            'type': 'startup',
+        }
+        
+        if data:
+            registration_data.update(data)
+        
+        try:
+            response = self.session.post(
+                f'{api_url}/api/crawlers/register',
+                json=registration_data,
+                headers={'User-Agent': self.config.user_agent},
+                timeout=self.config.timeout
+            )
+            response.raise_for_status()
+            
+            result = response.json()
+            
+            # Store API key if provided
+            if 'apiKey' in result:
+                self.config.api_key = result['apiKey']
+            
+            return result
+            
+        except requests.RequestException as e:
+            raise NetworkError(f'Registration failed: {str(e)}', {'response': getattr(e, 'response', None)})
+
+    def authenticate(self, api_key: Optional[str] = None) -> Dict[str, Any]:
+        """Authenticate with Tachi API using API key"""
+        key = api_key or getattr(self.config, 'api_key', None)
+        if not key:
+            raise TachiError('API key required for authentication', 'CONFIG_ERROR')
+        
+        api_url = getattr(self.config, 'api_url', 'http://localhost:3001')
+        
+        try:
+            response = self.session.post(
+                f'{api_url}/api/crawlers/auth',
+                json={'apiKey': key},
+                headers={'User-Agent': self.config.user_agent},
+                timeout=self.config.timeout
+            )
+            response.raise_for_status()
+            return response.json()
+            
+        except requests.RequestException as e:
+            raise NetworkError(f'Authentication failed: {str(e)}', {'response': getattr(e, 'response', None)})
+
+    def get_publishers_directory(self) -> Dict[str, Any]:
+        """Get publishers directory from Tachi API"""
+        api_url = getattr(self.config, 'api_url', 'http://localhost:3001')
+        
+        try:
+            response = self.session.get(
+                f'{api_url}/api/publishers/directory',
+                headers={'User-Agent': self.config.user_agent},
+                timeout=self.config.timeout
+            )
+            response.raise_for_status()
+            return response.json()
+            
+        except requests.RequestException as e:
+            raise NetworkError(f'Failed to fetch publishers: {str(e)}', {'response': getattr(e, 'response', None)})
+
+    def fetch_content(self, domain: str, path: str, token: Optional[str] = None) -> Dict[str, Any]:
+        """Fetch content through Tachi API with authentication"""
+        api_url = getattr(self.config, 'api_url', 'http://localhost:3001')
+        url = f'{api_url}/api/content/{domain}/{path}'
+        
+        headers = {'User-Agent': self.config.user_agent}
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        
+        try:
+            response = self.session.get(url, headers=headers, timeout=self.config.timeout)
+            response.raise_for_status()
+            return response.json()
+            
+        except requests.RequestException as e:
+            raise NetworkError(f'Content fetch failed: {str(e)}', {'response': getattr(e, 'response', None)})
+
+    def get_content_pricing(self, domain: str) -> Dict[str, Any]:
+        """Get content pricing for a domain"""
+        api_url = getattr(self.config, 'api_url', 'http://localhost:3001')
+        
+        try:
+            response = self.session.get(
+                f'{api_url}/api/content/pricing/{domain}',
+                headers={'User-Agent': self.config.user_agent},
+                timeout=self.config.timeout
+            )
+            response.raise_for_status()
+            return response.json()
+            
+        except requests.RequestException as e:
+            raise NetworkError(f'Failed to fetch pricing: {str(e)}', {'response': getattr(e, 'response', None)})
+
+    def batch_request(self, requests_list: list, token: Optional[str] = None) -> Dict[str, Any]:
+        """Perform batch content requests"""
+        api_url = getattr(self.config, 'api_url', 'http://localhost:3001')
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'User-Agent': self.config.user_agent
+        }
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        
+        try:
+            response = self.session.post(
+                f'{api_url}/api/content/batch',
+                json={'requests': requests_list},
+                headers=headers,
+                timeout=self.config.timeout
+            )
+            response.raise_for_status()
+            return response.json()
+            
+        except requests.RequestException as e:
+            raise NetworkError(f'Batch request failed: {str(e)}', {'response': getattr(e, 'response', None)})
+
+    def check_health(self) -> Dict[str, Any]:
+        """Check API health"""
+        api_url = getattr(self.config, 'api_url', 'http://localhost:3001')
+        
+        try:
+            response = self.session.get(
+                f'{api_url}/health',
+                headers={'User-Agent': self.config.user_agent},
+                timeout=self.config.timeout
+            )
+            response.raise_for_status()
+            return response.json()
+            
+        except requests.RequestException as e:
+            raise NetworkError(f'Health check failed: {str(e)}', {'response': getattr(e, 'response', None)})
 
 
 # Convenience functions

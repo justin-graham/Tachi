@@ -14,6 +14,10 @@ import 'cross-fetch/polyfill';
 
 // Configuration interface
 export interface TachiConfig {
+  // API configuration
+  apiUrl?: string;
+  apiKey?: string;
+  
   // Network configuration
   network: 'base' | 'base-sepolia';
   rpcUrl: string;
@@ -30,6 +34,15 @@ export interface TachiConfig {
   userAgent?: string;
   timeout?: number;
   maxRetries?: number;
+}
+
+// Crawler registration data
+export interface CrawlerRegistration {
+  name?: string;
+  contact?: string;
+  description?: string;
+  companyName?: string;
+  type?: 'individual' | 'startup' | 'enterprise';
 }
 
 // Payment information from 402 response
@@ -397,6 +410,179 @@ class TachiSDK {
    */
   getAccountAddress(): Address | null {
     return this.account?.address || null;
+  }
+
+  // === Tachi API Integration Methods ===
+
+  /**
+   * Register crawler with Tachi API
+   */
+  async registerCrawler(data: CrawlerRegistration = {}): Promise<any> {
+    const apiUrl = this.config.apiUrl || 'http://localhost:3001';
+    
+    const response = await fetch(`${apiUrl}/api/crawlers/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': this.config.userAgent!,
+      },
+      body: JSON.stringify({
+        name: data.name || 'AI Crawler',
+        contact: data.contact || 'crawler@example.com',
+        description: data.description || 'Automated content crawler',
+        companyName: data.companyName || 'AI Company',
+        type: data.type || 'startup',
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Registration failed: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    
+    // Store API key if provided
+    if (result.apiKey) {
+      this.config.apiKey = result.apiKey;
+    }
+
+    return result;
+  }
+
+  /**
+   * Authenticate with Tachi API using API key
+   */
+  async authenticate(apiKey?: string): Promise<any> {
+    const key = apiKey || this.config.apiKey;
+    if (!key) {
+      throw new Error('API key required for authentication');
+    }
+
+    const apiUrl = this.config.apiUrl || 'http://localhost:3001';
+    
+    const response = await fetch(`${apiUrl}/api/crawlers/auth`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': this.config.userAgent!,
+      },
+      body: JSON.stringify({ apiKey: key }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Authentication failed: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Get publishers directory from Tachi API
+   */
+  async getPublishersDirectory(): Promise<any> {
+    const apiUrl = this.config.apiUrl || 'http://localhost:3001';
+    
+    const response = await fetch(`${apiUrl}/api/publishers/directory`, {
+      headers: {
+        'User-Agent': this.config.userAgent!,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch publishers: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Fetch content through Tachi API with authentication
+   */
+  async fetchContent(domain: string, path: string, token?: string): Promise<any> {
+    const apiUrl = this.config.apiUrl || 'http://localhost:3001';
+    const url = `${apiUrl}/api/content/${domain}/${path}`;
+    
+    const headers: Record<string, string> = {
+      'User-Agent': this.config.userAgent!,
+    };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, { headers });
+
+    if (!response.ok) {
+      throw new Error(`Content fetch failed: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Get content pricing for a domain
+   */
+  async getContentPricing(domain: string): Promise<any> {
+    const apiUrl = this.config.apiUrl || 'http://localhost:3001';
+    
+    const response = await fetch(`${apiUrl}/api/content/pricing/${domain}`, {
+      headers: {
+        'User-Agent': this.config.userAgent!,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch pricing: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Perform batch content requests
+   */
+  async batchRequest(requests: Array<{ domain: string; path: string }>, token?: string): Promise<any> {
+    const apiUrl = this.config.apiUrl || 'http://localhost:3001';
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'User-Agent': this.config.userAgent!,
+    };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${apiUrl}/api/content/batch`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ requests }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Batch request failed: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Check API health
+   */
+  async checkHealth(): Promise<any> {
+    const apiUrl = this.config.apiUrl || 'http://localhost:3001';
+    
+    const response = await fetch(`${apiUrl}/health`, {
+      headers: {
+        'User-Agent': this.config.userAgent!,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Health check failed: ${response.statusText}`);
+    }
+
+    return response.json();
   }
 
   /**

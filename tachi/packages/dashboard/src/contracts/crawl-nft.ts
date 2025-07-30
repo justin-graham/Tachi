@@ -13,6 +13,13 @@ export const crawlNftAbi = [
     type: "function"
   },
   {
+    inputs: [{ name: "termsURI", type: "string" }],
+    name: "mintMyLicense",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
     inputs: [{ name: "publisher", type: "address" }],
     name: "hasLicense",
     outputs: [{ name: "", type: "bool" }],
