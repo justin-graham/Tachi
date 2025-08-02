@@ -125,19 +125,11 @@ async function checkPrerequisites() {
       allPassed = false;
     }
     
-    // Check USDC balance
-    const usdcContract = {
-      address: CONFIG.USDC_ADDRESS,
-      abi: ['function balanceOf(address account) external view returns (uint256)']
-    };
-    
-    const usdcBalance = await publicClient.readContract({
-      ...usdcContract,
-      functionName: 'balanceOf',
-      args: [wallet.address]
-    });
-    
-    const usdcBalanceFormatted = formatUnits(usdcBalance, 6);
+    // Check USDC balance using ethers.js (more reliable)
+    const usdcAbi = ['function balanceOf(address account) external view returns (uint256)'];
+    const usdcContract = new ethers.Contract(CONFIG.USDC_ADDRESS, usdcAbi, provider);
+    const usdcBalance = await usdcContract.balanceOf(wallet.address);
+    const usdcBalanceFormatted = ethers.formatUnits(usdcBalance, 6);
     console.log(`💵 USDC Balance: ${usdcBalanceFormatted} USDC`);
     
     if (parseFloat(usdcBalanceFormatted) >= parseFloat(CONFIG.MIN_USDC_BALANCE)) {

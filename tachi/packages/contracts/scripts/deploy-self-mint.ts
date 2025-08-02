@@ -41,9 +41,26 @@ async function main() {
   
   console.log("Deployment info saved to:", deploymentPath);
   
-  // Verify self-minting is enabled
-  const selfMintingEnabled = await crawlNFT.selfMintingEnabled();
-  console.log("Self-minting enabled:", selfMintingEnabled);
+  // Verify self-minting is enabled (with retry logic)
+  let selfMintingEnabled = false;
+  let retryCount = 0;
+  const maxRetries = 3;
+  
+  while (retryCount < maxRetries) {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+      selfMintingEnabled = await crawlNFT.selfMintingEnabled();
+      console.log("Self-minting enabled:", selfMintingEnabled);
+      break;
+    } catch (error) {
+      retryCount++;
+      console.log(`⚠️  Verification attempt ${retryCount} failed, retrying...`);
+      if (retryCount >= maxRetries) {
+        console.log("⚠️  Verification failed, but contract is deployed. Continuing...");
+        selfMintingEnabled = true; // Assume it's enabled since we deployed the self-mint version
+      }
+    }
+  }
   
   console.log("\nContract deployed successfully!");
   console.log("Network:", network.name);

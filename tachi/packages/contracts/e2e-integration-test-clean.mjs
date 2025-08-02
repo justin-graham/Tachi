@@ -66,6 +66,24 @@ async function deployContracts(provider, wallet) {
     fs.mkdirSync(deploymentDir, { recursive: true });
   }
   
+  // Clear old deployment files to avoid conflicts
+  const filesToClear = [
+    'baseSepolia.json',
+    'payment-processor-baseSepolia.json', 
+    'ledger-baseSepolia.json',
+    'crawlnft-deployment.json',
+    'payment-processor-deployment.json',
+    'proof-of-crawl-ledger-deployment.json'
+  ];
+  
+  filesToClear.forEach(file => {
+    const filePath = path.join(deploymentDir, file);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log(`🗑️  Cleared old deployment file: ${file}`);
+    }
+  });
+  
   const contracts = {};
   
   try {
@@ -90,10 +108,15 @@ async function deployContracts(provider, wallet) {
     });
     console.log(ledgerOutput);
     
-    // Load deployment addresses
-    const nftDeployment = JSON.parse(fs.readFileSync(path.join(deploymentDir, 'crawlnft-deployment.json'), 'utf8'));
-    const processorDeployment = JSON.parse(fs.readFileSync(path.join(deploymentDir, 'payment-processor-deployment.json'), 'utf8'));
-    const ledgerDeployment = JSON.parse(fs.readFileSync(path.join(deploymentDir, 'proof-of-crawl-ledger-deployment.json'), 'utf8'));
+    // Load deployment addresses from actual generated files
+    const nftDeployment = JSON.parse(fs.readFileSync(path.join(deploymentDir, 'baseSepolia.json'), 'utf8'));
+    const processorDeployment = JSON.parse(fs.readFileSync(path.join(deploymentDir, 'payment-processor-baseSepolia.json'), 'utf8'));
+    const ledgerDeployment = JSON.parse(fs.readFileSync(path.join(deploymentDir, 'ledger-baseSepolia.json'), 'utf8'));
+    
+    // Create expected file aliases for compatibility with other scripts
+    fs.writeFileSync(path.join(deploymentDir, 'crawlnft-deployment.json'), JSON.stringify(nftDeployment, null, 2));
+    fs.writeFileSync(path.join(deploymentDir, 'payment-processor-deployment.json'), JSON.stringify(processorDeployment, null, 2));
+    fs.writeFileSync(path.join(deploymentDir, 'ledger-deployment.json'), JSON.stringify(ledgerDeployment, null, 2));
     
     contracts.crawlNFT = nftDeployment.address;
     contracts.paymentProcessor = processorDeployment.address;

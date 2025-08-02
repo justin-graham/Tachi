@@ -20,8 +20,8 @@ async function main() {
   const publisherAddress = deployer.address;
   console.log(`👤 Publisher Address: ${publisherAddress}`);
 
-  // Connect to the CrawlNFT contract
-  const CrawlNFT = await ethers.getContractFactory("CrawlNFT");
+  // Connect to the CrawlNFT contract (using self-mint version)
+  const CrawlNFT = await ethers.getContractFactory("src/CrawlNFTSelfMint.sol:CrawlNFT");
   const crawlNFT = CrawlNFT.attach(deploymentInfo.address);
 
   try {
@@ -45,16 +45,13 @@ async function main() {
       return;
     }
 
-    // Mint a new license
+    // Mint a new license using self-mint function
     console.log("🔨 Minting new publisher license...");
     
-    const domain = "test-publisher.com"; // Test domain
-    const priceInUSDC = ethers.parseUnits("0.01", 6); // 0.01 USDC
+    const termsURI = "ipfs://QmTestTermsURI123456789"; // Test terms URI
     
-    const tx = await crawlNFT.createLicense(
-      domain,
-      priceInUSDC,
-      publisherAddress,
+    const tx = await crawlNFT.mintMyLicense(
+      termsURI,
       { gasLimit: 300000 }
     );
     
@@ -77,8 +74,7 @@ async function main() {
       // Save license info for testing
       const licenseInfo = {
         tokenId: tokenId.toString(),
-        domain,
-        priceInUSDC: priceInUSDC.toString(),
+        termsURI,
         publisher: publisherAddress,
         contractAddress: deploymentInfo.address,
         network: "baseSepolia",
