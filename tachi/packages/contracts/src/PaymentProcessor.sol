@@ -5,11 +5,12 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title PaymentProcessor - On-Chain Payment Toll Booth for Tachi Protocol
 /// @notice A stateless utility contract to accept payments from crawlers and immediately forward them to publishers
 /// @dev Serves as the on-chain "toll booth" for crawl payments using USDC
-contract PaymentProcessor is ReentrancyGuard {
+contract PaymentProcessor is ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
     
     /// @notice The USDC token contract address
@@ -37,9 +38,19 @@ contract PaymentProcessor is ReentrancyGuard {
         string reason
     );
     
+    /// @notice Event emitted when tokens are recovered from the contract
+    /// @param token The address of the recovered token
+    /// @param to The address that received the recovered tokens
+    /// @param amount The amount of tokens recovered
+    event TokenRecovered(
+        address indexed token,
+        address indexed to,
+        uint256 amount
+    );
+    
     /// @dev Constructor sets the USDC token contract address
     /// @param _usdcToken The address of the USDC token contract on Base
-    constructor(address _usdcToken) {
+    constructor(address _usdcToken) Ownable(msg.sender) {
         require(_usdcToken != address(0), "PaymentProcessor: USDC token address cannot be zero");
         usdcToken = IERC20(_usdcToken);
     }
@@ -81,14 +92,8 @@ contract PaymentProcessor is ReentrancyGuard {
         require(crawlNFTContract != address(0), "PaymentProcessor: CrawlNFT contract address cannot be zero");
         require(amount > 0, "PaymentProcessor: Amount must be greater than zero");
         
-        // Get the publisher address from the CrawlNFT contract
-        address publisher;
-        try IERC721(crawlNFTContract).ownerOf(tokenId) returns (address owner) {
-            publisher = owner;
-        } catch {
-            revert("PaymentProcessor: Invalid CrawlNFT token ID or contract");
-        }
-        
+        // Get the publisher address from the CrawlNFT contract - SECURITY FIX: Proper initialization
+        address publisher = IERC721(crawlNFTContract).ownerOf(tokenId);
         require(publisher != address(0), "PaymentProcessor: Publisher address cannot be zero");
         
         // Check if caller has sufficient balance
@@ -114,10 +119,10 @@ contract PaymentProcessor is ReentrancyGuard {
     }
     
     /// @notice Get the USDC allowance from owner to this contract
-    /// @param owner The address of the token owner
+    /// @param tokenOwner The address of the token owner
     /// @return The amount of USDC this contract is allowed to spend
-    function getUSDCAllowance(address owner) external view returns (uint256) {
-        return usdcToken.allowance(owner, address(this));
+    function getUSDCAllowance(address tokenOwner) external view returns (uint256) {
+        return usdcToken.allowance(tokenOwner, address(this));
     }
     
     /// @notice Get the USDC token contract address
@@ -131,11 +136,12 @@ contract PaymentProcessor is ReentrancyGuard {
     /// @param to The address to send the recovered tokens to
     /// @param amount The amount of tokens to recover
     /// @dev This contract should not hold any tokens, but this provides a safety mechanism
+    /// @dev Only the contract owner can call this function
     function emergencyTokenRecovery(
         address token,
         address to,
         uint256 amount
-    ) external {
+    ) external onlyOwner {
         require(to != address(0), "PaymentProcessor: Recovery address cannot be zero");
         require(amount > 0, "PaymentProcessor: Recovery amount must be greater than zero");
         
@@ -144,5 +150,7 @@ contract PaymentProcessor is ReentrancyGuard {
         require(balance >= amount, "PaymentProcessor: Insufficient token balance for recovery");
         
         tokenContract.safeTransfer(to, amount);
+        
+        emit TokenRecovered(token, to, amount);
     }
 }

@@ -13,6 +13,7 @@ import { Globe, Building, Mail, FileText, Upload, Check, AlertTriangle, Eye, Shi
 import { siteDetailsStepSchema, type SiteDetailsStepData } from '@/schemas/site-details'
 import { generateDefaultTermsOfService, validateTermsContent } from '@/utils/terms-template'
 import { IPFSUploader, type IPFSUploadResult } from '@/utils/ipfs-upload'
+import { validateSiteDetails, sanitizeString, isValidDomain } from '@/lib/validation'
 
 interface SiteDetailsStepProps {
   onComplete: (data: SiteDetailsStepData) => void
@@ -32,6 +33,7 @@ export function SiteDetailsStep({ onComplete, isComplete }: SiteDetailsStepProps
   const [useCustomTerms, setUseCustomTerms] = useState(false)
   const [customTerms, setCustomTerms] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
   const {
     register,

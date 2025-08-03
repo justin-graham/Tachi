@@ -7,7 +7,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /// @notice A lightweight on-chain log to record successful crawls for transparency and auditability
 /// @dev Records crawl events after payment verification, providing immutable proof of authorized access
 contract ProofOfCrawlLedger is Ownable {
-    /// @notice Counter for total crawls logged
+    /// @notice Counter tracking the total number of crawls logged
+    /// @dev Incremented with each successful crawl log entry
     uint256 public totalCrawlsLogged;
     
     /// @notice Event emitted when a crawl is successfully logged
@@ -50,11 +51,26 @@ contract ProofOfCrawlLedger is Ownable {
         uint256 indexed logId
     );
     
-    /// @notice Event emitted when the contract is paused or unpaused
-    /// @param paused Whether the contract is paused
-    event ContractPaused(bool paused);
+    /// @notice Event emitted when total crawls counter is reset by administrator
+    /// @param oldTotal The previous total crawls count before reset
+    /// @param newTotal The new total crawls count after reset (typically 0)
+    /// @param admin The administrator address who performed the reset
+    event TotalCrawlsReset(
+        uint256 indexed oldTotal,
+        uint256 indexed newTotal,
+        address indexed admin
+    );
     
-    /// @notice Whether the contract is paused
+    /// @notice Event emitted when the contract's paused state is changed
+    /// @param paused The new paused state (true = paused, false = active)
+    /// @param admin The administrator address who changed the pause state
+    event PausedStateChanged(
+        bool paused,
+        address indexed admin
+    );
+    
+    /// @notice Flag indicating whether the contract is currently paused
+    /// @dev When paused, crawl logging functions cannot be executed
     bool public paused;
     
     /// @dev Constructor sets the initial owner
@@ -69,11 +85,11 @@ contract ProofOfCrawlLedger is Ownable {
         _;
     }
     
-    /// @notice Log a crawl event (basic version)
+    /// @notice Log a crawl event to the blockchain
     /// @param crawlTokenId The CrawlNFT token ID identifying the publisher's content
     /// @param crawler The address of the crawler who performed the crawl
     /// @dev Only the contract owner (protocol admin) can call this function
-    /// @dev This function only emits an event - no persistent storage for gas efficiency
+    /// @dev Emits an event for off-chain indexing and verification
     function logCrawl(uint256 crawlTokenId, address crawler) 
         external 
         onlyOwner 
@@ -93,13 +109,14 @@ contract ProofOfCrawlLedger is Ownable {
         );
     }
     
-    /// @notice Log a crawl event with content hash
+    /// @notice Log a crawl event with detailed content hash information
     /// @param crawlTokenId The CrawlNFT token ID identifying the publisher's content
     /// @param crawler The address of the crawler who performed the crawl
-    /// @param contentHash The hash of the content that was crawled
+    /// @param contentHash The cryptographic hash of the crawled content
     /// @dev Only the contract owner (protocol admin) can call this function
+    /// @dev Provides additional content verification through hash storage
     function logCrawlWithContent(
-        uint256 crawlTokenId, 
+        uint256 crawlTokenId,
         address crawler, 
         bytes32 contentHash
     ) 
@@ -123,13 +140,14 @@ contract ProofOfCrawlLedger is Ownable {
         );
     }
     
-    /// @notice Log a crawl event with URL
+    /// @notice Log a crawl event with the specific URL that was accessed
     /// @param crawlTokenId The CrawlNFT token ID identifying the publisher's content
     /// @param crawler The address of the crawler who performed the crawl
-    /// @param url The URL that was crawled
+    /// @param url The specific URL that was crawled and accessed
     /// @dev Only the contract owner (protocol admin) can call this function
+    /// @dev Useful for tracking specific page or resource access
     function logCrawlWithURL(
-        uint256 crawlTokenId, 
+        uint256 crawlTokenId,
         address crawler, 
         string calldata url
     ) 
@@ -153,10 +171,11 @@ contract ProofOfCrawlLedger is Ownable {
         );
     }
     
-    /// @notice Batch log multiple crawls (gas optimization)
-    /// @param crawlTokenIds Array of CrawlNFT token IDs
-    /// @param crawlers Array of crawler addresses
-    /// @dev Arrays must be the same length
+    /// @notice Log multiple crawl events in a single transaction for gas efficiency
+    /// @param crawlTokenIds Array of CrawlNFT token IDs for the crawled content
+    /// @param crawlers Array of crawler addresses who performed the crawls
+    /// @dev All arrays must be the same length and non-empty
+    /// @dev Gas-optimized batch operation for high-volume crawling
     function logCrawlBatch(
         uint256[] calldata crawlTokenIds,
         address[] calldata crawlers
@@ -185,36 +204,44 @@ contract ProofOfCrawlLedger is Ownable {
         }
     }
     
-    /// @notice Pause or unpause the contract
-    /// @param _paused Whether to pause the contract
+    /// @notice Pause or unpause the contract's crawl logging functionality
+    /// @param _paused Whether to pause the contract (true = pause, false = unpause)
     /// @dev Only the contract owner can call this function
+    /// @dev Useful for emergency stops or maintenance periods
     function setPaused(bool _paused) external onlyOwner {
         paused = _paused;
-        emit ContractPaused(_paused);
+        emit PausedStateChanged(_paused, msg.sender);
     }
     
-    /// @notice Get the total number of crawls logged
-    /// @return The total number of crawls logged
+    /// @notice Get the total number of crawls logged since contract deployment
+    /// @return The current total number of crawl events logged
+    /// @dev This counter increases monotonically unless reset by admin
     function getTotalCrawlsLogged() external view returns (uint256) {
         return totalCrawlsLogged;
     }
     
-    /// @notice Check if the contract is paused
-    /// @return Whether the contract is paused
+    /// @notice Check if the contract is currently paused
+    /// @return True if the contract is paused, false if active
+    /// @dev When paused, crawl logging functions will revert
     function isPaused() external view returns (bool) {
         return paused;
     }
     
-    /// @notice Get contract version
-    /// @return The version of the contract
+    /// @notice Get the current version of this contract
+    /// @return A semantic version string for this contract implementation
+    /// @dev Useful for front-end integration and upgrade tracking
     function getVersion() external pure returns (string memory) {
         return "1.0.0";
     }
     
-    /// @notice Emergency function to reset total crawls counter (admin only)
-    /// @param newTotal The new total to set
-    /// @dev This should only be used in case of migration or emergency
+    /// @notice Emergency function to reset the total crawls counter
+    /// @param newTotal The new total count to set (typically 0 for full reset)
+    /// @dev Only the contract owner can call this function
+    /// @dev Should only be used for contract migration or emergency situations
     function resetTotalCrawls(uint256 newTotal) external onlyOwner {
+        uint256 oldTotal = totalCrawlsLogged;
         totalCrawlsLogged = newTotal;
+        
+        emit TotalCrawlsReset(oldTotal, newTotal, msg.sender);
     }
 }

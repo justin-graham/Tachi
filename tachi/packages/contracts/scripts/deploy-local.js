@@ -9,8 +9,8 @@ async function main() {
   console.log("Deploying contracts with the account:", deployer.address);
   console.log("Account balance:", (await deployer.provider.getBalance(deployer.address)).toString());
 
-  // Simple contract deployment - we'll use a minimal ERC721 for testing
-  const CrawlNFT = await ethers.getContractFactory("CrawlNFT");
+  // Use the self-mint version for local testing
+  const CrawlNFT = await ethers.getContractFactory("src/CrawlNFTSelfMint.sol:CrawlNFT");
   const crawlNFT = await CrawlNFT.deploy();
 
   await crawlNFT.waitForDeployment();

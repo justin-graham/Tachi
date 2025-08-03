@@ -8,26 +8,36 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /// @notice A non-fungible token representing a content license for publishers
 /// @dev Each publisher gets one CrawlNFT as a credential of their participation
 contract CrawlNFT is ERC721, Ownable {
-    /// @notice Counter for token IDs
+    /// @notice Counter for token IDs, incremented for each new license minted
+    /// @dev Starts at 1, ensures token IDs are never 0
     uint256 private _tokenIdCounter;
     
-    /// @notice Mapping from token ID to terms URI
+    /// @notice Mapping from token ID to the URI containing license terms
+    /// @dev Stores IPFS hashes or URIs pointing to publisher's license agreement
     mapping(uint256 => string) private _tokenTermsURI;
     
-    /// @notice Mapping from publisher address to their token ID
+    /// @notice Mapping from publisher address to their unique token ID
+    /// @dev Used to quickly find a publisher's license token
     mapping(address => uint256) private _publisherTokenId;
     
     /// @notice Mapping to track if a publisher already has a license
+    /// @dev Prevents duplicate license minting to the same publisher
     mapping(address => bool) private _hasLicense;
     
-    /// @notice Event emitted when a new license is minted
+    /// @notice Event emitted when a new license is minted to a publisher
+    /// @param publisher The address of the publisher who received the license
+    /// @param tokenId The unique token ID assigned to this license
+    /// @param termsURI The URI containing the license terms and conditions
     event LicenseMinted(
         address indexed publisher,
         uint256 indexed tokenId,
         string termsURI
     );
     
-    /// @notice Event emitted when terms URI is updated
+    /// @notice Event emitted when license terms are updated
+    /// @param tokenId The token ID whose terms were updated
+    /// @param oldTermsURI The previous terms URI
+    /// @param newTermsURI The new terms URI
     event TermsURIUpdated(
         uint256 indexed tokenId,
         string oldTermsURI,
@@ -69,37 +79,50 @@ contract CrawlNFT is ERC721, Ownable {
     }
     
     /// @notice Get the terms URI for a specific token ID
-    /// @param tokenId The token ID to query
-    /// @return The terms URI associated with the token
+    /// @param tokenId The token ID to query for terms
+    /// @return The URI string containing the license terms for this token
+    /// @dev Reverts if the token does not exist
     function getTermsURI(uint256 tokenId) external view returns (string memory) {
         require(_ownerOf(tokenId) != address(0), "CrawlNFT: Token does not exist");
         return _tokenTermsURI[tokenId];
     }
     
-    /// @notice Get the token ID for a publisher
-    /// @param publisher The publisher's address
-    /// @return The token ID owned by the publisher (0 if none)
+    /// @notice Get the token ID owned by a specific publisher
+    /// @param publisher The publisher's address to query
+    /// @return The token ID owned by the publisher (0 if no license)
+    /// @dev Returns 0 if the publisher doesn't have a license
     function getPublisherTokenId(address publisher) external view returns (uint256) {
         return _publisherTokenId[publisher];
     }
     
-    /// @notice Check if a publisher has a license
-    /// @param publisher The publisher's address
+    /// @notice Check if a publisher has an active license
+    /// @param publisher The publisher's address to check
     /// @return True if the publisher has a license, false otherwise
+    /// @dev This is an alias for hasPublisherLicense for backward compatibility
     function hasLicense(address publisher) external view returns (bool) {
         return _hasLicense[publisher];
     }
     
+    /// @notice Check if a publisher has an active license
+    /// @param publisher The publisher's address to check  
+    /// @return True if the publisher has a license, false otherwise
+    /// @dev Primary method for checking publisher license status
+    function hasPublisherLicense(address publisher) external view returns (bool) {
+        return _hasLicense[publisher];
+    }
+    
     /// @notice Get the total number of licenses minted
-    /// @return The total supply of tokens
+    /// @return The total supply of license tokens
+    /// @dev Returns _tokenIdCounter - 1 since counter starts at 1
     function totalSupply() external view returns (uint256) {
         return _tokenIdCounter - 1;
     }
     
-    /// @notice Update the terms URI for a token (owner only)
-    /// @param tokenId The token ID to update
-    /// @param newTermsURI The new terms URI
-    /// @dev This allows for terms updates in case of legal changes
+    /// @notice Update the terms URI for an existing license token
+    /// @param tokenId The token ID whose terms should be updated
+    /// @param newTermsURI The new URI containing updated license terms
+    /// @dev Only the contract owner can update terms
+    /// @dev Allows for legal updates to license agreements
     function updateTermsURI(uint256 tokenId, string calldata newTermsURI) 
         external 
         onlyOwner 
@@ -114,8 +137,10 @@ contract CrawlNFT is ERC721, Ownable {
     }
     
     /// @notice Override tokenURI to return terms URI
-    /// @param tokenId The token ID to query
-    /// @return The token URI (same as terms URI)
+    /// @notice Get the token URI for a specific token ID
+    /// @param tokenId The token ID to query for its URI
+    /// @return The token URI (identical to terms URI for this implementation)
+    /// @dev Required by ERC721 standard, returns the same as getTermsURI()
     function tokenURI(uint256 tokenId) 
         public 
         view 
@@ -126,11 +151,12 @@ contract CrawlNFT is ERC721, Ownable {
         return _tokenTermsURI[tokenId];
     }
     
-    /// @notice Override _update to make tokens soulbound (non-transferable)
+    /// @notice Override transfer function to enforce soulbound property
     /// @param to The address tokens are being transferred to
-    /// @param tokenId The token ID being transferred
+    /// @param tokenId The token ID being transferred  
     /// @param auth The address authorized to perform the transfer
-    /// @dev Allows minting but prevents all other transfers
+    /// @return The previous owner of the token
+    /// @dev Allows minting (from == address(0)) and burning but prevents transfers
     function _update(
         address to,
         uint256 tokenId,
@@ -143,7 +169,7 @@ contract CrawlNFT is ERC721, Ownable {
             revert("CrawlNFT: Token is soulbound and cannot be transferred");
         }
         
-        // If burning (to == address(0)), update tracking
+        // If burning (to == address(0)), update tracking mappings
         if (to == address(0) && from != address(0)) {
             _hasLicense[from] = false;
             _publisherTokenId[from] = 0;
@@ -152,17 +178,19 @@ contract CrawlNFT is ERC721, Ownable {
         return super._update(to, tokenId, auth);
     }
     
-    /// @notice Burn a license token (owner only)
+    /// @notice Burn a license token, revoking the publisher's license
     /// @param tokenId The token ID to burn
-    /// @dev Allows revocation of licenses if needed
+    /// @dev Only the contract owner can burn tokens
+    /// @dev Updates all tracking mappings when burning
     function burn(uint256 tokenId) external onlyOwner {
         require(_ownerOf(tokenId) != address(0), "CrawlNFT: Token does not exist");
         _burn(tokenId);
     }
     
-    /// @notice Override supportsInterface to include ERC721 interfaces
-    /// @param interfaceId The interface ID to check
-    /// @return True if the interface is supported
+    /// @notice Check which interfaces this contract supports
+    /// @param interfaceId The interface identifier to check
+    /// @return True if the interface is supported, false otherwise
+    /// @dev Required by ERC165 standard
     function supportsInterface(bytes4 interfaceId) 
         public 
         view 

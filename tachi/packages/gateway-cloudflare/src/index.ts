@@ -21,6 +21,155 @@ interface Env {
   CRAWL_TOKEN_ID: string;
   PRICE_USDC: string; // Price in USDC (e.g., "1.0")
   PUBLISHER_ADDRESS: string;
+  // KV namespace for storing used transaction hashes
+  USED_TX_HASHES?: KVNamespace;
+  // Security configuration
+  RATE_LIMIT_REQUESTS?: string; // requests per minute
+  MAX_REQUEST_SIZE?: string; // max request size in bytes
+  ENABLE_LOGGING?: string; // enable security logging
+}
+
+// Input validation and sanitization
+interface SanitizedHeaders {
+  userAgent: string;
+  authorization: string;
+  origin?: string;
+  referer?: string;
+}
+
+// Rate limiting store (using KV in production)
+const RATE_LIMIT_PREFIX = 'rate_limit:';
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+
+// Security configuration
+const MAX_HEADER_LENGTH = 500;
+const MAX_REQUEST_SIZE = 1024 * 1024; // 1MB
+const DEFAULT_RATE_LIMIT = 100; // requests per minute
+
+/**
+ * Sanitize and validate input strings
+ */
+function sanitizeString(input: string, maxLength: number = MAX_HEADER_LENGTH): string {
+  if (!input || typeof input !== 'string') {
+    return '';
+  }
+  
+  return input
+    .slice(0, maxLength)
+    .replace(/[<>\"'&\x00-\x1f\x7f-\x9f]/g, '') // Remove control chars and dangerous characters
+    .replace(/javascript:/gi, '')
+    .replace(/data:/gi, '')
+    .replace(/vbscript:/gi, '')
+    .trim();
+}
+
+/**
+ * Validate and sanitize request headers
+ */
+function sanitizeHeaders(request: Request): SanitizedHeaders {
+  const userAgent = sanitizeString(request.headers.get('User-Agent') || '', 500);
+  const authorization = sanitizeString(request.headers.get('Authorization') || '', 200);
+  const origin = request.headers.get('Origin');
+  const referer = request.headers.get('Referer');
+  
+  return {
+    userAgent,
+    authorization,
+    origin: origin ? sanitizeString(origin, 255) : undefined,
+    referer: referer ? sanitizeString(referer, 500) : undefined
+  };
+}
+
+/**
+ * Check request size limits
+ */
+function validateRequestSize(request: Request, maxSize: number = MAX_REQUEST_SIZE): boolean {
+  const contentLength = request.headers.get('Content-Length');
+  if (contentLength) {
+    const size = parseInt(contentLength, 10);
+    return size <= maxSize;
+  }
+  return true; // If no content-length header, assume it's valid
+}
+
+/**
+ * Rate limiting using KV storage
+ */
+async function checkRateLimit(
+  request: Request, 
+  env: Env, 
+  limit: number = DEFAULT_RATE_LIMIT
+): Promise<{ allowed: boolean; remaining: number }> {
+  const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const key = `${RATE_LIMIT_PREFIX}${clientIP}`;
+  
+  if (!env.USED_TX_HASHES) {
+    // Fallback: allow if KV not available
+    return { allowed: true, remaining: limit };
+  }
+  
+  try {
+    const now = Date.now();
+    const windowStart = now - RATE_LIMIT_WINDOW;
+    
+    // Get current count
+    const currentData = await env.USED_TX_HASHES.get(key);
+    let requests: number[] = currentData ? JSON.parse(currentData) : [];
+    
+    // Filter out old requests
+    requests = requests.filter(timestamp => timestamp > windowStart);
+    
+    // Check if limit exceeded
+    if (requests.length >= limit) {
+      return { allowed: false, remaining: 0 };
+    }
+    
+    // Add current request
+    requests.push(now);
+    
+    // Store updated data
+    await env.USED_TX_HASHES.put(key, JSON.stringify(requests), {
+      expirationTtl: Math.ceil(RATE_LIMIT_WINDOW / 1000)
+    });
+    
+    return { allowed: true, remaining: limit - requests.length };
+  } catch (error) {
+    console.error('Rate limiting error:', error);
+    // Fail open: allow request if rate limiting fails
+    return { allowed: true, remaining: limit };
+  }
+}
+
+/**
+ * Create standardized error response
+ */
+function createErrorResponse(
+  type: 'payment' | 'auth' | 'validation' | 'rate_limit' | 'size_limit',
+  status: number = 400,
+  details?: string
+): Response {
+  const errors = {
+    payment: 'Payment verification failed',
+    auth: 'Authentication required',
+    validation: 'Invalid request format',
+    rate_limit: 'Rate limit exceeded',
+    size_limit: 'Request too large'
+  };
+  
+  const message = errors[type];
+  
+  // In production, avoid exposing detailed error information
+  const body = process.env.NODE_ENV === 'production' 
+    ? { error: message }
+    : { error: message, details };
+  
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
 }
 
 // Known AI crawler user agents
@@ -135,12 +284,29 @@ function createPaymentRequiredResponse(env: Env): Response {
 
 /**
  * Verifies payment by checking the transaction receipt
+ * Includes replay attack protection
  */
 async function verifyPayment(
   txHash: string,
   env: Env
 ): Promise<{ isValid: boolean; crawlerAddress?: string; error?: string }> {
   try {
+    // ✅ SECURITY: Check for transaction hash replay
+    if (env.USED_TX_HASHES) {
+      const lastUsed = await env.USED_TX_HASHES.get(txHash);
+      if (lastUsed) {
+        const lastUsedTime = parseInt(lastUsed);
+        const currentTime = Date.now();
+        // Prevent reuse within 1 hour
+        if (currentTime - lastUsedTime < 3600000) {
+          return { 
+            isValid: false, 
+            error: 'Transaction hash already used recently' 
+          };
+        }
+      }
+    }
+
     // Create public client for Base network
     const publicClient = createPublicClient({
       chain: base,
@@ -240,6 +406,13 @@ async function verifyPayment(
       };
     }
 
+    // ✅ SECURITY: Mark transaction hash as used to prevent replay
+    if (env.USED_TX_HASHES && crawlerAddress) {
+      await env.USED_TX_HASHES.put(txHash, Date.now().toString(), {
+        expirationTtl: 3600 // Expire after 1 hour
+      });
+    }
+
     return { isValid: true, crawlerAddress };
 
   } catch (error) {
@@ -305,95 +478,107 @@ function handleCORS(request: Request): Response | null {
  */
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    // Handle CORS preflight
-    const corsResponse = handleCORS(request);
-    if (corsResponse) return corsResponse;
+    try {
+      // Validate request size
+      const maxSize = env.MAX_REQUEST_SIZE ? parseInt(env.MAX_REQUEST_SIZE) : MAX_REQUEST_SIZE;
+      if (!validateRequestSize(request, maxSize)) {
+        return createErrorResponse('size_limit', 413);
+      }
+      
+      // Rate limiting
+      const rateLimit = env.RATE_LIMIT_REQUESTS ? parseInt(env.RATE_LIMIT_REQUESTS) : DEFAULT_RATE_LIMIT;
+      const rateLimitCheck = await checkRateLimit(request, env, rateLimit);
+      
+      if (!rateLimitCheck.allowed) {
+        const response = createErrorResponse('rate_limit', 429);
+        response.headers.set('Retry-After', '60');
+        response.headers.set('X-RateLimit-Limit', rateLimit.toString());
+        response.headers.set('X-RateLimit-Remaining', '0');
+        return response;
+      }
+      
+      // Handle CORS preflight
+      const corsResponse = handleCORS(request);
+      if (corsResponse) return corsResponse;
 
-    const userAgent = request.headers.get('User-Agent') || '';
-    const authorization = request.headers.get('Authorization');
-    const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+      // Sanitize and validate headers
+      const headers = sanitizeHeaders(request);
+      const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
 
-    // Check if request is from AI crawler
-    if (!isAICrawler(userAgent)) {
-      // Not an AI crawler - pass through to origin
-      return fetch(request);
-    }
+      // Security logging
+      if (env.ENABLE_LOGGING === 'true') {
+        console.log(`Request from ${clientIP}: ${headers.userAgent}`);
+      }
 
-    console.log(`AI crawler detected: ${userAgent} from ${clientIP}`);
+      // Check if request is from AI crawler
+      if (!isAICrawler(headers.userAgent)) {
+        // Not an AI crawler - pass through to origin
+        return fetch(request);
+      }
 
-    // Check if authorization header is present
-    if (!authorization) {
-      // No payment proof - return 402 Payment Required
-      return createPaymentRequiredResponse(env);
-    }
+      console.log(`AI crawler detected: ${headers.userAgent} from ${clientIP}`);
 
-    // Extract transaction hash from Authorization header
-    const txHash = extractTxHash(authorization);
-    if (!txHash) {
-      return new Response('Invalid authorization format. Use: Bearer <transaction_hash>', {
-        status: 400,
-        headers: {
-          'Content-Type': 'text/plain',
-          'Access-Control-Allow-Origin': '*',
-        },
+      // Check if authorization header is present
+      if (!headers.authorization) {
+        // No payment proof - return 402 Payment Required
+        return createPaymentRequiredResponse(env);
+      }
+
+      // Extract transaction hash from Authorization header
+      const txHash = extractTxHash(headers.authorization);
+      if (!txHash) {
+        return createErrorResponse('validation', 400, 'Invalid authorization format. Use: Bearer <transaction_hash>');
+      }
+
+      // Verify payment
+      const verification = await verifyPayment(txHash, env);
+      if (!verification.isValid) {
+        return createErrorResponse('payment', 402, verification.error);
+      }
+
+      console.log(`Payment verified for crawler: ${verification.crawlerAddress}`);
+
+      // Payment is valid - fetch content from origin
+      const originRequest = new Request(request.url, {
+        method: request.method,
+        headers: request.headers,
+        body: request.body,
       });
+
+      // Remove authorization header when forwarding to origin
+      originRequest.headers.delete('Authorization');
+
+      const originResponse = await fetch(originRequest);
+
+      // Asynchronously log the crawl on-chain (fire-and-forget)
+      if (verification.crawlerAddress) {
+        ctx.waitUntil(
+          logCrawlOnChain(
+            env.CRAWL_TOKEN_ID,
+            verification.crawlerAddress,
+            env
+          )
+        );
+      }
+
+      // Add security headers and CORS to response
+      const response = new Response(originResponse.body, {
+        status: originResponse.status,
+        statusText: originResponse.statusText,
+        headers: originResponse.headers,
+      });
+
+      response.headers.set('Access-Control-Allow-Origin', '*');
+      response.headers.set('X-Crawler-Verified', 'true');
+      response.headers.set('X-Payment-Hash', txHash);
+      response.headers.set('X-RateLimit-Limit', rateLimit.toString());
+      response.headers.set('X-RateLimit-Remaining', rateLimitCheck.remaining.toString());
+
+      return response;
+      
+    } catch (error) {
+      console.error('Worker error:', error);
+      return createErrorResponse('validation', 500, 'Internal server error');
     }
-
-    // Verify payment
-    const verification = await verifyPayment(txHash, env);
-    if (!verification.isValid) {
-      return new Response(
-        JSON.stringify({
-          error: 'Payment verification failed',
-          message: verification.error,
-          txHash,
-        }),
-        {
-          status: 402,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    }
-
-    console.log(`Payment verified for crawler: ${verification.crawlerAddress}`);
-
-    // Payment is valid - fetch content from origin
-    const originRequest = new Request(request.url, {
-      method: request.method,
-      headers: request.headers,
-      body: request.body,
-    });
-
-    // Remove authorization header when forwarding to origin
-    originRequest.headers.delete('Authorization');
-
-    const originResponse = await fetch(originRequest);
-
-    // Asynchronously log the crawl on-chain (fire-and-forget)
-    if (verification.crawlerAddress) {
-      ctx.waitUntil(
-        logCrawlOnChain(
-          env.CRAWL_TOKEN_ID,
-          verification.crawlerAddress,
-          env
-        )
-      );
-    }
-
-    // Add CORS headers to response
-    const response = new Response(originResponse.body, {
-      status: originResponse.status,
-      statusText: originResponse.statusText,
-      headers: originResponse.headers,
-    });
-
-    response.headers.set('Access-Control-Allow-Origin', '*');
-    response.headers.set('X-Crawler-Verified', 'true');
-    response.headers.set('X-Payment-Hash', txHash);
-
-    return response;
   },
 } satisfies ExportedHandler<Env>;

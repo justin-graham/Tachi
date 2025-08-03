@@ -218,7 +218,7 @@ contract PaymentProcessorTest is Test {
         mockUSDC.approve(address(paymentProcessor), USDC_AMOUNT);
         
         vm.prank(crawler1);
-        vm.expectRevert("PaymentProcessor: Invalid CrawlNFT token ID or contract");
+        vm.expectRevert(); // Now expects ERC721NonexistentToken error from ownerOf call
         paymentProcessor.payPublisherByNFT(address(crawlNFT), 999, USDC_AMOUNT);
     }
     

@@ -41,7 +41,7 @@ contract ProofOfCrawlLedgerTest is Test {
         uint256 indexed logId
     );
     
-    event ContractPaused(bool paused);
+    event PausedStateChanged(bool paused, address indexed admin);
     
     function setUp() public {
         vm.prank(owner);
@@ -228,7 +228,7 @@ contract ProofOfCrawlLedgerTest is Test {
         assertEq(ledger.isPaused(), false);
         
         vm.expectEmit(true, true, true, true);
-        emit ContractPaused(true);
+        emit PausedStateChanged(true, owner);
         
         vm.prank(owner);
         ledger.setPaused(true);
@@ -237,7 +237,7 @@ contract ProofOfCrawlLedgerTest is Test {
         
         // Test unpausing
         vm.expectEmit(true, true, true, true);
-        emit ContractPaused(false);
+        emit PausedStateChanged(false, owner);
         
         vm.prank(owner);
         ledger.setPaused(false);
