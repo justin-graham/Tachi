@@ -4,3 +4,6 @@
 [submodule "tachi/packages/contracts/lib/openzeppelin-contracts"]
 	path = tachi/packages/contracts/lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
+[submodule "tachi/packages/contracts/lib/openzeppelin-contracts-upgradeable"]
+	path = tachi/packages/contracts/lib/openzeppelin-contracts-upgradeable
+	url = https://github.com/openzeppelin/openzeppelin-contracts-upgradeable

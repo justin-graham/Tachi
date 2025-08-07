@@ -10,6 +10,8 @@ import {
 } from 'viem';
 import { base } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
+import { initSentry, withSentryTracing, sendHeartbeat } from './sentry-config';
+import './types/rate-limiter';
 
 // Environment variables interface for type safety
 interface Env {
@@ -23,10 +25,16 @@ interface Env {
   PUBLISHER_ADDRESS: string;
   // KV namespace for storing used transaction hashes
   USED_TX_HASHES?: KVNamespace;
+  // Rate Limiter binding
+  RATE_LIMITER?: RateLimiterNamespace;
   // Security configuration
   RATE_LIMIT_REQUESTS?: string; // requests per minute
   MAX_REQUEST_SIZE?: string; // max request size in bytes
   ENABLE_LOGGING?: string; // enable security logging
+  // Monitoring configuration
+  SENTRY_DSN?: string;
+  ENVIRONMENT?: string;
+  BETTER_UPTIME_HEARTBEAT_URL?: string;
 }
 
 // Input validation and sanitization
@@ -93,51 +101,76 @@ function validateRequestSize(request: Request, maxSize: number = MAX_REQUEST_SIZ
 }
 
 /**
- * Rate limiting using KV storage
+ * Enhanced rate limiting using Cloudflare Rate Limiter binding
  */
 async function checkRateLimit(
   request: Request, 
   env: Env, 
   limit: number = DEFAULT_RATE_LIMIT
-): Promise<{ allowed: boolean; remaining: number }> {
+): Promise<{ allowed: boolean; remaining: number; resetTime?: number }> {
   const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
-  const key = `${RATE_LIMIT_PREFIX}${clientIP}`;
+  const key = `${clientIP}:${request.url}`;
   
-  if (!env.USED_TX_HASHES) {
-    // Fallback: allow if KV not available
-    return { allowed: true, remaining: limit };
-  }
-  
-  try {
-    const now = Date.now();
-    const windowStart = now - RATE_LIMIT_WINDOW;
-    
-    // Get current count
-    const currentData = await env.USED_TX_HASHES.get(key);
-    let requests: number[] = currentData ? JSON.parse(currentData) : [];
-    
-    // Filter out old requests
-    requests = requests.filter(timestamp => timestamp > windowStart);
-    
-    // Check if limit exceeded
-    if (requests.length >= limit) {
-      return { allowed: false, remaining: 0 };
+  // Try Cloudflare Rate Limiter binding first
+  if (env.RATE_LIMITER) {
+    try {
+      const rateLimitResult = await env.RATE_LIMITER.limit({ key });
+      
+      return {
+        allowed: rateLimitResult.success,
+        remaining: rateLimitResult.success ? (limit - (rateLimitResult.count || 0)) : 0,
+        resetTime: rateLimitResult.success ? Date.now() + 60000 : undefined // 1 minute window
+      };
+    } catch (error) {
+      console.error('Cloudflare Rate Limiter error:', error);
+      // Fall through to KV-based rate limiting
     }
-    
-    // Add current request
-    requests.push(now);
-    
-    // Store updated data
-    await env.USED_TX_HASHES.put(key, JSON.stringify(requests), {
-      expirationTtl: Math.ceil(RATE_LIMIT_WINDOW / 1000)
-    });
-    
-    return { allowed: true, remaining: limit - requests.length };
-  } catch (error) {
-    console.error('Rate limiting error:', error);
-    // Fail open: allow request if rate limiting fails
-    return { allowed: true, remaining: limit };
   }
+  
+  // Fallback to KV-based rate limiting
+  if (env.USED_TX_HASHES) {
+    try {
+      const now = Date.now();
+      const windowStart = now - RATE_LIMIT_WINDOW;
+      const kvKey = `${RATE_LIMIT_PREFIX}${clientIP}`;
+      
+      // Get current count
+      const currentData = await env.USED_TX_HASHES.get(kvKey);
+      let requests: number[] = currentData ? JSON.parse(currentData) : [];
+      
+      // Filter out old requests
+      requests = requests.filter(timestamp => timestamp > windowStart);
+      
+      // Check if limit exceeded
+      if (requests.length >= limit) {
+        return { 
+          allowed: false, 
+          remaining: 0,
+          resetTime: Math.min(...requests) + RATE_LIMIT_WINDOW
+        };
+      }
+      
+      // Add current request
+      requests.push(now);
+      
+      // Store updated data
+      await env.USED_TX_HASHES.put(kvKey, JSON.stringify(requests), {
+        expirationTtl: Math.ceil(RATE_LIMIT_WINDOW / 1000)
+      });
+      
+      return { 
+        allowed: true, 
+        remaining: limit - requests.length,
+        resetTime: now + RATE_LIMIT_WINDOW
+      };
+    } catch (error) {
+      console.error('KV Rate limiting error:', error);
+    }
+  }
+  
+  // Ultimate fallback: allow request if rate limiting fails
+  console.warn('Rate limiting unavailable - allowing request');
+  return { allowed: true, remaining: limit };
 }
 
 /**
@@ -146,7 +179,8 @@ async function checkRateLimit(
 function createErrorResponse(
   type: 'payment' | 'auth' | 'validation' | 'rate_limit' | 'size_limit',
   status: number = 400,
-  details?: string
+  details?: string,
+  env?: Env
 ): Response {
   const errors = {
     payment: 'Payment verification failed',
@@ -159,17 +193,47 @@ function createErrorResponse(
   const message = errors[type];
   
   // In production, avoid exposing detailed error information
-  const body = process.env.NODE_ENV === 'production' 
+  const body = env?.ENVIRONMENT === 'production' 
     ? { error: message }
     : { error: message, details };
   
-  return new Response(JSON.stringify(body), {
+  const response = new Response(JSON.stringify(body), {
     status,
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
     },
   });
+  
+  // Add security headers to error responses
+  addSecurityHeaders(response);
+  return response;
+}
+
+/**
+ * Add comprehensive security headers to response
+ */
+function addSecurityHeaders(response: Response): void {
+  // Strict Transport Security - Force HTTPS
+  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  
+  // Prevent MIME type sniffing
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  
+  // Prevent clickjacking
+  response.headers.set('X-Frame-Options', 'DENY');
+  
+  // Basic Content Security Policy
+  response.headers.set('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; media-src 'self'; child-src 'none';");
+  
+  // Additional security headers
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  
+  // Remove server identifying headers
+  response.headers.delete('Server');
+  response.headers.delete('X-Powered-By');
 }
 
 // Known AI crawler user agents
@@ -457,11 +521,11 @@ async function logCrawlOnChain(
 }
 
 /**
- * Handles CORS preflight requests
+ * Handles CORS preflight requests with security headers
  */
 function handleCORS(request: Request): Response | null {
   if (request.method === 'OPTIONS') {
-    return new Response(null, {
+    const response = new Response(null, {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -469,6 +533,10 @@ function handleCORS(request: Request): Response | null {
         'Access-Control-Max-Age': '86400',
       },
     });
+    
+    // Add security headers to CORS responses
+    addSecurityHeaders(response);
+    return response;
   }
   return null;
 }
@@ -478,31 +546,45 @@ function handleCORS(request: Request): Response | null {
  */
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    try {
-      // Validate request size
-      const maxSize = env.MAX_REQUEST_SIZE ? parseInt(env.MAX_REQUEST_SIZE) : MAX_REQUEST_SIZE;
-      if (!validateRequestSize(request, maxSize)) {
-        return createErrorResponse('size_limit', 413);
-      }
-      
-      // Rate limiting
-      const rateLimit = env.RATE_LIMIT_REQUESTS ? parseInt(env.RATE_LIMIT_REQUESTS) : DEFAULT_RATE_LIMIT;
-      const rateLimitCheck = await checkRateLimit(request, env, rateLimit);
-      
-      if (!rateLimitCheck.allowed) {
-        const response = createErrorResponse('rate_limit', 429);
-        response.headers.set('Retry-After', '60');
-        response.headers.set('X-RateLimit-Limit', rateLimit.toString());
-        response.headers.set('X-RateLimit-Remaining', '0');
-        return response;
-      }
-      
-      // Handle CORS preflight
-      const corsResponse = handleCORS(request);
-      if (corsResponse) return corsResponse;
+    // Initialize Sentry monitoring
+    if (env.SENTRY_DSN) {
+      initSentry(env);
+    }
+    
+    // Send heartbeat for uptime monitoring
+    if (env.BETTER_UPTIME_HEARTBEAT_URL) {
+      ctx.waitUntil(sendHeartbeat(env.BETTER_UPTIME_HEARTBEAT_URL));
+    }
+    
+    return withSentryTracing('gateway-request', async () => {
+      try {
+        // Validate request size
+        const maxSize = env.MAX_REQUEST_SIZE ? parseInt(env.MAX_REQUEST_SIZE) : MAX_REQUEST_SIZE;
+        if (!validateRequestSize(request, maxSize)) {
+          return createErrorResponse('size_limit', 413, undefined, env);
+        }
+        
+        // Rate limiting with enhanced error response
+        const rateLimit = env.RATE_LIMIT_REQUESTS ? parseInt(env.RATE_LIMIT_REQUESTS) : DEFAULT_RATE_LIMIT;
+        const rateLimitCheck = await checkRateLimit(request, env, rateLimit);
+        
+        if (!rateLimitCheck.allowed) {
+          const response = createErrorResponse('rate_limit', 429, `Rate limit of ${rateLimit} requests per minute exceeded`, env);
+          response.headers.set('Retry-After', '60');
+          response.headers.set('X-RateLimit-Limit', rateLimit.toString());
+          response.headers.set('X-RateLimit-Remaining', '0');
+          if (rateLimitCheck.resetTime) {
+            response.headers.set('X-RateLimit-Reset', Math.ceil(rateLimitCheck.resetTime / 1000).toString());
+          }
+          return response;
+        }
+        
+        // Handle CORS preflight
+        const corsResponse = handleCORS(request);
+        if (corsResponse) return corsResponse;
 
-      // Sanitize and validate headers
-      const headers = sanitizeHeaders(request);
+        // Sanitize and validate headers
+        const headers = sanitizeHeaders(request);
       const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
 
       // Security logging
@@ -512,8 +594,17 @@ export default {
 
       // Check if request is from AI crawler
       if (!isAICrawler(headers.userAgent)) {
-        // Not an AI crawler - pass through to origin
-        return fetch(request);
+        // Not an AI crawler - pass through to origin with security headers
+        const originResponse = await fetch(request);
+        const secureResponse = new Response(originResponse.body, {
+          status: originResponse.status,
+          statusText: originResponse.statusText,
+          headers: originResponse.headers,
+        });
+        
+        // Add security headers to all responses
+        addSecurityHeaders(secureResponse);
+        return secureResponse;
       }
 
       console.log(`AI crawler detected: ${headers.userAgent} from ${clientIP}`);
@@ -527,13 +618,13 @@ export default {
       // Extract transaction hash from Authorization header
       const txHash = extractTxHash(headers.authorization);
       if (!txHash) {
-        return createErrorResponse('validation', 400, 'Invalid authorization format. Use: Bearer <transaction_hash>');
+        return createErrorResponse('validation', 400, 'Invalid authorization format. Use: Bearer <transaction_hash>', env);
       }
 
       // Verify payment
       const verification = await verifyPayment(txHash, env);
       if (!verification.isValid) {
-        return createErrorResponse('payment', 402, verification.error);
+        return createErrorResponse('payment', 402, verification.error, env);
       }
 
       console.log(`Payment verified for crawler: ${verification.crawlerAddress}`);
@@ -568,17 +659,25 @@ export default {
         headers: originResponse.headers,
       });
 
+      // CORS and application-specific headers
       response.headers.set('Access-Control-Allow-Origin', '*');
       response.headers.set('X-Crawler-Verified', 'true');
       response.headers.set('X-Payment-Hash', txHash);
       response.headers.set('X-RateLimit-Limit', rateLimit.toString());
       response.headers.set('X-RateLimit-Remaining', rateLimitCheck.remaining.toString());
+      if (rateLimitCheck.resetTime) {
+        response.headers.set('X-RateLimit-Reset', Math.ceil(rateLimitCheck.resetTime / 1000).toString());
+      }
+      
+      // Add comprehensive security headers
+      addSecurityHeaders(response);
 
       return response;
       
-    } catch (error) {
-      console.error('Worker error:', error);
-      return createErrorResponse('validation', 500, 'Internal server error');
-    }
+      } catch (error) {
+        console.error('Worker error:', error);
+        return createErrorResponse('validation', 500, 'Internal server error', env);
+      }
+    });
   },
 } satisfies ExportedHandler<Env>;

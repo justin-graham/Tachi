@@ -10,7 +10,9 @@
     "deploy": "wrangler deploy",
     "test": "jest",
     "test:gateway": "node test-gateway.mjs",
+    "test:security": "node security-test.mjs",
     "test:local": "wrangler dev --local & sleep 3 && TEST_URL=http://localhost:8787 node test-gateway.mjs",
+    "test:security:local": "wrangler dev --local & sleep 3 && node security-test.mjs; pkill -f 'wrangler dev'",
     "lint": "eslint src --ext .ts",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit"
@@ -24,6 +26,7 @@
     "wrangler": "^4.24.4"
   },
   "dependencies": {
+    "@sentry/browser": "^10.0.0",
     "viem": "^2.21.0"
   }
 }

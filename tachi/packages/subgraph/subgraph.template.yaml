@@ -1,0 +1,70 @@
+specVersion: 1.2.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: CrawlNFTUpgradeable
+    network: {{network}}
+    source:
+      address: "{{crawlNFTAddress}}"
+      abi: CrawlNFTUpgradeable
+      startBlock: {{crawlNFTStartBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Publisher
+        - License
+        - LicenseActivity
+      abis:
+        - name: CrawlNFTUpgradeable
+          file: ./abis/CrawlNFTUpgradeable.json
+      eventHandlers:
+        - event: LicenseMinted(indexed address,indexed uint256,string)
+          handler: handleLicenseMinted
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+        - event: BaseURIUpdated(string)
+          handler: handleBaseURIUpdated
+      file: ./src/crawl-nft.ts
+  - kind: ethereum
+    name: PaymentProcessorUpgradeable
+    network: {{network}}
+    source:
+      address: "{{paymentProcessorAddress}}"
+      abi: PaymentProcessorUpgradeable
+      startBlock: {{paymentProcessorStartBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - CrawlEvent
+        - Payment
+        - Publisher
+        - ProtocolStats
+        - DailyStats
+      abis:
+        - name: PaymentProcessorUpgradeable
+          file: ./abis/PaymentProcessorUpgradeable.json
+        - name: CrawlNFTUpgradeable
+          file: ./abis/CrawlNFTUpgradeable.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: CrawlRequested(indexed address,indexed address,indexed uint256,uint256,uint256,string)
+          handler: handleCrawlRequested
+        - event: FeesWithdrawn(indexed address,uint256)
+          handler: handleFeesWithdrawn
+        - event: ProtocolFeesWithdrawn(indexed address,uint256)
+          handler: handleProtocolFeesWithdrawn
+        - event: BaseCrawlFeeUpdated(uint256)
+          handler: handleBaseCrawlFeeUpdated
+        - event: ProtocolFeePercentUpdated(uint256)
+          handler: handleProtocolFeePercentUpdated
+        - event: FeeRecipientUpdated(indexed address)
+          handler: handleFeeRecipientUpdated
+      file: ./src/payment-processor.ts

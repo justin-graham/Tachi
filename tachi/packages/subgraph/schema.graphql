@@ -1,0 +1,456 @@
+type Publisher @entity {
+  "Publisher wallet address"
+  id: Bytes! # address
+  
+  "Publisher licenses owned"
+  licenses: [License!]! @derivedFrom(field: "publisher")
+  
+  "Total earnings in USDC (wei)"
+  totalEarnings: BigInt!
+  
+  "Total number of crawls"
+  totalCrawls: BigInt!
+  
+  "Total fees withdrawn"
+  totalWithdrawn: BigInt!
+  
+  "Number of active licenses"
+  activeLicenses: BigInt!
+  
+  "Average earning per crawl"
+  averageEarningPerCrawl: BigDecimal!
+  
+  "Publisher activities"
+  activities: [PublisherActivity!]! @derivedFrom(field: "publisher")
+  
+  "Daily statistics"
+  dailyStats: [PublisherDailyStats!]! @derivedFrom(field: "publisher")
+  
+  "First transaction timestamp"
+  firstCrawlAt: BigInt
+  
+  "Last transaction timestamp"
+  lastCrawlAt: BigInt
+  
+  "Created at block timestamp"
+  createdAt: BigInt!
+  
+  "Last updated block timestamp"
+  updatedAt: BigInt!
+}
+
+type License @entity {
+  "Token ID"
+  id: Bytes! # tokenId as bytes
+  
+  "Token ID as number"
+  tokenId: BigInt!
+  
+  "Publisher who owns this license"
+  publisher: Publisher!
+  
+  "Domain associated with this license"
+  domain: String!
+  
+  "License metadata URI"
+  tokenURI: String
+  
+  "All crawl events for this license"
+  crawls: [CrawlEvent!]! @derivedFrom(field: "license")
+  
+  "Total earnings from this license"
+  totalEarnings: BigInt!
+  
+  "Total crawls for this license"
+  totalCrawls: BigInt!
+  
+  "Average earning per crawl for this license"
+  averageEarningPerCrawl: BigDecimal!
+  
+  "License activities"
+  activities: [LicenseActivity!]! @derivedFrom(field: "license")
+  
+  "Daily statistics for this license"
+  dailyStats: [LicenseDailyStats!]! @derivedFrom(field: "license")
+  
+  "Minted at block timestamp"
+  mintedAt: BigInt!
+  
+  "Minted at block number"
+  mintedAtBlock: BigInt!
+  
+  "Minted transaction hash"
+  mintedTxHash: Bytes!
+  
+  "Last crawl timestamp"
+  lastCrawlAt: BigInt
+  
+  "Status of the license"
+  isActive: Boolean!
+}
+
+type CrawlEvent @entity {
+  "Transaction hash + log index"
+  id: Bytes!
+  
+  "Address that requested the crawl"
+  requester: Bytes!
+  
+  "Publisher receiving payment"
+  publisher: Publisher!
+  
+  "License being accessed"
+  license: License!
+  
+  "Token ID being accessed"
+  tokenId: BigInt!
+  
+  "Payment amount in USDC (wei)"
+  amount: BigInt!
+  
+  "Protocol fee amount"
+  protocolFee: BigInt!
+  
+  "Net amount to publisher (amount - protocolFee)"
+  netAmount: BigInt!
+  
+  "Target URL being crawled"
+  targetUrl: String!
+  
+  "Block timestamp"
+  timestamp: BigInt!
+  
+  "Block number"
+  blockNumber: BigInt!
+  
+  "Transaction hash"
+  transactionHash: Bytes!
+  
+  "Gas price used"
+  gasPrice: BigInt
+  
+  "Gas used"
+  gasUsed: BigInt
+}
+
+type Payment @entity {
+  "Transaction hash"
+  id: Bytes!
+  
+  "Type of payment (CRAWL_PAYMENT, FEE_WITHDRAWAL, PROTOCOL_FEE_WITHDRAWAL)"
+  type: PaymentType!
+  
+  "Publisher (for withdrawals) or crawler (for payments)"
+  account: Bytes!
+  
+  "Amount in USDC (wei)"
+  amount: BigInt!
+  
+  "Related crawl event (if type is CRAWL_PAYMENT)"
+  crawlEvent: CrawlEvent
+  
+  "Related license (if applicable)"
+  license: License
+  
+  "Block timestamp"
+  timestamp: BigInt!
+  
+  "Block number"
+  blockNumber: BigInt!
+  
+  "Transaction hash"
+  transactionHash: Bytes!
+}
+
+enum PaymentType {
+  CRAWL_PAYMENT
+  FEE_WITHDRAWAL
+  PROTOCOL_FEE_WITHDRAWAL
+}
+
+type ProtocolStats @entity {
+  "Singleton entity with ID '1'"
+  id: Bytes!
+  
+  "Total volume processed in USDC (wei)"
+  totalVolume: BigInt!
+  
+  "Total number of crawl events"
+  totalCrawls: BigInt!
+  
+  "Total protocol fees collected"
+  totalProtocolFees: BigInt!
+  
+  "Total protocol fees withdrawn"
+  totalProtocolFeesWithdrawn: BigInt!
+  
+  "Current base crawl fee"
+  baseCrawlFee: BigInt!
+  
+  "Current protocol fee percentage (basis points)"
+  protocolFeePercent: BigInt!
+  
+  "Current fee recipient address"
+  feeRecipient: Bytes!
+  
+  "Total number of publishers"
+  totalPublishers: BigInt!
+  
+  "Total number of licenses"
+  totalLicenses: BigInt!
+  
+  "Total number of active licenses"
+  totalActiveLicenses: BigInt!
+  
+  "Average crawl amount"
+  averageCrawlAmount: BigDecimal!
+  
+  "First crawl timestamp"
+  firstCrawlAt: BigInt
+  
+  "Last crawl timestamp"
+  lastCrawlAt: BigInt
+  
+  "Last updated timestamp"
+  lastUpdatedAt: BigInt!
+}
+
+type DailyStats @entity {
+  "Date in YYYY-MM-DD format"
+  id: Bytes!
+  
+  "Date as timestamp (start of day)"
+  date: BigInt!
+  
+  "Daily volume in USDC (wei)"
+  volume: BigInt!
+  
+  "Number of crawls"
+  crawlCount: BigInt!
+  
+  "Number of unique publishers active"
+  uniquePublishers: BigInt!
+  
+  "Number of unique crawlers active"
+  uniqueCrawlers: BigInt!
+  
+  "Protocol fees collected"
+  protocolFees: BigInt!
+  
+  "Average crawl amount"
+  averageCrawlAmount: BigDecimal!
+  
+  "New licenses minted"
+  newLicenses: BigInt!
+  
+  "New publishers"
+  newPublishers: BigInt!
+}
+
+type PublisherDailyStats @entity {
+  "Publisher address + date"
+  id: Bytes!
+  
+  "Publisher"
+  publisher: Publisher!
+  
+  "Date as timestamp (start of day)"
+  date: BigInt!
+  
+  "Daily earnings for this publisher"
+  earnings: BigInt!
+  
+  "Number of crawls"
+  crawlCount: BigInt!
+  
+  "Number of unique crawlers"
+  uniqueCrawlers: BigInt!
+  
+  "Average earning per crawl"
+  averageEarningPerCrawl: BigDecimal!
+  
+  "Fees withdrawn on this day"
+  feesWithdrawn: BigInt!
+}
+
+type LicenseDailyStats @entity {
+  "License ID + date"
+  id: Bytes!
+  
+  "License"
+  license: License!
+  
+  "Date as timestamp (start of day)"
+  date: BigInt!
+  
+  "Daily earnings for this license"
+  earnings: BigInt!
+  
+  "Number of crawls for this license"
+  crawlCount: BigInt!
+  
+  "Number of unique crawlers"
+  uniqueCrawlers: BigInt!
+  
+  "Average earning per crawl"
+  averageEarningPerCrawl: BigDecimal!
+}
+
+type PublisherActivity @entity {
+  "Transaction hash + log index"
+  id: Bytes!
+  
+  "Publisher"
+  publisher: Publisher!
+  
+  "Activity type"
+  type: PublisherActivityType!
+  
+  "Related license (if applicable)"
+  license: License
+  
+  "Amount involved (if applicable)"
+  amount: BigInt
+  
+  "Description of the activity"
+  description: String!
+  
+  "Block timestamp"
+  timestamp: BigInt!
+  
+  "Block number"
+  blockNumber: BigInt!
+  
+  "Transaction hash"
+  transactionHash: Bytes!
+}
+
+enum PublisherActivityType {
+  LICENSE_MINTED
+  CRAWL_RECEIVED
+  FEES_WITHDRAWN
+}
+
+type LicenseActivity @entity {
+  "Transaction hash + log index"
+  id: Bytes!
+  
+  "License"
+  license: License!
+  
+  "Activity type"
+  type: LicenseActivityType!
+  
+  "Requester (for crawls)"
+  requester: Bytes
+  
+  "Amount involved (if applicable)"
+  amount: BigInt
+  
+  "Description of the activity"
+  description: String!
+  
+  "Block timestamp"
+  timestamp: BigInt!
+  
+  "Block number"
+  blockNumber: BigInt!
+  
+  "Transaction hash"
+  transactionHash: Bytes!
+}
+
+enum LicenseActivityType {
+  MINTED
+  CRAWLED
+  URI_UPDATED
+}
+
+type CrawlerStats @entity {
+  "Crawler address"
+  id: Bytes!
+  
+  "Total amount spent"
+  totalSpent: BigInt!
+  
+  "Total number of crawls"
+  totalCrawls: BigInt!
+  
+  "Number of unique publishers accessed"
+  uniquePublishers: BigInt!
+  
+  "Number of unique licenses accessed"
+  uniqueLicenses: BigInt!
+  
+  "Average amount per crawl"
+  averageAmountPerCrawl: BigDecimal!
+  
+  "First crawl timestamp"
+  firstCrawlAt: BigInt
+  
+  "Last crawl timestamp"
+  lastCrawlAt: BigInt
+}
+
+type HourlyStats @entity {
+  "Timestamp rounded to hour"
+  id: Bytes!
+  
+  "Hour timestamp"
+  hour: BigInt!
+  
+  "Volume in that hour"
+  volume: BigInt!
+  
+  "Number of crawls"
+  crawlCount: BigInt!
+  
+  "Number of unique publishers"
+  uniquePublishers: BigInt!
+  
+  "Number of unique crawlers"
+  uniqueCrawlers: BigInt!
+  
+  "Average crawl amount"
+  averageCrawlAmount: BigDecimal!
+}
+
+type TopPublisher @entity {
+  "Publisher address"
+  id: Bytes!
+  
+  "Publisher entity"
+  publisher: Publisher!
+  
+  "Total earnings (for ranking)"
+  totalEarnings: BigInt!
+  
+  "Total crawls (for ranking)"
+  totalCrawls: BigInt!
+  
+  "Ranking by earnings"
+  earningsRank: BigInt!
+  
+  "Ranking by crawl volume"
+  crawlVolumeRank: BigInt!
+}
+
+type TopLicense @entity {
+  "License token ID"
+  id: Bytes!
+  
+  "License entity"
+  license: License!
+  
+  "Total earnings (for ranking)"
+  totalEarnings: BigInt!
+  
+  "Total crawls (for ranking)"
+  totalCrawls: BigInt!
+  
+  "Ranking by earnings"
+  earningsRank: BigInt!
+  
+  "Ranking by crawl volume"
+  crawlVolumeRank: BigInt!
+}
