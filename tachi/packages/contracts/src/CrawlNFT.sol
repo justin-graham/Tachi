@@ -54,6 +54,7 @@ contract CrawlNFT is ERC721, Ownable {
     /// @param termsURI The URI pointing to the license terms (IPFS hash or URI)
     /// @dev Only the contract owner can mint new licenses
     /// @dev Each publisher can only have one license
+    /// @dev Uses CEI (Checks-Effects-Interactions) pattern to prevent reentrancy
     function mintLicense(address publisher, string calldata termsURI) 
         external 
         onlyOwner 
@@ -65,14 +66,12 @@ contract CrawlNFT is ERC721, Ownable {
         uint256 tokenId = _tokenIdCounter;
         _tokenIdCounter++;
         
-        // Store the terms URI for this token
+        // EFFECTS: Update all state before external interactions
         _tokenTermsURI[tokenId] = termsURI;
-        
-        // Track publisher's token ID and license status
         _publisherTokenId[publisher] = tokenId;
         _hasLicense[publisher] = true;
         
-        // Mint the token to the publisher
+        // INTERACTIONS: External calls last to prevent reentrancy
         _safeMint(publisher, tokenId);
         
         emit LicenseMinted(publisher, tokenId, termsURI);

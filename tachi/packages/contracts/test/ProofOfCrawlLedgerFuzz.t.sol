@@ -90,7 +90,6 @@ contract ProofOfCrawlLedgerFuzzTest is Test {
         
         address testCrawler = makeAddr("testCrawler");
         uint256 testTokenId = 1;
-        bytes32 testHash = keccak256("test");
         
         if (shouldPause) {
             // Should revert when paused
@@ -120,8 +119,6 @@ contract ProofOfCrawlLedgerFuzzTest is Test {
         
         for (uint8 i = 0; i < numOperations; i++) {
             address crawler = makeAddr(string(abi.encodePacked("crawler", i)));
-            uint256 tokenId = uint256(i + 1);
-            bytes32 hash = keccak256(abi.encodePacked("hash", i));
             
                         ledger.logCrawl(uint256(i + 1), crawler);
             

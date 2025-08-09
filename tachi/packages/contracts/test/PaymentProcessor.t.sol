@@ -157,14 +157,20 @@ contract PaymentProcessorTest is Test {
     }
     
     function testPayPublisherInsufficientBalance() public {
-        // Arrange: crawler1 approves more than they have
+        // Arrange: Drain most of crawler1's balance first, leaving only 500 USDC
         vm.prank(crawler1);
-        mockUSDC.approve(address(paymentProcessor), 2000 * 10**6);
+        mockUSDC.approve(address(paymentProcessor), 500 * 10**6);
+        vm.prank(crawler1);
+        paymentProcessor.payPublisher(publisher2, 500 * 10**6); // Now crawler1 has 500 USDC left
+        
+        // Now try to pay more than remaining balance (but within max limit)
+        vm.prank(crawler1);
+        mockUSDC.approve(address(paymentProcessor), 600 * 10**6);
         
         // Act & Assert: should fail due to insufficient balance
         vm.prank(crawler1);
         vm.expectRevert("PaymentProcessor: Insufficient USDC balance");
-        paymentProcessor.payPublisher(publisher1, 2000 * 10**6); // More than crawler1's balance
+        paymentProcessor.payPublisher(publisher1, 600 * 10**6); // More than crawler1's remaining balance
     }
     
     function testPayPublisherInsufficientAllowance() public {
@@ -176,6 +182,20 @@ contract PaymentProcessorTest is Test {
         vm.prank(crawler1);
         vm.expectRevert("PaymentProcessor: Insufficient USDC allowance");
         paymentProcessor.payPublisher(publisher1, USDC_AMOUNT); // More than approved amount
+    }
+    
+    function testPayPublisherExceedsMaximumAmount() public {
+        // Arrange: Give crawler1 enough balance and approval for large payment
+        vm.prank(owner);
+        mockUSDC.transfer(crawler1, 2000 * 10**6); // Give enough balance
+        
+        vm.prank(crawler1);
+        mockUSDC.approve(address(paymentProcessor), 2000 * 10**6);
+        
+        // Act & Assert: should fail due to maximum payment limit
+        vm.prank(crawler1);
+        vm.expectRevert("PaymentProcessor: Amount exceeds maximum allowed");
+        paymentProcessor.payPublisher(publisher1, 2000 * 10**6); // Exceeds 1000 USDC limit
     }
     
     function testPayPublisherByNFTSuccess() public {

@@ -34,8 +34,8 @@ contract PaymentProcessorFuzzTest is Test {
     
     /// @notice Fuzz test for payPublisher with random amounts
     function testFuzz_PayPublisher(uint256 amount) public {
-        // Bound amount to reasonable range (1 wei to 1M USDC)
-        amount = bound(amount, 1, 1000000 * 10**6);
+        // Bound amount to valid range (1 wei to 1000 USDC max limit)
+        amount = bound(amount, 1, 1000 * 10**6);
         
         vm.startPrank(crawler);
         
@@ -56,7 +56,7 @@ contract PaymentProcessorFuzzTest is Test {
     function testFuzz_PayPublisherByNFT(uint256 tokenId, uint256 amount) public {
         // Bound inputs to valid ranges
         tokenId = bound(tokenId, 1, 1); // We only minted token ID 1
-        amount = bound(amount, 1, 1000000 * 10**6);
+        amount = bound(amount, 1, 1000 * 10**6); // Respect 1000 USDC max limit
         
         vm.startPrank(crawler);
         
@@ -116,8 +116,8 @@ contract PaymentProcessorFuzzTest is Test {
     
     /// @notice Fuzz test that payment processor remains stateless
     function testFuzz_PaymentProcessorStateless(uint256 amount1, uint256 amount2) public {
-        amount1 = bound(amount1, 1, 500000 * 10**6);
-        amount2 = bound(amount2, 1, 500000 * 10**6);
+        amount1 = bound(amount1, 1, 1000 * 10**6); // Respect 1000 USDC max limit
+        amount2 = bound(amount2, 1, 1000 * 10**6); // Respect 1000 USDC max limit
         
         vm.startPrank(crawler);
         

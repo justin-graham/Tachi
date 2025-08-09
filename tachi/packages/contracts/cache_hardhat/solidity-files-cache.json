@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/justin/Tachi/tachi/packages/contracts/src/CrawlNFT.sol": {
-      "lastModificationDate": 1754177301604,
-      "contentHash": "48a2019edc925fd9ba74fa94b61d1708",
+      "lastModificationDate": 1754677234920,
+      "contentHash": "d2de62f8d353e5171335aa3ef92f4c8f",
       "sourceName": "src/CrawlNFT.sol",
       "solcConfig": {
         "version": "0.8.28",
@@ -838,8 +838,8 @@
       "artifacts": []
     },
     "/Users/justin/Tachi/tachi/packages/contracts/src/PaymentProcessor.sol": {
-      "lastModificationDate": 1754175793164,
-      "contentHash": "0e9e04dff7e675f5153eb5aebd995cd3",
+      "lastModificationDate": 1754677578591,
+      "contentHash": "4b1fba406a58d1d804d5f86fa85b8c1e",
       "sourceName": "src/PaymentProcessor.sol",
       "solcConfig": {
         "version": "0.8.28",
@@ -871,7 +871,8 @@
         "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
         "@openzeppelin/contracts/utils/ReentrancyGuard.sol",
         "@openzeppelin/contracts/token/ERC721/IERC721.sol",
-        "@openzeppelin/contracts/access/Ownable.sol"
+        "@openzeppelin/contracts/access/Ownable.sol",
+        "@openzeppelin/contracts/utils/Pausable.sol"
       ],
       "versionPragmas": [
         "^0.8.28"
@@ -996,8 +997,8 @@
       ]
     },
     "/Users/justin/Tachi/tachi/packages/contracts/src/ProofOfCrawlLedger.sol": {
-      "lastModificationDate": 1754177726501,
-      "contentHash": "f0694d74a5bff698153186233673543b",
+      "lastModificationDate": 1754677311993,
+      "contentHash": "26acc56c83a75129e344a70f3c68af5d",
       "sourceName": "src/ProofOfCrawlLedger.sol",
       "solcConfig": {
         "version": "0.8.28",
@@ -1035,8 +1036,8 @@
       ]
     },
     "/Users/justin/Tachi/tachi/packages/contracts/src/CrawlNFTSelfMint.sol": {
-      "lastModificationDate": 1754150194480,
-      "contentHash": "e4eca45ba2e3d53a7030c1f3885a4dc3",
+      "lastModificationDate": 1754677538021,
+      "contentHash": "848c1aabc265783564329924da56737f",
       "sourceName": "src/CrawlNFTSelfMint.sol",
       "solcConfig": {
         "version": "0.8.28",
@@ -3363,6 +3364,86 @@
       ],
       "artifacts": [
         "ReentrancyGuardUpgradeable"
+      ]
+    },
+    "/Users/justin/Tachi/tachi/packages/contracts/lib/openzeppelin-contracts/contracts/utils/Pausable.sol": {
+      "lastModificationDate": 1754175424762,
+      "contentHash": "0d47b53e10b1985efbb396f937626279",
+      "sourceName": "@openzeppelin/contracts/utils/Pausable.sol",
+      "solcConfig": {
+        "version": "0.8.28",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../utils/Context.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "Pausable"
+      ]
+    },
+    "/Users/justin/Tachi/tachi/packages/contracts/src/TachiProductionMultiSig.sol": {
+      "lastModificationDate": 1754686680780,
+      "contentHash": "375dfe3521544f99e612758914b29c52",
+      "sourceName": "src/TachiProductionMultiSig.sol",
+      "solcConfig": {
+        "version": "0.8.28",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/utils/ReentrancyGuard.sol",
+        "@openzeppelin/contracts/utils/Pausable.sol",
+        "@openzeppelin/contracts/utils/cryptography/ECDSA.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.28"
+      ],
+      "artifacts": [
+        "TachiProductionMultiSig"
       ]
     }
   }

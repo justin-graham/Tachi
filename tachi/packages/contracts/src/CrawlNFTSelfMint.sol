@@ -65,14 +65,12 @@ contract CrawlNFT is ERC721, Ownable {
         uint256 tokenId = _tokenIdCounter;
         _tokenIdCounter++;
         
-        // Store the terms URI for this token
+        // EFFECTS: Update all state before external interactions
         _tokenTermsURI[tokenId] = termsURI;
-        
-        // Track publisher's token ID and license status
         _publisherTokenId[publisher] = tokenId;
         _hasLicense[publisher] = true;
         
-        // Mint the token to the publisher
+        // INTERACTIONS: External calls last to prevent reentrancy
         _safeMint(publisher, tokenId);
         
         emit LicenseMinted(publisher, tokenId, termsURI);
@@ -80,6 +78,7 @@ contract CrawlNFT is ERC721, Ownable {
     
     /// @notice Mint a license for the caller (convenience function)
     /// @param termsURI The URI pointing to the license terms
+    /// @dev Uses CEI (Checks-Effects-Interactions) pattern to prevent reentrancy
     function mintMyLicense(string calldata termsURI) external {
         require(selfMintingEnabled, "CrawlNFT: Self-minting is disabled");
         require(!_hasLicense[msg.sender], "CrawlNFT: You already have a license");
@@ -88,14 +87,12 @@ contract CrawlNFT is ERC721, Ownable {
         uint256 tokenId = _tokenIdCounter;
         _tokenIdCounter++;
         
-        // Store the terms URI for this token
+        // EFFECTS: Update all state before external interactions
         _tokenTermsURI[tokenId] = termsURI;
-        
-        // Track publisher's token ID and license status
         _publisherTokenId[msg.sender] = tokenId;
         _hasLicense[msg.sender] = true;
         
-        // Mint the token to the caller
+        // INTERACTIONS: External calls last to prevent reentrancy
         _safeMint(msg.sender, tokenId);
         
         emit LicenseMinted(msg.sender, tokenId, termsURI);

@@ -6,15 +6,19 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 /// @title PaymentProcessor - On-Chain Payment Toll Booth for Tachi Protocol
 /// @notice A stateless utility contract to accept payments from crawlers and immediately forward them to publishers
 /// @dev Serves as the on-chain "toll booth" for crawl payments using USDC
-contract PaymentProcessor is ReentrancyGuard, Ownable {
+contract PaymentProcessor is ReentrancyGuard, Pausable, Ownable {
     using SafeERC20 for IERC20;
     
     /// @notice The USDC token contract address
     IERC20 public immutable usdcToken;
+    
+    /// @notice Maximum payment amount to prevent large payment attacks (1000 USDC)
+    uint256 public constant MAX_PAYMENT_AMOUNT = 1000 * 10**6;
     
     /// @notice Event emitted when a payment is successfully forwarded
     /// @param from The address of the payer (crawler)
@@ -52,6 +56,14 @@ contract PaymentProcessor is ReentrancyGuard, Ownable {
     /// @param _usdcToken The address of the USDC token contract on Base
     constructor(address _usdcToken) Ownable(msg.sender) {
         require(_usdcToken != address(0), "PaymentProcessor: USDC token address cannot be zero");
+        
+        // Verify it's a valid ERC20 token with 6 decimals (USDC standard)
+        try IERC20(_usdcToken).balanceOf(address(this)) returns (uint256) {
+            // Balance check succeeded, it's a valid ERC20
+        } catch {
+            revert("PaymentProcessor: Invalid USDC token contract");
+        }
+        
         usdcToken = IERC20(_usdcToken);
     }
     
@@ -60,9 +72,10 @@ contract PaymentProcessor is ReentrancyGuard, Ownable {
     /// @param amount The amount of USDC to pay (in wei, e.g., 1 USDC = 1e6)
     /// @dev The caller must have approved this contract to spend at least `amount` USDC
     /// @dev This function transfers USDC from the caller to the publisher atomically
-    function payPublisher(address publisher, uint256 amount) external nonReentrant {
+    function payPublisher(address publisher, uint256 amount) external nonReentrant whenNotPaused {
         require(publisher != address(0), "PaymentProcessor: Publisher address cannot be zero");
         require(amount > 0, "PaymentProcessor: Amount must be greater than zero");
+        require(amount <= MAX_PAYMENT_AMOUNT, "PaymentProcessor: Amount exceeds maximum allowed");
         
         // Check if caller has sufficient balance
         uint256 callerBalance = usdcToken.balanceOf(msg.sender);
@@ -88,9 +101,10 @@ contract PaymentProcessor is ReentrancyGuard, Ownable {
         address crawlNFTContract,
         uint256 tokenId,
         uint256 amount
-    ) external nonReentrant {
+    ) external nonReentrant whenNotPaused {
         require(crawlNFTContract != address(0), "PaymentProcessor: CrawlNFT contract address cannot be zero");
         require(amount > 0, "PaymentProcessor: Amount must be greater than zero");
+        require(amount <= MAX_PAYMENT_AMOUNT, "PaymentProcessor: Amount exceeds maximum allowed");
         
         // Get the publisher address from the CrawlNFT contract - SECURITY FIX: Proper initialization
         address publisher = IERC721(crawlNFTContract).ownerOf(tokenId);
@@ -129,6 +143,18 @@ contract PaymentProcessor is ReentrancyGuard, Ownable {
     /// @return The address of the USDC token contract
     function getUSDCTokenAddress() external view returns (address) {
         return address(usdcToken);
+    }
+    
+    /// @notice Pause the contract to prevent payments (emergency use only)
+    /// @dev Only the contract owner can pause the contract
+    function pause() external onlyOwner {
+        _pause();
+    }
+    
+    /// @notice Unpause the contract to resume payments
+    /// @dev Only the contract owner can unpause the contract
+    function unpause() external onlyOwner {
+        _unpause();
     }
     
     /// @notice Emergency function to recover any tokens accidentally sent to this contract

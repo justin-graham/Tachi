@@ -188,12 +188,14 @@ contract ProofOfCrawlLedger is Ownable {
         require(crawlTokenIds.length > 0, "ProofOfCrawlLedger: Arrays cannot be empty");
         require(crawlTokenIds.length <= 100, "ProofOfCrawlLedger: Batch size too large");
         
-        for (uint256 i = 0; i < crawlTokenIds.length; i++) {
+        uint256 batchSize = crawlTokenIds.length;
+        uint256 startingLogId = totalCrawlsLogged;
+        
+        for (uint256 i = 0; i < batchSize; i++) {
             require(crawlers[i] != address(0), "ProofOfCrawlLedger: Crawler address cannot be zero");
             require(crawlTokenIds[i] > 0, "ProofOfCrawlLedger: CrawlTokenId must be greater than zero");
             
-            totalCrawlsLogged++;
-            uint256 logId = totalCrawlsLogged;
+            uint256 logId = startingLogId + i + 1;
             
             emit CrawlLogged(
                 crawlTokenIds[i],
@@ -202,6 +204,9 @@ contract ProofOfCrawlLedger is Ownable {
                 logId
             );
         }
+        
+        // Update state once after all operations for gas efficiency
+        totalCrawlsLogged += batchSize;
     }
     
     /// @notice Pause or unpause the contract's crawl logging functionality

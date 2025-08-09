@@ -42,17 +42,17 @@ describe("Tachi Protocol Integration Tests", function () {
     
     // Deploy CrawlNFT
     const CrawlNFTFactory = await hre.ethers.getContractFactory("CrawlNFT");
-    crawlNFT = await CrawlNFTFactory.deploy();
+    crawlNFT = (await CrawlNFTFactory.deploy()) as unknown as CrawlNFT;
     await crawlNFT.waitForDeployment();
     
     // Deploy PaymentProcessor
     const PaymentProcessorFactory = await hre.ethers.getContractFactory("PaymentProcessor");
-    paymentProcessor = await PaymentProcessorFactory.deploy(await mockUSDC.getAddress());
+    paymentProcessor = (await PaymentProcessorFactory.deploy(await mockUSDC.getAddress())) as unknown as PaymentProcessor;
     await paymentProcessor.waitForDeployment();
     
     // Deploy ProofOfCrawlLedger
     const ProofOfCrawlLedgerFactory = await hre.ethers.getContractFactory("ProofOfCrawlLedger");
-    proofOfCrawlLedger = await ProofOfCrawlLedgerFactory.deploy();
+    proofOfCrawlLedger = (await ProofOfCrawlLedgerFactory.deploy()) as unknown as ProofOfCrawlLedger;
     await proofOfCrawlLedger.waitForDeployment();
     
     // Setup: Give crawler some USDC tokens
