@@ -2,7 +2,7 @@ import { TachiSecurityMonitor } from "./TachiSecurityMonitor";
 import { PerformanceMonitor } from "./PerformanceMonitor";
 import { config } from "dotenv";
 import { resolve } from "path";
-import express, { Application, Request, Response, NextFunction } from "express";
+import express from "express";
 
 // Load environment configuration
 config({ path: resolve(__dirname, "../../.env.production") });
@@ -81,11 +81,11 @@ async function startProduction(): Promise<void> {
     await securityMonitor.startMonitoring();
     
     // Start dashboard server
-    const app: Application = express();
+    const app = express();
     const port = parseInt(process.env.DASHBOARD_PORT || "3001");
     
     // Basic authentication for dashboard
-    app.use((req: Request, res: Response, next: NextFunction) => {
+    app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
       const auth = req.headers.authorization;
       if (!auth) {
         res.setHeader('WWW-Authenticate', 'Basic');
@@ -105,20 +105,18 @@ async function startProduction(): Promise<void> {
     });
     
     // Dashboard routes
-    app.get('/', (req: Request, res: Response) => {
+    app.get('/', (req: express.Request, res: express.Response) => {
       const dashboardData = performanceMonitor.getDashboardData();
       res.send(generateDashboardHTML(dashboardData));
     });
-    
-    app.get('/api/stats', (req: Request, res: Response) => {
+
+    app.get('/api/stats', (req: express.Request, res: express.Response) => {
       res.json(securityMonitor.getStats());
     });
-    
-    app.get('/api/dashboard', (req: Request, res: Response) => {
+
+    app.get('/api/dashboard', (req: express.Request, res: express.Response) => {
       res.json(performanceMonitor.getDashboardData());
-    });
-    
-    // Start dashboard server
+    });    // Start dashboard server
     app.listen(port, () => {
       console.log(`📊 Dashboard available at http://localhost:${port}`);
       console.log(`🔐 Username: ${process.env.DASHBOARD_AUTH_USERNAME || 'admin'}`);

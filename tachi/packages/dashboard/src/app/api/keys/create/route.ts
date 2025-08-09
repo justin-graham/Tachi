@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/mock-prisma'
 import crypto from 'crypto'
-import bcrypt from 'bcryptjs'
 
 export async function POST(req: NextRequest) {
   try {
@@ -43,9 +42,9 @@ export async function POST(req: NextRequest) {
     const rawKey = `sk_${process.env.NODE_ENV === 'production' ? 'live' : 'test'}_${crypto.randomBytes(32).toString('hex')}`
     const keyPrefix = rawKey.substring(0, 16) + '...' // Show first 16 characters
     
-    // Hash the key using bcrypt for better security
-    const saltRounds = 12
-    const keyHash = await bcrypt.hash(rawKey, saltRounds)
+    // Hash the key using crypto with a salt (fallback if no env var)
+    const salt = process.env.API_KEY_SALT || 'tachi-default-salt-2024'
+    const keyHash = crypto.createHash('sha256').update(rawKey + salt).digest('hex')
 
     // Save to database
     const apiKey = await prisma.apiKey.create({

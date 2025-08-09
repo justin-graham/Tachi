@@ -2,6 +2,13 @@
   "name": "tachi-monorepo",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter tachi-publisher-dashboard dev"
+    "dev": "pnpm --filter tachi-publisher-dashboard dev",
+    "build": "node build-optimizer.mjs",
+    "build:clean": "node build-optimizer.mjs --clean && node build-optimizer.mjs",
+    "build:fast": "node build-optimizer.mjs",
+    "build:packages": "node build-optimizer.mjs",
+    "validate": "node runtime-validator.mjs",
+    "validate:profile": "node memory-profiler.mjs && node runtime-validator.mjs",
+    "validate:full": "node build-optimizer.mjs && node memory-profiler.mjs && node runtime-validator.mjs"
   }
 }

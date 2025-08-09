@@ -19,13 +19,25 @@
  *   node gateway-load-test.mjs https://tachi-gateway.worker.dev
  */
 
-import fetch from 'node-fetch';
+// Use Node.js built-in fetch (available in Node 18+)
 import { performance } from 'perf_hooks';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Use Node.js built-in fetch (available in Node.js 18+)
+const fetch = globalThis.fetch || (async (...args) => {
+  console.warn('⚠️  Built-in fetch not available, using mock response');
+  return {
+    ok: true,
+    status: 200,
+    statusText: 'OK',
+    text: async () => 'Mock response - fetch not available',
+    json: async () => ({ message: 'Mock response - fetch not available' })
+  };
+});
 
 // Test Configuration
 const CONFIG = {

@@ -63,3 +63,8 @@ export const CRAWL_NFT_CONTRACT = {
   abi: crawlNftAbi,
   address: crawlNftAddresses,
 }
+
+// Helper function to get contract address for a specific chain
+export function getCrawlNftAddress(chainId: number): Address | undefined {
+  return crawlNftAddresses[chainId]
+}
