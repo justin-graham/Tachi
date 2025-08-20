@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { logRateLimit, logSuspiciousRequest, securityMonitor } from '@/lib/security-monitor'
+import { logRateLimit, logSuspiciousRequest, securityMonitor, checkSuspiciousActivity } from '@/lib/security-monitor'
 
 // Security headers for all routes
 const securityHeaders = [
@@ -158,7 +158,7 @@ export function middleware(request: NextRequest) {
   }
   
   // Check if IP has suspicious activity
-  const activityCheck = securityMonitor.checkSuspiciousActivity(ip)
+  const activityCheck = checkSuspiciousActivity(ip)
   if (activityCheck.isSuspicious) {
     return new NextResponse(
       JSON.stringify({ 

@@ -1,0 +1,113 @@
+.root {
+  width: 100%;
+  height: auto;
+  max-width: var(--token--5BxrCAHYYGH);
+  display: flex;
+  position: relative;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 16px 8px;
+}
+.rootonboarding_unnamedVariant {
+  justify-content: center;
+  align-items: center;
+}
+.link {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+.logo {
+  object-fit: cover;
+  width: 48px;
+  height: 48px;
+  color: var(--token-hVfcb8r6pWxK);
+  flex-shrink: 0;
+}
+.logoonboarding_unnamedVariant {
+  align-self: flex-end;
+  left: auto;
+  top: auto;
+  z-index: 1;
+  position: relative;
+  transform: translateX(0px) translateY(0px) translateZ(0px);
+}
+.freeBox {
+  display: flex;
+  position: relative;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  width: auto;
+  column-gap: 20px;
+}
+@media (min-width: 0px) and (max-width: 768px) {
+  .freeBox {
+    column-gap: 16px;
+    row-gap: 0px;
+  }
+}
+.button:global(.__wab_instance) {
+  position: relative;
+}
+.buttononboarding_unnamedVariant:global(.__wab_instance) {
+  display: none;
+}
+.svg__rRlg0 {
+  position: relative;
+  object-fit: cover;
+  width: 24px;
+  height: 24px;
+}
+.buttonSignin {
+  background: #066d5a3d;
+  width: auto;
+  height: auto;
+  display: flex;
+  overflow: hidden;
+  flex-direction: row;
+  column-gap: 10px;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 13px;
+  padding-right: 13px;
+  border-radius: 10px;
+}
+.signIn {
+  position: relative;
+  width: 49px;
+  height: 33px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.text {
+  display: block;
+  font-size: 15px;
+  text-align: center;
+  font-family: "Helvetica Neue";
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 92px;
+  color: #066d5a;
+  padding-right: 8px;
+}
+.svg {
+  object-fit: cover;
+  max-width: 100%;
+  color: #066d5a;
+  width: 7px;
+  height: 10px;
+  display: block;
+  position: relative;
+  flex-shrink: 0;
+}
+.svg__fyR29 {
+  position: relative;
+  object-fit: cover;
+  width: 24px;
+  height: 24px;
+}
