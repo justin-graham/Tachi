@@ -277,7 +277,7 @@ function PlasmicLanding__RenderFunc(props: {
                     {"73% of publishers are blocking AI crawlers."}
                   </div>
                   <PlasmicImg__
-                    alt={""}
+                    alt={"Uncompensated data extraction - 73% of publishers blocking AI crawlers"}
                     className={classNames(sty.img__nwA1M)}
                     displayHeight={"auto"}
                     displayMaxHeight={"none"}
@@ -287,7 +287,7 @@ function PlasmicLanding__RenderFunc(props: {
                     displayWidth={"auto"}
                     loading={"lazy"}
                     src={{
-                      src: "/plasmic/tachi_landing_page/images/tachiPitchDeck11Png.png",
+                      src: "/images/landing/features/uncomp_ext.png",
                       fullWidth: 4560,
                       fullHeight: 2565,
                       aspectRatio: undefined
@@ -318,7 +318,7 @@ function PlasmicLanding__RenderFunc(props: {
                     {"today's internet cripples automated commerce."}
                   </div>
                   <PlasmicImg__
-                    alt={""}
+                    alt={"Internet infrastructure not built for autonomous agents"}
                     className={classNames(sty.img__btf45)}
                     displayHeight={"auto"}
                     displayMaxHeight={"none"}
@@ -328,7 +328,7 @@ function PlasmicLanding__RenderFunc(props: {
                     displayWidth={"auto"}
                     loading={"lazy"}
                     src={{
-                      src: "/plasmic/tachi_landing_page/images/tachiPitchDeck9Png.png",
+                      src: "/images/landing/features/no_autonomy.png",
                       fullWidth: 4560,
                       fullHeight: 2565,
                       aspectRatio: undefined
@@ -359,7 +359,7 @@ function PlasmicLanding__RenderFunc(props: {
                     {"the agentic economy lacks a native trust layer."}
                   </div>
                   <PlasmicImg__
-                    alt={""}
+                    alt={"Trust and ownership void in the agentic economy"}
                     className={classNames(sty.img__xPbBx)}
                     displayHeight={"auto"}
                     displayMaxHeight={"none"}
@@ -369,7 +369,7 @@ function PlasmicLanding__RenderFunc(props: {
                     displayWidth={"auto"}
                     loading={"lazy"}
                     src={{
-                      src: "/plasmic/tachi_landing_page/images/tachiPitchDeck10Png.png",
+                      src: "/images/landing/features/trust_void.png",
                       fullWidth: 4560,
                       fullHeight: 2565,
                       aspectRatio: undefined
@@ -379,7 +379,14 @@ function PlasmicLanding__RenderFunc(props: {
               </div>
             </div>
           </section>
-          <section className={classNames(projectcss.all, sty.section__mjw6J)}>
+          <section className={classNames(projectcss.all, sty.section__mjw6J)}
+                   style={{
+                     position: 'relative',
+                     backgroundImage: 'url(/images/landing/background2.png)',
+                     backgroundSize: 'cover',
+                     backgroundPosition: 'center',
+                     backgroundRepeat: 'no-repeat'
+                   }}>
             <div className={classNames(projectcss.all, sty.columns___1Fg42)}>
               <div className={classNames(projectcss.all, sty.column__mpf6Y)}>
                 <h2
@@ -437,23 +444,6 @@ function PlasmicLanding__RenderFunc(props: {
                 </div>
               </div>
             </div>
-            <PlasmicImg__
-              alt={""}
-              className={classNames(sty.img__uqSw7)}
-              displayHeight={"auto"}
-              displayMaxHeight={"none"}
-              displayMaxWidth={"80%"}
-              displayMinHeight={"0"}
-              displayMinWidth={"0"}
-              displayWidth={"auto"}
-              loading={"lazy"}
-              src={{
-                src: "/plasmic/tachi_landing_page/images/screenshot20250810At43040PmPng.png",
-                fullWidth: 828,
-                fullHeight: 662,
-                aspectRatio: undefined
-              }}
-            />
           </section>
           <section className={classNames(projectcss.all, sty.section__o8HFc)}>
             <div className={classNames(projectcss.all, sty.columns__v9E09)}>
@@ -520,7 +510,7 @@ function PlasmicLanding__RenderFunc(props: {
                   </React.Fragment>
                 </h3>
                 <PlasmicImg__
-                  alt={""}
+                  alt={"Creator benefits - get paid for every view, set your own price"}
                   className={classNames(sty.img__psCw5)}
                   displayHeight={"800px"}
                   displayMaxHeight={"none"}
@@ -530,7 +520,7 @@ function PlasmicLanding__RenderFunc(props: {
                   displayWidth={"auto"}
                   loading={"lazy"}
                   src={{
-                    src: "/plasmic/tachi_landing_page/images/tachiPitchDeck12Png.png",
+                    src: "/images/landing/creator_steps.png",
                     fullWidth: 4560,
                     fullHeight: 2565,
                     aspectRatio: undefined
@@ -566,7 +556,7 @@ function PlasmicLanding__RenderFunc(props: {
                   </React.Fragment>
                 </h3>
                 <PlasmicImg__
-                  alt={""}
+                  alt={"Developer feature - price your resource with simple configuration"}
                   className={classNames(sty.img__dpDef)}
                   displayHeight={"auto"}
                   displayMaxHeight={"none"}
@@ -576,7 +566,7 @@ function PlasmicLanding__RenderFunc(props: {
                   displayWidth={"auto"}
                   loading={"lazy"}
                   src={{
-                    src: "/plasmic/tachi_landing_page/images/screenshot20250810At54300PmPng.png",
+                    src: "/images/landing/dev1.png",
                     fullWidth: 842,
                     fullHeight: 408,
                     aspectRatio: undefined
@@ -601,7 +591,7 @@ function PlasmicLanding__RenderFunc(props: {
                   </React.Fragment>
                 </h3>
                 <PlasmicImg__
-                  alt={""}
+                  alt={"Pay and access on-demand with instant stablecoin settlement"}
                   className={classNames(sty.img__fyhal)}
                   displayHeight={"auto"}
                   displayMaxHeight={"none"}
@@ -611,7 +601,7 @@ function PlasmicLanding__RenderFunc(props: {
                   displayWidth={"auto"}
                   loading={"lazy"}
                   src={{
-                    src: "/plasmic/tachi_landing_page/images/screenshot20250810At54413PmPng.png",
+                    src: "/images/landing/dev2.png",
                     fullWidth: 930,
                     fullHeight: 372,
                     aspectRatio: undefined
@@ -636,7 +626,7 @@ function PlasmicLanding__RenderFunc(props: {
                   </React.Fragment>
                 </h3>
                 <PlasmicImg__
-                  alt={""}
+                  alt={"Verify transactions on-chain with transparent blockchain records"}
                   className={classNames(sty.img___2SAkr)}
                   displayHeight={"auto"}
                   displayMaxHeight={"none"}
@@ -646,7 +636,7 @@ function PlasmicLanding__RenderFunc(props: {
                   displayWidth={"auto"}
                   loading={"lazy"}
                   src={{
-                    src: "/plasmic/tachi_landing_page/images/screenshot20250810At55435PmPng.png",
+                    src: "/images/landing/dev3.png",
                     fullWidth: 872,
                     fullHeight: 406,
                     aspectRatio: undefined
@@ -654,7 +644,14 @@ function PlasmicLanding__RenderFunc(props: {
                 />
               </div>
             </div>
-            <section className={classNames(projectcss.all, sty.section__lu05Z)}>
+            <section className={classNames(projectcss.all, sty.section__lu05Z)} 
+                     style={{
+                       position: 'relative',
+                       backgroundImage: 'url(/images/landing/wave1.png)',
+                       backgroundSize: 'cover',
+                       backgroundPosition: 'center left',
+                       backgroundRepeat: 'no-repeat'
+                     }}>
               <div className={classNames(projectcss.all, sty.freeBox__epoCq)}>
                 <h2
                   className={classNames(

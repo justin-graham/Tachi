@@ -842,7 +842,7 @@ function PlasmicOnboarding4__RenderFunc(props: {
                   displayWidth={"auto"}
                   loading={"lazy"}
                   src={{
-                    src: "/plasmic/tachi_landing_page/images/tachiPitchDeck22Png2.png",
+                    src: "/images/onboarding/wave5.png",
                     fullWidth: 4800,
                     fullHeight: 2700,
                     aspectRatio: undefined

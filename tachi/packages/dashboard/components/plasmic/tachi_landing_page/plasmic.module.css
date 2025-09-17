@@ -21,7 +21,7 @@
   --plasmic-token-brand-brand: var(--token-YMDZE7Svla9D);
   --token-rF7dxCNFg2yO: 0.5rem;
   --plasmic-token-size-8: var(--token-rF7dxCNFg2yO);
-  --token-yXm_0-h1rIqi: Inter;
+  --token-yXm_0-h1rIqi: "Coinbase Sans", sans-serif;
   --plasmic-token-sans-serif: var(--token-yXm_0-h1rIqi);
   --token-Wd6_bo1gvu55: 1rem;
   --plasmic-token-font-md: var(--token-Wd6_bo1gvu55);
@@ -170,7 +170,7 @@
 }
 
 .plasmic_default_styles {
-  --mixin-vWVq6nBTSTlr_font-family: "Inter", sans-serif;
+  --mixin-vWVq6nBTSTlr_font-family: "Coinbase Sans", sans-serif;
   --mixin-vWVq6nBTSTlr_font-size: 18px;
   --mixin-vWVq6nBTSTlr_font-weight: 400;
   --mixin-vWVq6nBTSTlr_font-style: normal;
@@ -183,42 +183,42 @@
   --mixin-vWVq6nBTSTlr_user-select: text;
   --mixin-vWVq6nBTSTlr_text-decoration-line: none;
   --mixin-vWVq6nBTSTlr_text-overflow: clip;
-  --mixin-ZzSij6D6CXDv_font-family: "Inter", sans-serif;
+  --mixin-ZzSij6D6CXDv_font-family: "Coinbase Sans", sans-serif;
   --mixin-ZzSij6D6CXDv_color: #000000;
   --mixin-ZzSij6D6CXDv_font-size: 72px;
   --mixin-ZzSij6D6CXDv_font-weight: 900;
   --mixin-ZzSij6D6CXDv_letter-spacing: -4px;
   --mixin-ZzSij6D6CXDv_line-height: 1;
   --mixin-ZzSij6D6CXDv_white-space: pre-wrap;
-  --mixin-_83uKMg7GQYv_font-family: "Inter", sans-serif;
+  --mixin-_83uKMg7GQYv_font-family: "Coinbase Sans", sans-serif;
   --mixin-_83uKMg7GQYv_color: #000000;
   --mixin-_83uKMg7GQYv_font-size: 48px;
   --mixin-_83uKMg7GQYv_font-weight: 700;
   --mixin-_83uKMg7GQYv_letter-spacing: -1px;
   --mixin-_83uKMg7GQYv_line-height: 1.1;
   --mixin-_83uKMg7GQYv_white-space: pre-wrap;
-  --mixin-2zPcntT62Hl__font-family: "Inter", sans-serif;
+  --mixin-2zPcntT62Hl__font-family: "Coinbase Sans", sans-serif;
   --mixin-2zPcntT62Hl__color: #000000;
   --mixin-2zPcntT62Hl__font-size: 32px;
   --mixin-2zPcntT62Hl__font-weight: 600;
   --mixin-2zPcntT62Hl__letter-spacing: -0.8px;
   --mixin-2zPcntT62Hl__line-height: 1.2;
   --mixin-2zPcntT62Hl__white-space: pre-wrap;
-  --mixin-dZQenyaiwmnN_font-family: "Inter", sans-serif;
+  --mixin-dZQenyaiwmnN_font-family: "Coinbase Sans", sans-serif;
   --mixin-dZQenyaiwmnN_color: #000000;
   --mixin-dZQenyaiwmnN_font-size: 24px;
   --mixin-dZQenyaiwmnN_font-weight: 600;
   --mixin-dZQenyaiwmnN_letter-spacing: -0.5px;
   --mixin-dZQenyaiwmnN_line-height: 1.3;
   --mixin-dZQenyaiwmnN_white-space: pre-wrap;
-  --mixin-XXkjT3t7BqHS_font-family: "Inter", sans-serif;
+  --mixin-XXkjT3t7BqHS_font-family: "Coinbase Sans", sans-serif;
   --mixin-XXkjT3t7BqHS_color: #000000;
   --mixin-XXkjT3t7BqHS_font-size: 20px;
   --mixin-XXkjT3t7BqHS_font-weight: 600;
   --mixin-XXkjT3t7BqHS_letter-spacing: -0.3px;
   --mixin-XXkjT3t7BqHS_line-height: 1.5;
   --mixin-XXkjT3t7BqHS_white-space: pre-wrap;
-  --mixin-UbVZp_r0aCIP_font-family: "Inter", sans-serif;
+  --mixin-UbVZp_r0aCIP_font-family: "Coinbase Sans", sans-serif;
   --mixin-UbVZp_r0aCIP_color: #000000;
   --mixin-UbVZp_r0aCIP_font-size: 16px;
   --mixin-UbVZp_r0aCIP_font-weight: 600;

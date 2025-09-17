@@ -433,7 +433,7 @@ function PlasmicOnboarding__RenderFunc(props: {
                             displayWidth={"21.33333396911621px"}
                             loading={"lazy"}
                             src={{
-                              src: "/plasmic/tachi_landing_page/images/logo2.svg",
+                              src: "/images/logos/tachi-logo.svg",
                               fullWidth: 21.33333396911621,
                               fullHeight: 20,
                               aspectRatio: undefined
@@ -473,7 +473,7 @@ function PlasmicOnboarding__RenderFunc(props: {
                           displayWidth={"32px"}
                           loading={"lazy"}
                           src={{
-                            src: "/plasmic/tachi_landing_page/images/wcCoin.svg",
+                            src: "/images/logos/walletconnect/coin.svg",
                             fullWidth: 32,
                             fullHeight: 32,
                             aspectRatio: undefined
@@ -513,7 +513,7 @@ function PlasmicOnboarding__RenderFunc(props: {
                           displayWidth={"32px"}
                           loading={"lazy"}
                           src={{
-                            src: "/plasmic/tachi_landing_page/images/wcConnect.svg",
+                            src: "/images/logos/walletconnect/connect.svg",
                             fullWidth: 32,
                             fullHeight: 32,
                             aspectRatio: undefined
@@ -550,7 +550,7 @@ function PlasmicOnboarding__RenderFunc(props: {
                   displayWidth={"auto"}
                   loading={"lazy"}
                   src={{
-                    src: "/plasmic/tachi_landing_page/images/tachiPitchDeck18Png.png",
+                    src: "/images/onboarding/wave2.png",
                     fullWidth: 6000,
                     fullHeight: 3375,
                     aspectRatio: undefined

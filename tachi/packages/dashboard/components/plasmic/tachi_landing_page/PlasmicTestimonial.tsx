@@ -168,7 +168,7 @@ function PlasmicTestimonial__RenderFunc(props: {
             displayMinWidth={"0"}
             displayWidth={"100%"}
             src={{
-              src: "/plasmic/tachi_landing_page/images/profilepic.png",
+              src: "/images/ui/avatars/profile-placeholder.png",
               fullWidth: 192,
               fullHeight: 192,
               aspectRatio: undefined

@@ -12,7 +12,8 @@
   "images": {
     "scheme": "public-files",
     "publicDir": "../public",
-    "publicUrlPrefix": "/"
+    "publicUrlPrefix": "/",
+    "pathPrefix": "images/"
   },
   "tokens": {
     "scheme": "theo",
@@ -1053,7 +1054,7 @@
         {
           "id": "JueIpQXKd4mV",
           "name": "profilepic",
-          "filePath": "../public/plasmic/tachi_landing_page/images/profilepic.png"
+          "filePath": "../public/images/ui/avatars/profile-placeholder.png"
         },
         {
           "id": "FU53-1r64NFr",
@@ -1078,7 +1079,7 @@
         {
           "id": "8o5WD11SHBo3",
           "name": "image 2",
-          "filePath": "../public/plasmic/tachi_landing_page/images/image2.svg"
+          "filePath": "../public/images/ui/placeholders/generic-placeholder.svg"
         },
         {
           "id": "5jL8E6GqWm3u",
@@ -1203,17 +1204,17 @@
         {
           "id": "zRCcnsvaFq9l",
           "name": "Logo 2",
-          "filePath": "../public/plasmic/tachi_landing_page/images/logo2.svg"
+          "filePath": "../public/images/logos/tachi_logo.svg"
         },
         {
           "id": "aHaZ1qeb4lM0",
           "name": "wc-coin",
-          "filePath": "../public/plasmic/tachi_landing_page/images/wcCoin.svg"
+          "filePath": "../public/images/logos/walletconnect/coin.svg"
         },
         {
           "id": "Bmwpg-jgqx87",
           "name": "wc-connect",
-          "filePath": "../public/plasmic/tachi_landing_page/images/wcConnect.svg"
+          "filePath": "../public/images/logos/walletconnect/connect.svg"
         },
         {
           "id": "lkF0fL99FAbO",

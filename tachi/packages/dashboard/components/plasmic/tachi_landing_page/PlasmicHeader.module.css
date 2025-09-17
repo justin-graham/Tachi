@@ -62,48 +62,62 @@
   height: 24px;
 }
 .buttonSignin {
-  background: #066d5a3d;
+  background: linear-gradient(135deg, var(--token-hVfcb8r6pWxK) 0%, #048C6F 100%);
   width: auto;
   height: auto;
   display: flex;
   overflow: hidden;
   flex-direction: row;
-  column-gap: 10px;
+  column-gap: 8px;
   align-items: center;
-  justify-content: flex-start;
-  padding-left: 13px;
-  padding-right: 13px;
-  border-radius: 10px;
+  justify-content: center;
+  padding: 12px 20px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(6, 109, 90, 0.3);
+  cursor: pointer;
+}
+
+.buttonSignin:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(6, 109, 90, 0.4);
+  background: linear-gradient(135deg, #048C6F 0%, var(--token-hVfcb8r6pWxK) 100%);
 }
 .signIn {
   position: relative;
-  width: 49px;
-  height: 33px;
+  width: auto;
+  height: auto;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 .text {
   display: block;
-  font-size: 15px;
+  font-size: 16px;
   text-align: center;
-  font-family: "Helvetica Neue";
+  font-family: "Playfair Display", serif;
   font-weight: 500;
   letter-spacing: 0.01em;
-  line-height: 92px;
-  color: #066d5a;
-  padding-right: 8px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 1);
+  padding-right: 0;
 }
 .svg {
   object-fit: cover;
   max-width: 100%;
-  color: #066d5a;
-  width: 7px;
-  height: 10px;
+  color: rgba(255, 255, 255, 1);
+  width: 12px;
+  height: 12px;
   display: block;
   position: relative;
   flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.buttonSignin:hover .svg {
+  transform: translateX(2px);
 }
 .svg__fyR29 {
   position: relative;

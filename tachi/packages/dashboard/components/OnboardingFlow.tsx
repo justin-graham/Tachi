@@ -1,90 +1,285 @@
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Wallet, Globe, DollarSign, Coins, Rocket, TestTube, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import Background from './Background';
+import StandardButton from './StandardButton';
+import '../styles/background.css';
 
-// Simple inline components to avoid import issues
-const Button = ({ children, onClick, disabled, variant = 'default', className = '' }: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  variant?: 'default' | 'outline';
-  className?: string;
-}) => {
-  const baseStyles = 'inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-colors';
-  const variants = {
-    default: 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50',
-    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-  };
-  
+// HourglassSpiral component for success step
+const HourglassSpiral = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    // Dynamic import for THREE.js
+    const initThreeJS = async () => {
+      const THREE = await import('three');
+
+      // Setup scene
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color('#FAF9F6');
+      
+      // Setup camera
+      const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+      camera.position.z = 16;
+      camera.position.y = 0;
+      
+      // Setup renderer
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(400, 400);
+      if (containerRef.current) {
+        containerRef.current.appendChild(renderer.domElement);
+      }
+      
+      // Create main group
+      const pineCone = new THREE.Group();
+      
+      // Begin with the smallest elements
+      const particleCount = 10000;  // The many that arise from one
+      const particles = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);  // Space for growth
+      const colors = new Float32Array(particleCount * 3);     // Potential for form
+      const sizes = new Float32Array(particleCount);          // Room to develop
+      
+      for (let i = 0; i < particleCount; i++) {
+        // Create hourglass shape with particles
+        const t = i / particleCount;
+        // const layer = t * 40;
+        // const angle = layer * 0.3 + Math.random() * 0.2;
+        const spiralAngle = t * Math.PI * 40;
+        
+        let radius;
+        if (t < 0.3) {
+          // Top bulge
+          radius = Math.sin(t * Math.PI / 0.3) * 2.5;
+        } else if (t < 0.5) {
+          // Middle pinch - create hourglass waist
+          radius = 2.5 - (Math.sin((t - 0.3) * Math.PI / 0.2)) * 1.5;
+        } else if (t < 0.7) {
+          // Begin expansion after pinch
+          radius = 1 + (Math.sin((t - 0.5) * Math.PI / 0.2)) * 2;
+        } else {
+          // Bottom bulge
+          radius = 3 - (Math.sin((t - 0.7) * Math.PI / 0.3)) * 1;
+        }
+        
+        // Add some randomness for organic feel
+        radius += (Math.random() - 0.5) * 0.1;
+        
+        const y = t * 16 - 8;
+        const x = Math.cos(spiralAngle) * radius;
+        const z = Math.sin(spiralAngle) * radius;
+        
+        positions[i * 3] = x;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = z;
+        
+        // Set all particles to black
+        colors[i * 3] = 0;
+        colors[i * 3 + 1] = 0;
+        colors[i * 3 + 2] = 0;
+        
+        // Vary particle sizes
+        sizes[i] = Math.random() * 0.03 + 0.01;
+      }
+      
+      particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      particles.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      particles.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+      
+      const particleMaterial = new THREE.PointsMaterial({
+        size: 0.02,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.8,
+        sizeAttenuation: true,
+        blending: THREE.NormalBlending
+      });
+      
+      const particleSystem = new THREE.Points(particles, particleMaterial);
+      pineCone.add(particleSystem);
+      
+      // Add some structural lines - keeping these gray
+      const lineMaterial = new THREE.LineBasicMaterial({
+        color: '#888888',
+        transparent: true,
+        opacity: 0.3
+      });
+      
+      // Spiral structure
+      const spiralPoints: THREE.Vector3[] = [];
+      for (let i = 0; i < 200; i++) {
+        const t = i / 200;
+        const angle = t * Math.PI * 16;
+        const y = t * 16 - 8;
+        
+        let radius;
+        if (t < 0.3) {
+          // Top bulge
+          radius = Math.sin(t * Math.PI / 0.3) * 2.5;
+        } else if (t < 0.5) {
+          // Middle pinch - create hourglass waist
+          radius = 2.5 - (Math.sin((t - 0.3) * Math.PI / 0.2)) * 1.5;
+        } else if (t < 0.7) {
+          // Begin expansion after pinch
+          radius = 1 + (Math.sin((t - 0.5) * Math.PI / 0.2)) * 2;
+        } else {
+          // Bottom bulge
+          radius = 3 - (Math.sin((t - 0.7) * Math.PI / 0.3)) * 1;
+        }
+        
+        spiralPoints.push(new THREE.Vector3(
+          Math.cos(angle) * radius,
+          y,
+          Math.sin(angle) * radius
+        ));
+      }
+      
+      const spiralGeometry = new THREE.BufferGeometry().setFromPoints(spiralPoints);
+      const spiralLine = new THREE.Line(spiralGeometry, lineMaterial);
+      pineCone.add(spiralLine);
+      
+      scene.add(pineCone);
+      
+      let time = 0;
+      let animationFrameId: number;
+      
+      function animate() {
+        animationFrameId = requestAnimationFrame(animate);
+        
+        time += 0.005;  // Halved speed
+        
+        pineCone.rotation.y = time * 0.45;  // Increased rotation speed
+        pineCone.rotation.x = Math.sin(time * 0.25) * 0.05;  // Halved speed
+        pineCone.rotation.z = Math.cos(time * 0.35) * 0.03;  // Halved speed
+        
+        const breathe = 1 + Math.sin(time * 0.25) * 0.02;  // Halved speed
+        pineCone.scale.set(breathe, breathe, breathe);
+        
+        // Animate particles slightly
+        const positions = particleSystem.geometry.attributes.position.array as Float32Array;
+        for (let i = 0; i < positions.length; i += 3) {
+          positions[i] += Math.sin(time + i) * 0.00005;  // Halved movement
+          positions[i + 1] += Math.cos(time + i) * 0.00005;  // Halved movement
+          positions[i + 2] += Math.sin(time + i + 1) * 0.00005;  // Halved movement
+        }
+        particleSystem.geometry.attributes.position.needsUpdate = true;
+        
+        renderer.render(scene, camera);
+      }
+      
+      animate();
+      
+      // Cleanup function
+      return () => {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+        }
+        
+        // Dispose of geometries
+        if (particles) {
+          particles.dispose();
+        }
+        if (spiralGeometry) {
+          spiralGeometry.dispose();
+        }
+        
+        // Dispose of materials
+        if (particleMaterial) {
+          particleMaterial.dispose();
+        }
+        if (lineMaterial) {
+          lineMaterial.dispose();
+        }
+        
+        // Remove objects from scene
+        if (pineCone) {
+          if (particleSystem) {
+            pineCone.remove(particleSystem);
+          }
+          if (spiralLine) {
+            pineCone.remove(spiralLine);
+          }
+          scene.remove(pineCone);
+        }
+        
+        // Clear scene
+        if (scene) {
+          scene.clear();
+        }
+        
+        // Dispose of renderer
+        if (renderer) {
+          if (containerRef.current && renderer.domElement && containerRef.current.contains(renderer.domElement)) {
+            containerRef.current.removeChild(renderer.domElement);
+          }
+          renderer.dispose();
+          renderer.forceContextLoss();
+        }
+        
+        // Clear arrays to prevent memory leaks
+        positions.fill(0);
+        colors.fill(0);
+        sizes.fill(0);
+        spiralPoints.length = 0;
+        
+        // Reset time variable
+        time = 0;
+      };
+    };
+
+    initThreeJS().catch(console.error);
+  }, []);
+
   return (
-    <button
-      className={`${baseStyles} ${variants[variant]} ${className}`}
-      onClick={onClick}
-      disabled={disabled}
-    >
-      {children}
-    </button>
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#FAF9F6',
+      borderRadius: '8px',
+      overflow: 'hidden',
+      width: '400px',
+      height: '400px',
+      margin: '0 auto'
+    }}>
+      <div 
+        ref={containerRef}
+        style={{
+          width: '400px',
+          height: '400px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}
+      />
+    </div>
   );
 };
-
-const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-  <div className={`bg-white border rounded-lg shadow-sm ${className}`}>
-    {children}
-  </div>
-);
-
-const Input = ({ className = '', onChange, ...props }: {
-  className?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  [key: string]: any;
-}) => (
-  <input
-    className={`flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${className}`}
-    onChange={onChange}
-    {...props}
-  />
-);
-
-const Label = ({ children, htmlFor, className = '' }: {
-  children: React.ReactNode;
-  htmlFor?: string;
-  className?: string;
-}) => (
-  <label htmlFor={htmlFor} className={`text-sm font-medium text-gray-700 ${className}`}>
-    {children}
-  </label>
-);
-
-interface OnboardingStep {
-  id: number;
-  title: string;
-  icon: React.ReactNode;
-  completed: boolean;
-  current: boolean;
-}
 
 const OnboardingFlow: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     wallet: '',
     domain: '',
-    pricing: '',
-    mint: ''
+    siteTitle: '',
+    categories: [] as string[],
+    pricePerCrawl: 0.01,
+    currency: 'USDC',
+    usageRights: {
+      aiTraining: true,
+      commercialUse: true,
+      attribution: false,
+      derivatives: false
+    },
+    cloudflareToken: '',
+    deployMethod: 'auto',
+    testUrl: ''
   });
 
-  console.log('OnboardingFlow rendering with step:', currentStep);
-
-  const steps: OnboardingStep[] = [
-    { id: 1, title: 'wallet', icon: <Wallet size={16} />, completed: currentStep > 1, current: currentStep === 1 },
-    { id: 2, title: 'domain', icon: <Globe size={16} />, completed: currentStep > 2, current: currentStep === 2 },
-    { id: 3, title: 'pricing', icon: <DollarSign size={16} />, completed: currentStep > 3, current: currentStep === 3 },
-    { id: 4, title: 'mint', icon: <Coins size={16} />, completed: currentStep > 4, current: currentStep === 4 },
-    { id: 5, title: 'deploy', icon: <Rocket size={16} />, completed: currentStep > 5, current: currentStep === 5 },
-    { id: 6, title: 'test', icon: <TestTube size={16} />, completed: currentStep > 6, current: currentStep === 6 },
-    { id: 7, title: 'success', icon: <CheckCircle size={16} />, completed: currentStep > 7, current: currentStep === 7 }
-  ];
+  const steps = ['wallet', 'domain', 'pricing', 'mint', 'deploy', 'test', 'success'];
 
   const handleNext = () => {
-    if (currentStep < 6) {
+    if (currentStep < 7) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -95,311 +290,675 @@ const OnboardingFlow: React.FC = () => {
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleCategoryChange = (category: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      categories: checked
+        ? [...prev.categories, category]
+        : prev.categories.filter(c => c !== category)
+    }));
+  };
+
+  const handleUsageRightChange = (right: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      usageRights: { ...prev.usageRights, [right]: checked }
+    }));
+  };
+
+  const getStepTitle = () => {
+    switch (currentStep) {
+      case 1: return 'Connect Wallet';
+      case 2: return 'Site Details';
+      case 3: return 'Pricing Configuration';
+      case 4: return 'License Creation';
+      case 5: return 'Gateway Deployment';
+      case 6: return 'Testing & Verification';
+      case 7: return 'Your Tachi Protection is Live!';
+      default: return 'Connect Wallet';
+    }
+  };
+
+  const getStepDescription = () => {
+    switch (currentStep) {
+      case 1: return 'Choose your preferred wallet to continue';
+      case 2: return 'Enter the domain for your Tachi implementation';
+      case 3: return 'Configure your pricing structure';
+      case 4: return 'Ready to mint your content license';
+      case 5: return 'Deploy your Cloudflare worker gateway';
+      case 6: return 'Test your implementation';
+      case 7: return '';
+      default: return '';
+    }
+  };
+
+  // const getContentScale = () => {
+  //   // Steps 2 and 4 have more content, so scale them down slightly
+  //   switch (currentStep) {
+  //     case 2: return 0.9; // Categories grid needs more space
+  //     case 4: return 0.9; // Usage rights need more space
+  //     default: return 1;
+  //   }
+  // };
+
+  // Convert 0.75 inches to pixels (assuming 96 DPI)
+  const borderSize = '72px'; // 0.75 inch * 96 DPI
+
   return (
-    <div className="min-h-screen bg-[#faf9f6]">
-      {/* Header */}
-      <div className="w-full px-4 py-2">
-        <div className="bg-white rounded-lg p-4 shadow-sm max-w-7xl mx-auto">
-          <h1 className="text-xl font-semibold text-gray-900">Tachi Onboarding</h1>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <section className="w-full px-4 pt-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Left Column - Progress Stepper and Form */}
-            <div className="flex-1 space-y-6">
-              <div className="space-y-6">
-                {/* Progress Stepper */}
-                <Card className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    {steps.map((step, index) => (
-                      <React.Fragment key={step.id}>
-                        {/* Step Container */}
-                        <div className="flex flex-col items-center space-y-2 flex-1">
-                          <div 
-                            className={`
-                              w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300
-                              ${step.current 
-                                ? 'bg-blue-500 border-blue-500 text-white' 
-                                : step.completed 
-                                  ? 'bg-blue-500 border-blue-500 text-white'
-                                  : 'bg-white border-gray-300 text-gray-400'
-                              }
-                            `}
-                          >
-                            {step.completed ? (
-                              <CheckCircle size={16} />
-                            ) : step.current ? (
-                              <div className="w-3 h-3 bg-white rounded-full"></div>
-                            ) : (
-                              <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-                            )}
-                          </div>
-                          <span 
-                            className={`
-                              text-xs font-medium transition-all duration-300 text-center
-                              ${step.current 
-                                ? 'text-blue-600' 
-                                : step.completed 
-                                  ? 'text-blue-500'
-                                  : 'text-gray-400'
-                              }
-                            `}
-                          >
-                            {step.title}
-                          </span>
-                        </div>
-                        
-                        {/* Connecting Line */}
-                        {index < steps.length - 1 && (
-                          <div className="flex-1 mx-3 relative top-[-16px]">
-                            <div 
-                              className={`
-                                h-0.5 w-full transition-all duration-300
-                                ${step.completed ? 'bg-blue-500' : 'bg-gray-300'}
-                              `}
-                            />
-                          </div>
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                </Card>
-
-                {/* Form Card */}
-                <Card className="p-8">
-                  <div className="space-y-6">
-                    {/* Step Content */}
-                    <div className="transition-all duration-500 ease-in-out">
-                      {currentStep === 1 && (
-                        <div className="space-y-6">
-                          <div className="text-center mb-8">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Connect Wallet</h2>
-                            <p className="text-gray-600">Choose your preferred wallet to continue</p>
-                          </div>
-                          <div className="space-y-4">
-                            {/* MetaMask Option */}
-                            <div className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-all group">
-                              <div className="flex items-center space-x-4">
-                                <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                  <Wallet size={24} className="text-white" />
-                                </div>
-                                <div>
-                                  <h3 className="font-semibold text-gray-900">MetaMask</h3>
-                                  <p className="text-sm text-gray-500">Connect with MetaMask wallet</p>
-                                </div>
-                              </div>
-                              <ChevronRight size={20} className="text-gray-400 group-hover:text-blue-500" />
-                            </div>
-                            
-                            {/* Coinbase Wallet Option */}
-                            <div className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-all group">
-                              <div className="flex items-center space-x-4">
-                                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                  <Wallet size={24} className="text-white" />
-                                </div>
-                                <div>
-                                  <h3 className="font-semibold text-gray-900">CoinBase Wallet</h3>
-                                  <p className="text-sm text-gray-500">Connect with Coinbase wallet</p>
-                                </div>
-                              </div>
-                              <ChevronRight size={20} className="text-gray-400 group-hover:text-blue-500" />
-                            </div>
-                            
-                            {/* WalletConnect Option */}
-                            <div className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-all group">
-                              <div className="flex items-center space-x-4">
-                                <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                  <Wallet size={24} className="text-white" />
-                                </div>
-                                <div>
-                                  <h3 className="font-semibold text-gray-900">WalletConnect</h3>
-                                  <p className="text-sm text-gray-500">Connect with WalletConnect protocol</p>
-                                </div>
-                              </div>
-                              <ChevronRight size={20} className="text-gray-400 group-hover:text-blue-500" />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {currentStep === 2 && (
-                        <div className="space-y-6">
-                          <div className="text-center mb-8">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Domain Setup</h2>
-                            <p className="text-gray-600">Enter the domain for your Tachi implementation</p>
-                          </div>
-                          <div className="space-y-4">
-                            <Label htmlFor="domain" className="text-base font-semibold text-gray-900">Enter your domain</Label>
-                            <Input
-                              id="domain"
-                              type="text"
-                              placeholder="your-domain.com"
-                              value={formData.domain}
-                              onChange={(e: any) => handleInputChange('domain', e.target.value)}
-                              className="w-full h-12 text-base"
-                            />
-                            <p className="text-sm text-gray-600 bg-blue-50 p-4 rounded-lg">
-                              💡 This domain will be used for your Tachi implementation.
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {currentStep === 3 && (
-                        <div className="space-y-4">
-                          <h2 className="text-xl font-semibold text-gray-900">Pricing Plan</h2>
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-1 gap-3">
-                              <div className="p-4 border rounded-lg hover:border-blue-500 cursor-pointer transition-colors">
-                                <div className="flex justify-between items-center">
-                                  <div>
-                                    <h3 className="font-medium">Starter</h3>
-                                    <p className="text-sm text-gray-600">Perfect for small projects</p>
-                                  </div>
-                                  <span className="text-lg font-semibold">$10/mo</span>
-                                </div>
-                              </div>
-                              <div className="p-4 border-2 border-blue-500 rounded-lg bg-blue-50">
-                                <div className="flex justify-between items-center">
-                                  <div>
-                                    <h3 className="font-medium">Professional</h3>
-                                    <p className="text-sm text-gray-600">For growing businesses</p>
-                                  </div>
-                                  <span className="text-lg font-semibold">$50/mo</span>
-                                </div>
-                              </div>
-                              <div className="p-4 border rounded-lg hover:border-blue-500 cursor-pointer transition-colors">
-                                <div className="flex justify-between items-center">
-                                  <div>
-                                    <h3 className="font-medium">Enterprise</h3>
-                                    <p className="text-sm text-gray-600">For large scale operations</p>
-                                  </div>
-                                  <span className="text-lg font-semibold">Custom</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {currentStep === 4 && (
-                        <div className="space-y-4">
-                          <h2 className="text-xl font-semibold text-gray-900">Mint Tokens</h2>
-                          <div className="space-y-3">
-                            <Label htmlFor="mint-amount">Token Amount</Label>
-                            <Input
-                              id="mint-amount"
-                              type="number"
-                              placeholder="1000"
-                              value={formData.mint}
-                              onChange={(e) => handleInputChange('mint', e.target.value)}
-                              className="w-full"
-                            />
-                            <p className="text-sm text-gray-600">
-                              Specify the number of tokens to mint for your implementation.
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {currentStep === 5 && (
-                        <div className="space-y-4">
-                          <h2 className="text-xl font-semibold text-gray-900">Deploy Contract</h2>
-                          <div className="text-center py-8">
-                            <Rocket size={48} className="mx-auto text-blue-500 mb-4" />
-                            <p className="text-gray-600">Deploying your smart contract...</p>
-                            <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
-                              <div className="bg-blue-600 h-2 rounded-full w-3/4 transition-all duration-1000"></div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {currentStep === 6 && (
-                        <div className="space-y-4">
-                          <h2 className="text-xl font-semibold text-gray-900">Test Integration</h2>
-                          <div className="text-center py-8">
-                            <TestTube size={48} className="mx-auto text-green-500 mb-4" />
-                            <p className="text-gray-600">Running integration tests...</p>
-                            <div className="mt-4 space-y-2">
-                              <div className="flex justify-between text-sm">
-                                <span>✅ Contract deployment</span>
-                                <span className="text-green-500">Passed</span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span>✅ Token functionality</span>
-                                <span className="text-green-500">Passed</span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span>🔄 Domain integration</span>
-                                <span className="text-blue-500">Testing...</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Navigation Buttons */}
-                    <div className="flex justify-between pt-8 border-t border-gray-200">
-                      <Button
-                        variant="outline"
-                        onClick={handlePrevious}
-                        disabled={currentStep === 1}
-                        className="flex items-center space-x-2 px-6 py-3"
-                      >
-                        <ChevronLeft size={18} />
-                        <span>Previous</span>
-                      </Button>
-                      
-                      <Button
-                        onClick={handleNext}
-                        disabled={currentStep === 6}
-                        className="flex items-center space-x-2 px-6 py-3"
-                      >
-                        <span>Next</span>
-                        <ChevronRight size={18} />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
+    <div style={{
+      height: '100vh',
+      position: 'relative',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: `${borderSize} ${borderSize}`,
+      boxSizing: 'border-box'
+    }}>
+      <Background />
+      
+      <div style={{
+        maxWidth: '1238px',
+        width: '100%',
+        height: 'calc(110vh - 158px)',
+        backgroundColor: '#FAF9F6',
+        padding: '40px',
+        textAlign: 'center',
+        position: 'relative',
+        zIndex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #FAF9F6 0%, #FAF9F6 70%, #F8F4E6 100%)',
+        border: 'none',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06)'
+      }}>
+        
+        {/* Progress Indicators */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginBottom: '40px',
+          gap: '20px'
+        }}>
+          {steps.map((step, index) => (
+            <React.Fragment key={index}>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <div style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  backgroundColor: currentStep === index + 1 
+                    ? '#52796F' 
+                    : currentStep > index + 1 
+                      ? '#52796F'
+                      : '#888',
+                  border: '2px solid #52796F'
+                }} />
+                <span style={{
+                  fontSize: '10px',
+                  fontWeight: 'bold',
+                  color: currentStep === index + 1 || currentStep > index + 1 ? '#52796F' : '#888',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  {step}
+                </span>
               </div>
-            </div>
-
-            {/* Right Column - Image */}
-            <div className="flex-1 lg:max-w-lg">
-              <Card className="h-full overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100">
-                <div className="h-[600px] w-full relative">
-                  <img 
-                    src="/plasmic/tachi_landing_page/images/tachiPitchDeck18Png.png"
-                    alt="Tachi Onboarding Flow"
-                    className="w-full h-full object-cover"
-                    onError={(e: any) => {
-                      console.log('Primary image failed, trying fallback...');
-                      e.currentTarget.src = "/plasmic/tachi_landing_page/images/heroImage.png";
-                    }}
-                    onLoad={() => console.log('Image loaded successfully')}
-                  />
-                  {/* Fallback content if image fails */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 text-white opacity-0 hover:opacity-90 transition-opacity">
-                    <div className="text-center p-8">
-                      <h3 className="text-2xl font-bold mb-4">Tachi Protocol</h3>
-                      <p className="text-lg opacity-90">Pay-Per-Crawl Implementation</p>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </div>
+              {index < steps.length - 1 && (
+                <div style={{
+                  width: '30px',
+                  height: '2px',
+                  backgroundColor: currentStep > index + 1 ? '#52796F' : '#888',
+                  marginTop: '-20px'
+                }} />
+              )}
+            </React.Fragment>
+          ))}
         </div>
-      </section>
+
+        {/* Step Title */}
+        <h1 style={{
+          fontSize: currentStep === 2 || currentStep === 4 ? '2.2rem' : '2.5rem',
+          fontWeight: 'bold',
+          color: '#FF7043',
+          textTransform: 'uppercase',
+          letterSpacing: '2px',
+          marginBottom: currentStep === 2 || currentStep === 4 ? '15px' : '20px',
+          lineHeight: '1.2'
+        }}>
+          {getStepTitle()}
+        </h1>
+
+        {/* Step Description */}
+        <p style={{
+          color: '#666',
+          fontSize: currentStep === 2 || currentStep === 4 ? '0.9rem' : '1rem',
+          marginBottom: currentStep === 2 || currentStep === 4 ? '30px' : '40px',
+          lineHeight: '1.5'
+        }}>
+          {getStepDescription()}
+        </p>
+
+        {/* Step Content */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: currentStep === 2 || currentStep === 4 ? '15px' : '20px',
+          width: '70%',
+          margin: '0 auto'
+        }}>
+          
+          {/* Step 1: Connect Wallet */}
+          {currentStep === 1 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {[
+                { name: 'MetaMask', icon: '🦊', color: '#f97316', isText: true },
+                { name: 'Coinbase Wallet', icon: '/images/coinbase-v2.svg', color: '#FF7043', isText: false },
+                { name: 'WalletConnect', icon: '/images/walletconnect.png', color: '#3b82f6', isText: false }
+              ].map((wallet) => (
+                <button
+                  key={wallet.name}
+                  onClick={() => handleInputChange('wallet', wallet.name)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '20px',
+                    border: '3px solid #FF7043',
+                    backgroundColor: formData.wallet === wallet.name ? '#FF7043' : '#FAF9F6',
+                    color: formData.wallet === wallet.name ? 'white' : 'black',
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseOver={(e) => {
+                    if (formData.wallet !== wallet.name) {
+                      e.currentTarget.style.backgroundColor = '#e0e0e0';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (formData.wallet !== wallet.name) {
+                      e.currentTarget.style.backgroundColor = '#FAF9F6';
+                    }
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      backgroundColor: wallet.isText ? wallet.color : 'transparent',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontSize: '20px',
+                      fontWeight: 'bold'
+                    }}>
+                      {wallet.isText ? (
+                        wallet.icon
+                      ) : (
+                        <img
+                          src={wallet.icon}
+                          alt={wallet.name}
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            objectFit: 'contain'
+                          }}
+                        />
+                      )}
+                    </div>
+                    <span>{wallet.name}</span>
+                  </div>
+                  <span>▶</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Step 2: Site Details */}
+          {currentStep === 2 && (
+            <>
+              <input
+                type="text"
+                placeholder="Your domain (e.g., your-site.com)"
+                value={formData.domain}
+                onChange={(e) => handleInputChange('domain', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '15px',
+                  border: '3px solid #FF7043',
+                  backgroundColor: '#FAF9F6',
+                  fontSize: '16px',
+                  color: 'black',
+                  outline: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#FF7043';
+                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255, 112, 67, 0.2)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '#FF7043';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              />
+              
+              <input
+                type="text"
+                placeholder="Site title (e.g., My Blog)"
+                value={formData.siteTitle}
+                onChange={(e) => handleInputChange('siteTitle', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '15px',
+                  border: '3px solid #FF7043',
+                  backgroundColor: '#FAF9F6',
+                  fontSize: '16px',
+                  color: 'black',
+                  outline: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#FF7043';
+                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255, 112, 67, 0.2)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '#FF7043';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              />
+
+              <div style={{ textAlign: 'left' }}>
+                <p style={{ 
+                  fontSize: '14px', 
+                  fontWeight: 'bold', 
+                  marginBottom: '15px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px'
+                }}>
+                  Content Categories:
+                </p>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: '1fr 1fr', 
+                  gap: '8px' 
+                }}>
+                  {['News & Journalism', 'Blog & Opinion', 'Research & Academic', 'Technical Documentation', 'Creative Content', 'Other'].map((category) => (
+                    <label key={category} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      position: 'relative'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.categories.includes(category)}
+                        onChange={(e) => handleCategoryChange(category, e.target.checked)}
+                        style={{
+                          position: 'absolute',
+                          opacity: 0,
+                          width: '100%',
+                          height: '100%',
+                          cursor: 'pointer'
+                        }}
+                      />
+                      <div style={{
+                        padding: '8px 12px',
+                        border: '2px solid #FF7043',
+                        backgroundColor: formData.categories.includes(category) ? '#FF7043' : '#FAF9F6',
+                        color: formData.categories.includes(category) ? 'white' : 'black',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        transition: 'all 0.3s ease',
+                        width: '100%',
+                        textAlign: 'center'
+                      }}>
+                        {category}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Step 3: Pricing */}
+          {currentStep === 3 && (
+            <>
+              <input
+                type="number"
+                min="0.0001"
+                max="3.00"
+                step="0.0001"
+                placeholder="Price per crawl (e.g., 0.01)"
+                value={formData.pricePerCrawl}
+                onChange={(e) => handleInputChange('pricePerCrawl', parseFloat(e.target.value))}
+                style={{
+                  width: '100%',
+                  padding: '15px',
+                  border: '3px solid #FF7043',
+                  backgroundColor: '#FAF9F6',
+                  fontSize: '16px',
+                  color: 'black',
+                  outline: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#FF7043';
+                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255, 112, 67, 0.2)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '#FF7043';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              />
+              
+              <select
+                value={formData.currency}
+                onChange={(e) => handleInputChange('currency', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '25px',
+                  border: '3px solid #FF7043',
+                  backgroundColor: '#FAF9F6',
+                  fontSize: '16px',
+                  color: 'black',
+                  outline: 'none',
+                  transition: 'all 0.3s ease',
+                  minHeight: '70px'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#FF7043';
+                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255, 112, 67, 0.2)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '#FF7043';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <option value="USDC">USDC</option>
+                <option value="ETH">ETH</option>
+                <option value="MATIC">MATIC</option>
+              </select>
+            </>
+          )}
+
+          {/* Step 4: License Creation */}
+          {currentStep === 4 && (
+            <>
+              <div style={{ textAlign: 'left' }}>
+                <p style={{ 
+                  fontSize: '14px', 
+                  fontWeight: 'bold', 
+                  marginBottom: '15px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px'
+                }}>
+                  Content Usage Rights:
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {[
+                    { key: 'aiTraining', label: 'Allow AI training' },
+                    { key: 'commercialUse', label: 'Allow commercial use' },
+                    { key: 'attribution', label: 'Require attribution' },
+                    { key: 'derivatives', label: 'Limit derivative works' }
+                  ].map((right) => (
+                    <label key={right.key} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      position: 'relative'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.usageRights[right.key as keyof typeof formData.usageRights]}
+                        onChange={(e) => handleUsageRightChange(right.key, e.target.checked)}
+                        style={{
+                          position: 'absolute',
+                          opacity: 0,
+                          width: '100%',
+                          height: '100%',
+                          cursor: 'pointer'
+                        }}
+                      />
+                      <div style={{
+                        padding: '10px 15px',
+                        border: '2px solid #FF7043',
+                        backgroundColor: formData.usageRights[right.key as keyof typeof formData.usageRights] ? '#FF7043' : '#FAF9F6',
+                        color: formData.usageRights[right.key as keyof typeof formData.usageRights] ? 'white' : 'black',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        transition: 'all 0.3s ease',
+                        width: '100%',
+                        textAlign: 'center'
+                      }}>
+                        {right.label}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{
+                padding: '20px',
+                border: '3px solid #FF7043',
+                backgroundColor: '#B8D4C7',
+                textAlign: 'center'
+              }}>
+                <p style={{ fontWeight: 'bold', marginBottom: '5px' }}>Status: Ready to mint</p>
+                <p style={{ fontSize: '14px', color: '#666' }}>Gas Fee: ~$2.50 USD (Base network)</p>
+              </div>
+            </>
+          )}
+
+          {/* Step 5: Gateway Deployment */}
+          {currentStep === 5 && (
+            <>
+              <input
+                type="password"
+                placeholder="Cloudflare API Token"
+                value={formData.cloudflareToken}
+                onChange={(e) => handleInputChange('cloudflareToken', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '15px',
+                  border: '3px solid #FF7043',
+                  backgroundColor: '#FAF9F6',
+                  fontSize: '16px',
+                  color: 'black',
+                  outline: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#FF7043';
+                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255, 112, 67, 0.2)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '#FF7043';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              />
+
+              <div style={{ textAlign: 'left' }}>
+                <p style={{ 
+                  fontSize: '14px', 
+                  fontWeight: 'bold', 
+                  marginBottom: '15px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px'
+                }}>
+                  Deployment Method:
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {[
+                    { value: 'auto', label: 'Auto-deploy (Recommended)' },
+                    { value: 'manual', label: 'Download code for manual deployment' }
+                  ].map((method) => (
+                    <label key={method.value} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      position: 'relative'
+                    }}>
+                      <input
+                        type="radio"
+                        name="deployMethod"
+                        value={method.value}
+                        checked={formData.deployMethod === method.value}
+                        onChange={(e) => handleInputChange('deployMethod', e.target.value)}
+                        style={{
+                          position: 'absolute',
+                          opacity: 0,
+                          width: '100%',
+                          height: '100%',
+                          cursor: 'pointer'
+                        }}
+                      />
+                      <div style={{
+                        padding: '10px 15px',
+                        border: '2px solid #FF7043',
+                        backgroundColor: formData.deployMethod === method.value ? '#FF7043' : '#FAF9F6',
+                        color: formData.deployMethod === method.value ? 'white' : 'black',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        transition: 'all 0.3s ease',
+                        width: '100%',
+                        textAlign: 'center'
+                      }}>
+                        {method.label}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{
+                padding: '20px',
+                border: '3px solid #FF7043',
+                backgroundColor: '#B8D4C7',
+                textAlign: 'center'
+              }}>
+                <p style={{ fontWeight: 'bold', marginBottom: '5px' }}>Deployment Time: ~30 seconds</p>
+                <p style={{ fontSize: '14px', color: '#666' }}>Global propagation: ~2 minutes</p>
+              </div>
+            </>
+          )}
+
+          {/* Step 6: Testing */}
+          {currentStep === 6 && (
+            <>
+              <input
+                type="url"
+                placeholder="Test URL (e.g., https://your-domain.com/test-page)"
+                value={formData.testUrl}
+                onChange={(e) => handleInputChange('testUrl', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '15px',
+                  border: '3px solid #FF7043',
+                  backgroundColor: '#FAF9F6',
+                  fontSize: '16px',
+                  color: 'black',
+                  outline: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#FF7043';
+                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255, 112, 67, 0.2)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '#FF7043';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              />
+              
+              <StandardButton
+                variant="primary"
+                size="md"
+              >
+                Run Test
+              </StandardButton>
+            </>
+          )}
+
+          {/* Step 7: Success */}
+          {currentStep === 7 && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '30px'
+            }}>
+              <HourglassSpiral />
+              
+              <StandardButton 
+                onClick={() => window.location.href = '/dashboard'}
+                variant="primary"
+                size="lg"
+              >
+                Go to Dashboard
+              </StandardButton>
+            </div>
+          )}
+        </div>
+
+        {/* Navigation Buttons */}
+        {currentStep < 7 && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '20px',
+            marginTop: currentStep === 2 || currentStep === 4 ? '30px' : '40px',
+            width: '70%',
+            margin: `${currentStep === 2 || currentStep === 4 ? '30px' : '40px'} auto 0 auto`
+          }}>
+            <StandardButton 
+              onClick={handlePrevious}
+              disabled={currentStep === 1}
+              variant="secondary"
+              size="lg"
+              style={{
+                backgroundColor: currentStep === 1 ? '#888' : undefined,
+                color: '#333',
+                cursor: currentStep === 1 ? 'not-allowed' : 'pointer'
+              }}
+            >
+              Back
+            </StandardButton>
+            
+            <StandardButton 
+              onClick={handleNext}
+              variant="primary"
+              size="lg"
+            >
+              Continue
+            </StandardButton>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

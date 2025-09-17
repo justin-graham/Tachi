@@ -10,5 +10,11 @@
     "validate": "node runtime-validator.mjs",
     "validate:profile": "node memory-profiler.mjs && node runtime-validator.mjs",
     "validate:full": "node build-optimizer.mjs && node memory-profiler.mjs && node runtime-validator.mjs"
+  },
+  "dependencies": {
+    "@react-three/fiber": "^9.3.0",
+    "@react-three/postprocessing": "^3.0.4",
+    "postprocessing": "^6.37.7",
+    "three": "^0.167.1"
   }
 }

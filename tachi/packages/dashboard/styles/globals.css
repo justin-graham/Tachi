@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import Coinbase fonts */
+@import './coinbase-fonts.css';
+
+/* Set Coinbase Sans as default font with Inter fallback */
+html,
+body {
+  font-family: "Coinbase Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Ensure all text elements inherit the font */
+* {
+  font-family: inherit;
+}
