@@ -160,23 +160,23 @@ const ComputerGallery = () => {
         }
         
         .item-1 .comp .site {
-            background-image: url('/wallet-connect.png');
+            background-image: url('/images/wallet-connect.png');
         }
         
         .item-2 .comp .site {
-            background-image: url('/site-details.png');
+            background-image: url('/images/site-details.png');
         }
         
         .item-3 .comp .site {
-            background-image: url('/pricing-config-updated.png');
+            background-image: url('/images/pricing-config-updated.png');
         }
         
         .item-4 .comp .site {
-            background-image: url('/license-creation.png');
+            background-image: url('/images/license-creation.png');
         }
         
         .item-5 .comp .site {
-            background-image: url('/gateway-deployment.png');
+            background-image: url('/images/gateway-deployment.png');
             background-color: #f0f0f0;
         }
         .comp .site .topbar{
