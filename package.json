@@ -3,13 +3,13 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --filter tachi-publisher-dashboard dev",
-    "build": "node build-optimizer.mjs",
-    "build:clean": "node build-optimizer.mjs --clean && node build-optimizer.mjs",
-    "build:fast": "node build-optimizer.mjs",
-    "build:packages": "node build-optimizer.mjs",
-    "validate": "node runtime-validator.mjs",
-    "validate:profile": "node memory-profiler.mjs && node runtime-validator.mjs",
-    "validate:full": "node build-optimizer.mjs && node memory-profiler.mjs && node runtime-validator.mjs"
+    "build": "node tools/build-optimizer.mjs",
+    "build:clean": "node tools/build-optimizer.mjs --clean && node tools/build-optimizer.mjs",
+    "build:fast": "node tools/build-optimizer.mjs",
+    "build:packages": "node tools/build-optimizer.mjs",
+    "validate": "node tools/runtime-validator.mjs",
+    "validate:profile": "node tools/memory-profiler.mjs && node tools/runtime-validator.mjs",
+    "validate:full": "node tools/build-optimizer.mjs && node tools/memory-profiler.mjs && node tools/runtime-validator.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "^9.3.0",
