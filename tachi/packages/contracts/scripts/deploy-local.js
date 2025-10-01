@@ -10,7 +10,7 @@ async function main() {
   console.log("Account balance:", (await deployer.provider.getBalance(deployer.address)).toString());
 
   // Use the self-mint version for local testing
-  const CrawlNFT = await ethers.getContractFactory("src/CrawlNFTSelfMint.sol:CrawlNFT");
+  const CrawlNFT = await ethers.getContractFactory("src/core/CrawlNFTSelfMint.sol:CrawlNFT");
   const crawlNFT = await CrawlNFT.deploy();
 
   await crawlNFT.waitForDeployment();

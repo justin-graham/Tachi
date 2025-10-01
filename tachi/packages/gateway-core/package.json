@@ -23,6 +23,6 @@
   },
   "dependencies": {
     "@tachi/contracts": "workspace:*",
-    "viem": "^2.32.0"
+    "viem": "^2.37.9"
   }
 }

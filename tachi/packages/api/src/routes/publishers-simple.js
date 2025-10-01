@@ -1,4 +1,5 @@
 import express from 'express';
+import { validate, schemas } from '../middleware/validation.js';
 import { createLogger } from '../utils/logger.js';
 
 const router = express.Router();
@@ -47,7 +48,7 @@ router.get('/directory', async (req, res) => {
 });
 
 // Register a new publisher (demo mode)
-router.post('/register', async (req, res) => {
+router.post('/register', validate(schemas.registerPublisher), async (req, res) => {
   try {
     const { name = 'Demo Publisher', domain = 'demo.com', email = 'demo@demo.com' } = req.body;
     

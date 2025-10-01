@@ -276,76 +276,24 @@ export default function DomainsPage() {
   }, [showAddForm, newDomain]);
 
   return (
-    <div className="min-h-screen p-4 lg:p-8" style={{ backgroundColor: '#FAF9F6' }}>
-      <div className="max-w-7xl mx-auto">
-        
-        {/* Header with Tachi, Docs and Home */}
-        <div className="flex justify-between items-center mb-4" style={{ padding: '0 1rem' }}>
-          {/* Left side - Tachi */}
-          <div>
-            <span style={{
-              color: '#52796F',
-              fontFamily: '"Coinbase Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              fontSize: '24px',
-              fontWeight: '700',
-              letterSpacing: '0.5px',
-            }}>
+    <div>
+      {/* Header Navigation */}
+      <div className="border-b-2 border-[#FF7043] bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <nav className="flex items-center justify-between h-16">
+            <div className="text-[#52796F] font-medium text-lg">
               tachi
-            </span>
-          </div>
-          
-          {/* Right side - Docs and Home */}
-          <div className="flex space-x-6">
-            <button
-              onClick={() => window.open('https://docs.example.com', '_blank')}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#52796F',
-                fontFamily: '"Coinbase Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                fontSize: '16px',
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                cursor: 'pointer',
-                padding: '8px 16px',
-                transition: 'opacity 0.3s ease',
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.opacity = '0.7';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.opacity = '1';
-              }}
-            >
-              DOCS
-            </button>
-            <button
-              onClick={() => window.location.href = '/landing'}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#52796F',
-                fontFamily: '"Coinbase Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                fontSize: '16px',
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                cursor: 'pointer',
-                padding: '8px 16px',
-                transition: 'opacity 0.3s ease',
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.opacity = '0.7';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.opacity = '1';
-              }}
-            >
-              HOME
-            </button>
-          </div>
+            </div>
+            <div className="hidden md:flex space-x-8 text-[#52796F] font-medium uppercase">
+              <a href="/docs" className="hover:underline">DOCS</a>
+              <a href="/dashboard" className="hover:underline">DASHBOARD</a>
+            </div>
+          </nav>
         </div>
+      </div>
+      
+      <div className="min-h-screen p-4 lg:p-8" style={{ backgroundColor: '#FAF9F6' }}>
+        <div className="max-w-7xl mx-auto">
         
         {/* Grid layout for domains page */}
         <div className="grid" style={{
@@ -994,6 +942,7 @@ app.use(tachi({
               )}
             </GridBox>
           </div>
+        </div>
         </div>
       </div>
     </div>

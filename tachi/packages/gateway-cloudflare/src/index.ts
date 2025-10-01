@@ -13,27 +13,146 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { initSentry, withSentryTracing, sendHeartbeat } from './sentry-config';
 import './types/rate-limiter';
 
-// Environment variables interface for type safety
+/**
+ * Environment variables interface for Tachi Protocol Cloudflare Worker
+ * 
+ * @interface Env
+ * @description Configuration interface for all environment variables required to run
+ * the Tachi Protocol gateway worker. These variables control blockchain connections,
+ * payment processing, security settings, and monitoring.
+ */
 interface Env {
+  /**
+   * Base network RPC endpoint URL (REQUIRED)
+   * @example 'https://base-mainnet.g.alchemy.com/v2/YOUR-API-KEY'
+   * @description Used for all blockchain interactions including payment verification
+   * and crawl logging. Must be a reliable, high-performance RPC endpoint.
+   */
   BASE_RPC_URL: string;
+
+  /**
+   * PaymentProcessor smart contract address (REQUIRED)
+   * @example '0x742d35Cc6634C0532925a3b8D427E3c8e3e7e7e7'
+   * @description Address of the deployed PaymentProcessor contract on Base network.
+   * This contract handles USDC payments from crawlers to publishers.
+   */
   PAYMENT_PROCESSOR_ADDRESS: string;
+
+  /**
+   * ProofOfCrawlLedger smart contract address (REQUIRED)
+   * @example '0x1234567890abcdef1234567890abcdef12345678'
+   * @description Address of the ProofOfCrawlLedger contract that logs crawl events
+   * on-chain for transparency and analytics.
+   */
   PROOF_OF_CRAWL_LEDGER_ADDRESS: string;
+
+  /**
+   * USDC token contract address (REQUIRED)
+   * @example '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' (Base mainnet USDC)
+   * @description Address of the USDC token contract used for payments.
+   * Must match the network (Base mainnet or testnet).
+   */
   USDC_ADDRESS: string;
+
+  /**
+   * Worker's private key for blockchain transactions (REQUIRED)
+   * @example '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+   * @security This key is used to sign crawl logging transactions. Keep secure!
+   * @description Private key for the worker's wallet that logs crawl events on-chain.
+   * Should have sufficient ETH for gas fees but doesn't need USDC.
+   */
   PRIVATE_KEY: string;
+
+  /**
+   * Publisher's crawl token (NFT) ID (REQUIRED)
+   * @example '123' or '0x7b'
+   * @description The token ID of the publisher's CrawlNFT license.
+   * Used for crawl logging and payment verification.
+   */
   CRAWL_TOKEN_ID: string;
-  PRICE_USDC: string; // Price in USDC (e.g., "1.0")
+
+  /**
+   * Content access price in USDC (REQUIRED)
+   * @example '1.50' for $1.50 USD, '0.10' for 10 cents
+   * @description Price that crawlers must pay to access protected content.
+   * Specified in human-readable USDC format (not wei).
+   */
+  PRICE_USDC: string;
+
+  /**
+   * Publisher's wallet address (REQUIRED)
+   * @example '0x742d35Cc6634C0532925a3b8D427E3c8e3e7e7e7'
+   * @description Address where the publisher receives payments.
+   * Used to verify that the PaymentProcessor actually forwarded payments.
+   */
   PUBLISHER_ADDRESS: string;
-  // KV namespace for storing used transaction hashes
+
+  /**
+   * Cloudflare KV namespace for replay attack prevention (OPTIONAL)
+   * @description KV namespace binding for storing used transaction hashes.
+   * Prevents the same payment transaction from being used multiple times.
+   * Also used for fallback rate limiting if RATE_LIMITER is unavailable.
+   */
   USED_TX_HASHES?: KVNamespace;
-  // Rate Limiter binding
+
+  /**
+   * Cloudflare Rate Limiter binding (OPTIONAL)
+   * @description Cloudflare Workers Rate Limiting API binding for protecting
+   * against abuse. Provides more sophisticated rate limiting than KV-based approach.
+   * Configure in wrangler.toml under [[rate_limiting]] section.
+   */
   RATE_LIMITER?: RateLimiterNamespace;
-  // Security configuration
-  RATE_LIMIT_REQUESTS?: string; // requests per minute
-  MAX_REQUEST_SIZE?: string; // max request size in bytes
-  ENABLE_LOGGING?: string; // enable security logging
-  // Monitoring configuration
+
+  /**
+   * Rate limit threshold (OPTIONAL)
+   * @example '100' for 100 requests per minute
+   * @default '100'
+   * @description Maximum number of requests allowed per IP address per minute.
+   * Helps prevent abuse and ensures fair resource usage.
+   */
+  RATE_LIMIT_REQUESTS?: string;
+
+  /**
+   * Maximum request size in bytes (OPTIONAL)
+   * @example '1048576' for 1MB limit
+   * @default '1048576' (1MB)
+   * @description Maximum allowed size for incoming requests.
+   * Prevents large request attacks and resource exhaustion.
+   */
+  MAX_REQUEST_SIZE?: string;
+
+  /**
+   * Enable detailed security logging (OPTIONAL)
+   * @example 'true' to enable, 'false' or undefined to disable
+   * @default 'false'
+   * @description When enabled, logs detailed information about requests
+   * and security events. Only recommended for development and debugging.
+   */
+  ENABLE_LOGGING?: string;
+
+  /**
+   * Sentry error monitoring DSN (OPTIONAL)
+   * @example 'https://1234567890abcdef@o123456.ingest.sentry.io/1234567'
+   * @description Sentry Data Source Name for error tracking and monitoring.
+   * When provided, enables automatic error reporting and performance monitoring.
+   */
   SENTRY_DSN?: string;
+
+  /**
+   * Deployment environment identifier (OPTIONAL)
+   * @example 'production', 'staging', 'development'
+   * @default 'development'
+   * @description Environment identifier that controls logging verbosity
+   * and error message detail. In 'production', detailed errors are hidden.
+   */
   ENVIRONMENT?: string;
+
+  /**
+   * Better Uptime heartbeat endpoint URL (OPTIONAL)
+   * @example 'https://uptime.betterstack.com/api/v1/heartbeat/YOUR-UUID'
+   * @description URL for sending uptime heartbeats to Better Uptime monitoring.
+   * The worker will ping this URL on each request to confirm it's operational.
+   */
   BETTER_UPTIME_HEARTBEAT_URL?: string;
 }
 
@@ -122,7 +241,10 @@ async function checkRateLimit(
         resetTime: rateLimitResult.success ? Date.now() + 60000 : undefined // 1 minute window
       };
     } catch (error) {
-      console.error('Cloudflare Rate Limiter error:', error);
+      // Log error in development only
+      if (env?.ENVIRONMENT !== 'production') {
+        console.error('Cloudflare Rate Limiter error:', error);
+      }
       // Fall through to KV-based rate limiting
     }
   }
@@ -164,12 +286,16 @@ async function checkRateLimit(
         resetTime: now + RATE_LIMIT_WINDOW
       };
     } catch (error) {
-      console.error('KV Rate limiting error:', error);
+      if (env?.ENVIRONMENT !== 'production') {
+        console.error('KV Rate limiting error:', error);
+      }
     }
   }
   
   // Ultimate fallback: allow request if rate limiting fails
-  console.warn('Rate limiting unavailable - allowing request');
+  if (env?.ENVIRONMENT !== 'production') {
+    console.warn('Rate limiting unavailable - allowing request');
+  }
   return { allowed: true, remaining: limit };
 }
 
@@ -480,10 +606,15 @@ async function verifyPayment(
     return { isValid: true, crawlerAddress };
 
   } catch (error) {
-    console.error('Payment verification error:', error);
+    // Log detailed errors only in development
+    if (env?.ENVIRONMENT !== 'production') {
+      console.error('Payment verification error:', error);
+    }
     return { 
       isValid: false, 
-      error: `Verification failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      error: env?.ENVIRONMENT === 'production' 
+        ? 'Payment verification failed' 
+        : `Verification failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
     };
   }
 }
@@ -513,9 +644,15 @@ async function logCrawlOnChain(
       args: [BigInt(crawlTokenId), crawlerAddress as Address],
     });
 
-    console.log(`Crawl logged on-chain: ${hash}`);
+    // Log success only in development
+    if (env?.ENVIRONMENT !== 'production') {
+      console.log(`Crawl logged on-chain: ${hash}`);
+    }
   } catch (error) {
-    console.error('Failed to log crawl on-chain:', error);
+    // Log errors only in development
+    if (env?.ENVIRONMENT !== 'production') {
+      console.error('Failed to log crawl on-chain:', error);
+    }
     // Don't throw - this is fire-and-forget
   }
 }
@@ -587,8 +724,8 @@ export default {
         const headers = sanitizeHeaders(request);
       const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
 
-      // Security logging
-      if (env.ENABLE_LOGGING === 'true') {
+      // Security logging (development and when explicitly enabled)
+      if (env.ENABLE_LOGGING === 'true' && env.ENVIRONMENT !== 'production') {
         console.log(`Request from ${clientIP}: ${headers.userAgent}`);
       }
 
@@ -607,7 +744,10 @@ export default {
         return secureResponse;
       }
 
-      console.log(`AI crawler detected: ${headers.userAgent} from ${clientIP}`);
+      // Log AI crawler detection only in development
+      if (env.ENVIRONMENT !== 'production') {
+        console.log(`AI crawler detected: ${headers.userAgent} from ${clientIP}`);
+      }
 
       // Check if authorization header is present
       if (!headers.authorization) {
@@ -627,7 +767,10 @@ export default {
         return createErrorResponse('payment', 402, verification.error, env);
       }
 
-      console.log(`Payment verified for crawler: ${verification.crawlerAddress}`);
+      // Log payment verification only in development
+      if (env.ENVIRONMENT !== 'production') {
+        console.log(`Payment verified for crawler: ${verification.crawlerAddress}`);
+      }
 
       // Payment is valid - fetch content from origin
       const originRequest = new Request(request.url, {
@@ -675,7 +818,10 @@ export default {
       return response;
       
       } catch (error) {
-        console.error('Worker error:', error);
+        // Log detailed errors only in development
+        if (env.ENVIRONMENT !== 'production') {
+          console.error('Worker error:', error);
+        }
         return createErrorResponse('validation', 500, 'Internal server error', env);
       }
     });

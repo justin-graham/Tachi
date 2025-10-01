@@ -1,0 +1,31 @@
+{
+  "name": "@tachi/reference-crawler",
+  "version": "1.0.0",
+  "description": "Reference implementation of an AI crawler using Tachi Protocol",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js",
+    "demo": "node demo.js",
+    "dev": "node --watch index.js"
+  },
+  "keywords": [
+    "tachi",
+    "crawler",
+    "ai",
+    "reference",
+    "example"
+  ],
+  "author": "Tachi Protocol Team",
+  "license": "MIT",
+  "dependencies": {
+    "@tachi/sdk-js": "^1.0.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

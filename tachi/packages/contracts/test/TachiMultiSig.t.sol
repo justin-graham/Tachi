@@ -2,9 +2,9 @@
 pragma solidity ^0.8.28;
 
 import "forge-std/Test.sol";
-import "../src/TachiMultiSig.sol";
-import "../src/TachiMultiSigFactory.sol";
-import "../src/CrawlNFTMultiSig.sol";
+import "../src/governance/TachiMultiSig.sol";
+import "../src/governance/TachiMultiSigFactory.sol";
+import "../src/governance/CrawlNFTMultiSig.sol";
 
 /// @title TachiMultiSigTest - Comprehensive tests for multi-signature implementation
 /// @notice Tests all aspects of the multi-signature security upgrade
@@ -19,17 +19,17 @@ contract TachiMultiSigTest is Test {
     address public signer3 = address(0x3333);
     address public signer4 = address(0x4444);
     address public signer5 = address(0x5555);
-    
+
     address public nonSigner = address(0x6666);
     address public guardian = address(0x7777);
 
     address[] internal testnetSigners;
     address[] internal productionSigners;
 
-    event TransactionSubmitted(uint256 indexed txId, address indexed submitter);
-    event TransactionConfirmed(uint256 indexed txId, address indexed owner);
-    event TransactionExecuted(uint256 indexed txId);
-    event TransactionRevoked(uint256 indexed txId, address indexed owner);
+    event TransactionSubmitted(uint256 indexed txId, address indexed submitter, address indexed to, uint256 value);
+    event TransactionConfirmed(uint256 indexed txId, address indexed owner, uint256 confirmationCount);
+    event TransactionRevoked(uint256 indexed txId, address indexed owner, uint256 confirmationCount);
+    event TransactionExecuted(uint256 indexed txId, address indexed executor, bool success);
 
     function setUp() public {
         // Setup signer arrays
@@ -58,7 +58,7 @@ contract TachiMultiSigTest is Test {
     function testMultiSigDeployment() public {
         assertEq(multiSig.threshold(), 2);
         assertEq(multiSig.getOwners().length, 3);
-        
+
         assertTrue(multiSig.isOwner(signer1));
         assertTrue(multiSig.isOwner(signer2));
         assertTrue(multiSig.isOwner(signer3));
@@ -73,8 +73,8 @@ contract TachiMultiSigTest is Test {
 
         assertEq(prodMultiSig.threshold(), 3);
         assertEq(prodMultiSig.getOwners().length, 5);
-        
-        for (uint i = 0; i < productionSigners.length; i++) {
+
+        for (uint256 i = 0; i < productionSigners.length; i++) {
             assertTrue(prodMultiSig.isOwner(productionSigners[i]));
         }
     }
@@ -82,22 +82,18 @@ contract TachiMultiSigTest is Test {
     /// @notice Test transaction submission and confirmation flow
     function testTransactionFlow() public {
         // Submit transaction to mint a license
-        bytes memory mintData = abi.encodeWithSignature(
-            "mintLicense(address,string)",
-            address(0x1234),
-            "ipfs://test-terms"
-        );
+        bytes memory mintData =
+            abi.encodeWithSignature("mintLicense(address,string)", address(0x1234), "ipfs://test-terms");
 
         vm.prank(signer1);
-        uint256 txId = multiSig.submitTransaction(
-            address(crawlNFTMultiSig),
-            0,
-            mintData
-        );
+        uint256 txId = multiSig.submitTransaction(address(crawlNFTMultiSig), 0, mintData);
 
         // Check transaction state
         assertEq(multiSig.getConfirmationCount(txId), 1);
         assertTrue(multiSig.isConfirmedBy(txId, signer1));
+
+        // Fast-forward past timelock period for non-emergency transactions
+        vm.warp(block.timestamp + 24 hours + 1);
 
         // Second signer confirms (this will automatically execute due to threshold)
         vm.prank(signer2);
@@ -123,7 +119,7 @@ contract TachiMultiSigTest is Test {
 
         // Try to execute with only 1 signature (requires 2)
         vm.prank(signer1);
-        vm.expectRevert("Not enough confirmations");
+        vm.expectRevert(TachiMultiSig.InsufficientConfirmations.selector);
         multiSig.executeTransaction(txId);
     }
 
@@ -162,7 +158,7 @@ contract TachiMultiSigTest is Test {
 
         assertEq(multiSig.getConfirmationCount(txId), 0);
         assertFalse(multiSig.isConfirmedBy(txId, signer1));
-        
+
         // Verify transaction is still not executed
         (,,, bool executed,) = multiSig.getTransaction(txId);
         assertFalse(executed);
@@ -173,11 +169,11 @@ contract TachiMultiSigTest is Test {
         // This is a simplified test since TachiMultiSig doesn't have batch operations
         // We can test multiple individual transactions
         uint256 startGas = gasleft();
-        
+
         bytes memory data1 = abi.encodeWithSignature("someFunction()");
         vm.prank(signer1);
         multiSig.submitTransaction(address(crawlNFTMultiSig), 0, data1);
-        
+
         uint256 gasUsed = startGas - gasleft();
         assertTrue(gasUsed > 0);
     }
@@ -186,17 +182,18 @@ contract TachiMultiSigTest is Test {
     function testTimelockDelay() public {
         // Test that TachiMultiSig requires proper confirmations
         // Use a simple call that will succeed - calling a view function
-        bytes memory transferData = abi.encodeWithSignature(
-            "getOwners()"
-        );
+        bytes memory transferData = abi.encodeWithSignature("getOwners()");
 
         vm.prank(signer1);
         uint256 txId = multiSig.submitTransaction(address(multiSig), 0, transferData);
 
         // Should fail with insufficient confirmations (only 1 of 2 required)
         vm.prank(signer1);
-        vm.expectRevert("Not enough confirmations");
+        vm.expectRevert(TachiMultiSig.InsufficientConfirmations.selector);
         multiSig.executeTransaction(txId);
+
+        // Fast-forward past timelock period
+        vm.warp(block.timestamp + 24 hours + 1);
 
         // Add second confirmation (this will automatically execute)
         vm.prank(signer2);
@@ -217,18 +214,14 @@ contract TachiMultiSigTest is Test {
         crawlNFTMultiSig.mintLicense(address(0x1234), "ipfs://test");
 
         // Mint via multi-sig works
-        bytes memory mintData = abi.encodeWithSignature(
-            "mintLicense(address,string)",
-            address(0x1234),
-            "ipfs://test-terms"
-        );
+        bytes memory mintData =
+            abi.encodeWithSignature("mintLicense(address,string)", address(0x1234), "ipfs://test-terms");
 
         vm.prank(signer1);
-        uint256 txId = multiSig.submitTransaction(
-            address(crawlNFTMultiSig),
-            0,
-            mintData
-        );
+        uint256 txId = multiSig.submitTransaction(address(crawlNFTMultiSig), 0, mintData);
+
+        // Fast-forward past timelock period
+        vm.warp(block.timestamp + 24 hours + 1);
 
         // Second confirmation will automatically execute
         vm.prank(signer2);
@@ -241,29 +234,35 @@ contract TachiMultiSigTest is Test {
     function testSignerManagement() public {
         // Test adding a new owner (needs to be done through multi-sig process)
         address newOwner = address(0x8888);
-        
+
         bytes memory addOwnerData = abi.encodeWithSignature("addOwner(address)", newOwner);
-        
+
         vm.prank(signer1);
         uint256 txId = multiSig.submitTransaction(address(multiSig), 0, addOwnerData);
-        
+
+        // Fast-forward past timelock period
+        vm.warp(block.timestamp + 24 hours + 1);
+
         // Second confirmation will automatically execute
         vm.prank(signer2);
         multiSig.confirmTransaction(txId);
-        
+
         // Verify new owner was added
         assertTrue(multiSig.isOwner(newOwner));
 
         // Test removing an owner
         bytes memory removeOwnerData = abi.encodeWithSignature("removeOwner(address)", signer3);
-        
+
         vm.prank(signer1);
         uint256 removeTxId = multiSig.submitTransaction(address(multiSig), 0, removeOwnerData);
-        
+
+        // Fast-forward past timelock period (starting from current time)
+        vm.warp(block.timestamp + 24 hours + 1);
+
         // Second confirmation will automatically execute
         vm.prank(signer2);
         multiSig.confirmTransaction(removeTxId);
-        
+
         assertFalse(multiSig.isOwner(signer3));
     }
 
@@ -281,12 +280,8 @@ contract TachiMultiSigTest is Test {
     /// @notice Test prediction of multi-sig addresses
     function testAddressPrediction() public {
         bytes32 salt = keccak256("prediction-test");
-        
-        address predicted = factory.predictMultiSigAddress(
-            testnetSigners,
-            2,
-            salt
-        );
+
+        address predicted = factory.predictMultiSigAddress(testnetSigners, 2, salt);
 
         address actual = factory.deployTestnetMultiSig(testnetSigners, salt);
 
@@ -333,7 +328,7 @@ contract TachiMultiSigTest is Test {
 
         gasBefore = gasleft();
         vm.prank(signer2);
-        try multiSig.executeTransaction(txId) {} catch {}
+        try multiSig.executeTransaction(txId) { } catch { }
         uint256 gasUsedExecute = gasBefore - gasleft();
 
         // Ensure gas usage is reasonable (these are rough estimates)
@@ -355,23 +350,26 @@ contract TachiMultiSigTest is Test {
         bytes memory data = abi.encodeWithSignature("someFunction()");
 
         // Test TransactionSubmitted event
-        vm.expectEmit(true, true, false, false);
-        emit TransactionSubmitted(0, signer1);
+        vm.expectEmit(true, true, true, true);
+        emit TransactionSubmitted(0, signer1, address(0x1234), 0);
 
         vm.prank(signer1);
         uint256 txId = multiSig.submitTransaction(address(0x1234), 0, data);
 
+        // Fast-forward past timelock period
+        vm.warp(block.timestamp + 24 hours + 1);
+
         // Test TransactionConfirmed event (will be emitted twice - once from submitTransaction, once from manual confirm)
-        vm.expectEmit(true, true, false, false);
-        emit TransactionConfirmed(txId, signer2);
+        vm.expectEmit(true, true, false, true);
+        emit TransactionConfirmed(txId, signer2, 2);
 
         // This will also emit TransactionExecuted since threshold is met
-        vm.expectEmit(true, false, false, false);
-        emit TransactionExecuted(txId);
+        vm.expectEmit(true, true, false, true);
+        emit TransactionExecuted(txId, signer2, true);
 
         vm.prank(signer2);
         multiSig.confirmTransaction(txId);
     }
 
-    receive() external payable {}
+    receive() external payable { }
 }

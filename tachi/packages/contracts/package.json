@@ -1,8 +1,17 @@
 {
   "name": "@tachi/contracts",
-  "version": "0.1.0",
-  "description": "Smart contracts for tachi infrastructure",
+  "version": "1.0.0",
+  "description": "Smart contracts for Tachi Protocol - Decentralized pay-per-crawl licensing system for AI training data",
   "private": true,
+  "license": "MIT",
+  "author": "Tachi Protocol Team",
+  "homepage": "https://tachi.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tachi-protocol/tachi.git",
+    "directory": "packages/contracts"
+  },
+  "keywords": ["blockchain", "smart-contracts", "ai", "crawling", "licensing", "ethereum", "base"],
   "scripts": {
     "build": "forge build && npx hardhat compile",
     "test": "forge test && npx hardhat test",
@@ -43,7 +52,12 @@
     "monitoring:test": "npx hardhat test test/monitoring-integration.test.ts",
     "monitoring:start": "node dist/src/monitoring/start-monitoring.js",
     "monitoring:start:dev": "node dist/src/monitoring/start-monitoring.js development",
-    "monitoring:setup": "./scripts/setup-production-monitoring-complete.sh"
+    "monitoring:setup": "./scripts/setup-production-monitoring-complete.sh",
+    "propagate-addresses": "npx ts-node scripts/propagate-addresses.ts",
+    "propagate-addresses:base": "npx ts-node scripts/propagate-addresses.ts base 8453",
+    "propagate-addresses:base-sepolia": "npx ts-node scripts/propagate-addresses.ts base-sepolia 84532",
+    "check-placeholders": "./scripts/check-placeholders.sh",
+    "production-ready": "./scripts/check-placeholders.sh && echo '✅ Run this before mainnet deployment'"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.1.4",
@@ -62,6 +76,6 @@
     "axios": "^1.6.2",
     "express": "^4.18.2",
     "node-fetch": "^3.3.2",
-    "viem": "^2.33.2"
+    "viem": "^2.37.9"
   }
 }

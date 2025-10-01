@@ -36,14 +36,20 @@ const authLink = setContext((_, { headers }) => {
 const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) => {
   if (graphQLErrors) {
     graphQLErrors.forEach(({ message, locations, path }) => {
-      console.error(
-        `GraphQL error: Message: ${message}, Location: ${locations}, Path: ${path}`
-      )
+      // Log GraphQL errors only in development
+      if (process.env.NODE_ENV !== 'production') {
+        console.error(
+          `GraphQL error: Message: ${message}, Location: ${locations}, Path: ${path}`
+        )
+      }
     })
   }
 
   if (networkError) {
-    console.error(`Network error: ${networkError}`)
+    // Log network errors only in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.error(`Network error: ${networkError}`)
+    }
   }
 })
 

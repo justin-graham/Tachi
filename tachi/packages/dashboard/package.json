@@ -1,7 +1,17 @@
 {
-  "name": "tachi-publisher-dashboard",
-  "version": "0.1.0",
+  "name": "@tachi/dashboard",
+  "version": "1.0.0",
+  "description": "Publisher dashboard for Tachi Protocol - Manage content licensing and crawler payments",
   "private": true,
+  "license": "MIT",
+  "author": "Tachi Protocol Team",
+  "homepage": "https://tachi.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tachi-protocol/tachi.git",
+    "directory": "packages/dashboard"
+  },
+  "keywords": ["tachi", "dashboard", "publisher", "content", "licensing", "nextjs"],
   "scripts": {
     "dev": "next dev --port 3003",
     "dev:safe": "./npm-safe-enhanced.sh dev 3003",
@@ -57,7 +67,7 @@
     "recharts": "^3.1.2",
     "tailwind-merge": "^2.4.0",
     "three": "0.144.0",
-    "viem": "^2.33.0",
+    "viem": "^2.37.9",
     "wagmi": "^2.16.0",
     "zod": "^3.25.76"
   },

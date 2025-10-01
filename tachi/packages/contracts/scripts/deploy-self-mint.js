@@ -10,7 +10,7 @@ async function main() {
     console.log("Deploying CrawlNFT (Self-Mint Version) contract...");
     console.log("Network:", hardhat_1.network.name);
     // Get the contract factory from the self-mint file
-    const CrawlNFT = await hardhat_1.ethers.getContractFactory("src/CrawlNFTSelfMint.sol:CrawlNFT");
+    const CrawlNFT = await hardhat_1.ethers.getContractFactory("src/core/CrawlNFTSelfMint.sol:CrawlNFT");
     // Deploy the contract
     const crawlNFT = await CrawlNFT.deploy();
     // Wait for deployment to be mined

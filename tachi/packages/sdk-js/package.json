@@ -1,8 +1,17 @@
 {
   "name": "@tachi/sdk-js",
-  "version": "0.1.0",
-  "description": "TypeScript SDK for tachi",
-  "private": true,
+  "version": "1.0.0",
+  "description": "TypeScript SDK for Tachi Protocol - Pay-per-crawl client library for AI training data",
+  "private": false,
+  "license": "MIT",
+  "author": "Tachi Protocol Team",
+  "homepage": "https://tachi.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tachi-protocol/tachi.git",
+    "directory": "packages/sdk-js"
+  },
+  "keywords": ["tachi", "ai", "crawling", "blockchain", "payment", "sdk", "typescript"],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -26,6 +35,6 @@
     "@tachi/contracts": "workspace:*",
     "cross-fetch": "^4.1.0",
     "ethers": "^6.0.0",
-    "viem": "^2.32.0"
+    "viem": "^2.37.9"
   }
 }

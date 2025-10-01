@@ -1,8 +1,17 @@
 {
   "name": "@tachi/gateway-cloudflare",
-  "version": "0.1.0",
-  "description": "Cloudflare Workers wrapper for tachi gateway",
+  "version": "1.0.0",
+  "description": "Cloudflare Workers gateway for Tachi Protocol - AI crawler payment verification and content protection",
   "private": true,
+  "license": "MIT",
+  "author": "Tachi Protocol Team",
+  "homepage": "https://tachi.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tachi-protocol/tachi.git",
+    "directory": "packages/gateway-cloudflare"
+  },
+  "keywords": ["tachi", "cloudflare", "workers", "gateway", "ai", "payment", "protection"],
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -27,6 +36,6 @@
   },
   "dependencies": {
     "@sentry/browser": "^10.0.0",
-    "viem": "^2.21.0"
+    "viem": "^2.37.9"
   }
 }

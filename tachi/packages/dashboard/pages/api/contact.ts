@@ -51,7 +51,10 @@ export default async function handler(
       });
     }
 
-    console.error('Contact form error:', error);
+    // Log error appropriately based on environment
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Contact form error:', error);
+    }
     return res.status(500).json({ 
       error: 'Internal server error. Please try again later.' 
     });

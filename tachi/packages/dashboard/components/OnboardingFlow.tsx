@@ -1,7 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Background from './Background';
 import StandardButton from './StandardButton';
+import TermsAndConditionsStep from './TermsAndConditionsStep';
 import '../styles/background.css';
+
+// Error display component
+const ErrorMessage = ({ error }: { error?: string }) => {
+  if (!error) return null;
+  return (
+    <p style={{
+      color: '#dc2626',
+      fontSize: '12px',
+      marginTop: '4px',
+      fontWeight: '500'
+    }}>
+      {error}
+    </p>
+  );
+};
 
 // HourglassSpiral component for success step
 const HourglassSpiral = () => {
@@ -271,16 +287,184 @@ const OnboardingFlow: React.FC = () => {
       attribution: false,
       derivatives: false
     },
+    termsAccepted: false,
     cloudflareToken: '',
     deployMethod: 'auto',
     testUrl: ''
   });
 
-  const steps = ['wallet', 'domain', 'pricing', 'mint', 'deploy', 'test', 'success'];
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const steps = ['wallet', 'domain', 'pricing', 'terms', 'mint', 'deploy', 'test', 'success'];
+
+  // Validation functions
+  const validateStep = (step: number): boolean => {
+    const newErrors: {[key: string]: string} = {};
+    
+    switch (step) {
+      case 1: // Wallet connection
+        if (!formData.wallet) {
+          newErrors.wallet = 'Please select a wallet to continue';
+        }
+        break;
+      
+      case 2: // Domain and site details
+        if (!formData.domain.trim()) {
+          newErrors.domain = 'Domain is required';
+        } else if (!formData.domain.includes('.') || formData.domain.length < 4) {
+          newErrors.domain = 'Please enter a valid domain (e.g., example.com)';
+        }
+        
+        if (!formData.siteTitle.trim()) {
+          newErrors.siteTitle = 'Site title is required';
+        } else if (formData.siteTitle.trim().length < 2) {
+          newErrors.siteTitle = 'Site title must be at least 2 characters';
+        }
+        break;
+      
+      case 3: // Pricing
+        if (!formData.pricePerCrawl || formData.pricePerCrawl <= 0) {
+          newErrors.pricePerCrawl = 'Price must be greater than 0';
+        } else if (formData.pricePerCrawl > 10) {
+          newErrors.pricePerCrawl = 'Price cannot exceed $10 per crawl';
+        } else if (formData.pricePerCrawl < 0.0001) {
+          newErrors.pricePerCrawl = 'Price must be at least $0.0001';
+        }
+        break;
+      
+      case 4: // Terms & Conditions
+        if (!formData.termsAccepted) {
+          newErrors.terms = 'You must accept the Terms and Conditions to proceed';
+        }
+        break;
+      
+      case 6: // Deployment
+        if (!formData.cloudflareToken.trim()) {
+          newErrors.cloudflareToken = 'Cloudflare API token is required';
+        } else if (formData.cloudflareToken.trim().length < 10) {
+          newErrors.cloudflareToken = 'Please enter a valid Cloudflare API token';
+        }
+        break;
+      
+      case 7: // Testing
+        if (!formData.testUrl.trim()) {
+          newErrors.testUrl = 'Test URL is required';
+        } else {
+          try {
+            new URL(formData.testUrl);
+          } catch {
+            newErrors.testUrl = 'Please enter a valid URL (e.g., https://example.com)';
+          }
+        }
+        break;
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const clearFieldError = (field: string) => {
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  // Async operation handlers with error handling
+  const handleMinting = async () => {
+    try {
+      setIsProcessing(true);
+      setErrors({});
+      
+      // Simulate minting process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Simulate potential errors
+      if (Math.random() < 0.1) { // 10% chance of error for demo
+        throw new Error('Minting failed: Insufficient gas fee. Please ensure you have enough ETH on Base network.');
+      }
+      
+      // Success - proceed to next step
+      setCurrentStep(currentStep + 1);
+    } catch (error) {
+      setErrors({ 
+        minting: error instanceof Error ? error.message : 'Minting failed. Please try again.' 
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDeployment = async () => {
+    try {
+      setIsProcessing(true);
+      setErrors({});
+      
+      // Validate before deployment
+      if (!validateStep(5)) {
+        setIsProcessing(false);
+        return;
+      }
+      
+      // Simulate deployment process
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Simulate potential errors
+      if (Math.random() < 0.15) { // 15% chance of error for demo
+        throw new Error('Deployment failed: Invalid Cloudflare API token or insufficient permissions. Please check your token.');
+      }
+      
+      // Success - proceed to next step
+      setCurrentStep(currentStep + 1);
+    } catch (error) {
+      setErrors({ 
+        deployment: error instanceof Error ? error.message : 'Deployment failed. Please check your Cloudflare settings and try again.' 
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleTesting = async () => {
+    try {
+      setIsProcessing(true);
+      setErrors({});
+      
+      // Validate before testing
+      if (!validateStep(6)) {
+        setIsProcessing(false);
+        return;
+      }
+      
+      // Simulate testing process
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Simulate potential errors
+      if (Math.random() < 0.2) { // 20% chance of error for demo
+        throw new Error('Test failed: Unable to reach the specified URL. Please check that your domain is correctly configured.');
+      }
+      
+      // Success - proceed to next step
+      setCurrentStep(currentStep + 1);
+    } catch (error) {
+      setErrors({ 
+        testing: error instanceof Error ? error.message : 'Test failed. Please verify your URL and try again.' 
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleNext = () => {
     if (currentStep < 7) {
-      setCurrentStep(currentStep + 1);
+      // Validate current step before proceeding
+      if (validateStep(currentStep)) {
+        setCurrentStep(currentStep + 1);
+      }
     }
   };
 
@@ -292,6 +476,7 @@ const OnboardingFlow: React.FC = () => {
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    clearFieldError(field);
   };
 
   const handleCategoryChange = (category: string, checked: boolean) => {
@@ -310,43 +495,35 @@ const OnboardingFlow: React.FC = () => {
     }));
   };
 
+  const handleTermsAcceptance = (accepted: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      termsAccepted: accepted
+    }));
+    // Clear any existing terms error when user accepts
+    if (accepted && errors.terms) {
+      setErrors(prev => {
+        const { terms, ...rest } = prev;
+        return rest;
+      });
+    }
+  };
+
   const getStepTitle = () => {
     switch (currentStep) {
       case 1: return 'Connect Wallet';
       case 2: return 'Site Details';
       case 3: return 'Pricing Configuration';
-      case 4: return 'License Creation';
-      case 5: return 'Gateway Deployment';
-      case 6: return 'Testing & Verification';
-      case 7: return 'Your Tachi Protection is Live!';
+      case 4: return 'Terms & Conditions';
+      case 5: return 'License Creation';
+      case 6: return 'Gateway Deployment';
+      case 7: return 'Testing & Verification';
+      case 8: return 'Your Tachi Protection is Live!';
       default: return 'Connect Wallet';
     }
   };
 
-  const getStepDescription = () => {
-    switch (currentStep) {
-      case 1: return 'Choose your preferred wallet to continue';
-      case 2: return 'Enter the domain for your Tachi implementation';
-      case 3: return 'Configure your pricing structure';
-      case 4: return 'Ready to mint your content license';
-      case 5: return 'Deploy your Cloudflare worker gateway';
-      case 6: return 'Test your implementation';
-      case 7: return '';
-      default: return '';
-    }
-  };
 
-  // const getContentScale = () => {
-  //   // Steps 2 and 4 have more content, so scale them down slightly
-  //   switch (currentStep) {
-  //     case 2: return 0.9; // Categories grid needs more space
-  //     case 4: return 0.9; // Usage rights need more space
-  //     default: return 1;
-  //   }
-  // };
-
-  // Convert 0.75 inches to pixels (assuming 96 DPI)
-  const borderSize = '72px'; // 0.75 inch * 96 DPI
 
   return (
     <div style={{
@@ -356,7 +533,7 @@ const OnboardingFlow: React.FC = () => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: `${borderSize} ${borderSize}`,
+      padding: '72px 72px',
       boxSizing: 'border-box'
     }}>
       <Background />
@@ -429,82 +606,77 @@ const OnboardingFlow: React.FC = () => {
 
         {/* Step Title */}
         <h1 style={{
-          fontSize: currentStep === 2 || currentStep === 4 ? '2.2rem' : '2.5rem',
+          fontSize: currentStep === 2 || currentStep === 4 || currentStep === 5 ? '2.2rem' : '2.5rem',
           fontWeight: 'bold',
           color: '#FF7043',
           textTransform: 'uppercase',
           letterSpacing: '2px',
-          marginBottom: currentStep === 2 || currentStep === 4 ? '15px' : '20px',
+          marginBottom: currentStep === 2 || currentStep === 4 || currentStep === 5 ? '15px' : '20px',
           lineHeight: '1.2'
         }}>
           {getStepTitle()}
         </h1>
 
         {/* Step Description */}
-        <p style={{
-          color: '#666',
-          fontSize: currentStep === 2 || currentStep === 4 ? '0.9rem' : '1rem',
-          marginBottom: currentStep === 2 || currentStep === 4 ? '30px' : '40px',
-          lineHeight: '1.5'
-        }}>
-          {getStepDescription()}
-        </p>
 
         {/* Step Content */}
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: currentStep === 2 || currentStep === 4 ? '15px' : '20px',
+          gap: currentStep === 2 || currentStep === 4 || currentStep === 5 ? '15px' : '20px',
           width: '70%',
           margin: '0 auto'
         }}>
           
           {/* Step 1: Connect Wallet */}
           {currentStep === 1 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {[
-                { name: 'MetaMask', icon: '🦊', color: '#f97316', isText: true },
-                { name: 'Coinbase Wallet', icon: '/images/coinbase-v2.svg', color: '#FF7043', isText: false },
-                { name: 'WalletConnect', icon: '/images/walletconnect.png', color: '#3b82f6', isText: false }
-              ].map((wallet) => (
-                <button
-                  key={wallet.name}
-                  onClick={() => handleInputChange('wallet', wallet.name)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '20px',
-                    border: '3px solid #FF7043',
-                    backgroundColor: formData.wallet === wallet.name ? '#FF7043' : '#FAF9F6',
-                    color: formData.wallet === wallet.name ? 'white' : 'black',
-                    fontSize: '18px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseOver={(e) => {
-                    if (formData.wallet !== wallet.name) {
-                      e.currentTarget.style.backgroundColor = '#e0e0e0';
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    if (formData.wallet !== wallet.name) {
-                      e.currentTarget.style.backgroundColor = '#FAF9F6';
-                    }
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{
-                      width: '40px',
-                      height: '40px',
-                      backgroundColor: wallet.isText ? wallet.color : 'transparent',
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', maxWidth: '600px', margin: '0 auto' }}>
+                {[
+                  { name: 'MetaMask', icon: '🦊', color: '#f97316', isText: true },
+                  { name: 'Coinbase Wallet', icon: '/images/coinbase.svg', color: '#FF7043', isText: false },
+                  { name: 'WalletConnect', icon: '/images/Walletconnect-logo.png', color: '#3b82f6', isText: false }
+                ].map((wallet) => (
+                  <button
+                    key={wallet.name}
+                    onClick={() => handleInputChange('wallet', wallet.name)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '20px',
+                      border: 'none',
+                      backgroundColor: 'transparent',
+                      color: formData.wallet === wallet.name ? '#FF7043' : '#FF7043',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
                       borderRadius: '8px',
+                      minHeight: '120px'
+                    }}
+                    onMouseOver={(e) => {
+                      if (formData.wallet !== wallet.name) {
+                        e.currentTarget.style.backgroundColor = '#FFF5F3';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (formData.wallet !== wallet.name) {
+                        e.currentTarget.style.backgroundColor = '#FAF9F6';
+                      }
+                    }}
+                  >
+                    <div style={{
+                      width: '72px',
+                      height: '72px',
+                      backgroundColor: wallet.isText ? wallet.color : 'transparent',
+                      borderRadius: '12px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       color: 'white',
-                      fontSize: '20px',
+                      fontSize: '36px',
                       fontWeight: 'bold'
                     }}>
                       {wallet.isText ? (
@@ -514,73 +686,45 @@ const OnboardingFlow: React.FC = () => {
                           src={wallet.icon}
                           alt={wallet.name}
                           style={{
-                            width: '32px',
-                            height: '32px',
+                            width: '60px',
+                            height: '60px',
                             objectFit: 'contain'
                           }}
                         />
                       )}
                     </div>
-                    <span>{wallet.name}</span>
-                  </div>
-                  <span>▶</span>
-                </button>
-              ))}
-            </div>
+                    <span style={{ textAlign: 'center' }}>{wallet.name}</span>
+                  </button>
+                ))}
+              </div>
+              <ErrorMessage error={errors.wallet} />
+            </>
           )}
 
           {/* Step 2: Site Details */}
           {currentStep === 2 && (
             <>
-              <input
-                type="text"
-                placeholder="Your domain (e.g., your-site.com)"
-                value={formData.domain}
-                onChange={(e) => handleInputChange('domain', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '15px',
-                  border: '3px solid #FF7043',
-                  backgroundColor: '#FAF9F6',
-                  fontSize: '16px',
-                  color: 'black',
-                  outline: 'none',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#FF7043';
-                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255, 112, 67, 0.2)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '#FF7043';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              />
+              <div>
+                <input
+                  type="text"
+                  placeholder="Your domain (e.g., your-site.com)"
+                  value={formData.domain}
+                  onChange={(e) => handleInputChange('domain', e.target.value)}
+                  className="w-full px-0 py-2 text-[#FF7043] bg-transparent border-0 border-b focus:outline-none focus:border-orange-600 border-[#FF7043] placeholder-[#FF7043]"
+                />
+                <ErrorMessage error={errors.domain} />
+              </div>
               
-              <input
-                type="text"
-                placeholder="Site title (e.g., My Blog)"
-                value={formData.siteTitle}
-                onChange={(e) => handleInputChange('siteTitle', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '15px',
-                  border: '3px solid #FF7043',
-                  backgroundColor: '#FAF9F6',
-                  fontSize: '16px',
-                  color: 'black',
-                  outline: 'none',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#FF7043';
-                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255, 112, 67, 0.2)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '#FF7043';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              />
+              <div>
+                <input
+                  type="text"
+                  placeholder="Site title (e.g., My Blog)"
+                  value={formData.siteTitle}
+                  onChange={(e) => handleInputChange('siteTitle', e.target.value)}
+                  className="w-full px-0 py-2 text-[#FF7043] bg-transparent border-0 border-b focus:outline-none focus:border-orange-600 border-[#FF7043] placeholder-[#FF7043]"
+                />
+                <ErrorMessage error={errors.siteTitle} />
+              </div>
 
               <div style={{ textAlign: 'left' }}>
                 <p style={{ 
@@ -642,47 +786,33 @@ const OnboardingFlow: React.FC = () => {
           {/* Step 3: Pricing */}
           {currentStep === 3 && (
             <>
-              <input
-                type="number"
-                min="0.0001"
-                max="3.00"
-                step="0.0001"
-                placeholder="Price per crawl (e.g., 0.01)"
-                value={formData.pricePerCrawl}
-                onChange={(e) => handleInputChange('pricePerCrawl', parseFloat(e.target.value))}
-                style={{
-                  width: '100%',
-                  padding: '15px',
-                  border: '3px solid #FF7043',
-                  backgroundColor: '#FAF9F6',
-                  fontSize: '16px',
-                  color: 'black',
-                  outline: 'none',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#FF7043';
-                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255, 112, 67, 0.2)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '#FF7043';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              />
+              <div>
+                <input
+                  type="number"
+                  min="0.0001"
+                  max="3.00"
+                  step="0.0001"
+                  placeholder="Price per crawl (e.g., 0.01)"
+                  value={formData.pricePerCrawl}
+                  onChange={(e) => handleInputChange('pricePerCrawl', parseFloat(e.target.value))}
+                  className="w-full px-0 py-2 text-[#FF7043] bg-transparent border-0 border-b focus:outline-none focus:border-orange-600 border-[#FF7043] placeholder-[#FF7043]"
+                />
+                <ErrorMessage error={errors.pricePerCrawl} />
+              </div>
               
               <select
                 value={formData.currency}
                 onChange={(e) => handleInputChange('currency', e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '25px',
+                  padding: '12px',
                   border: '3px solid #FF7043',
                   backgroundColor: '#FAF9F6',
                   fontSize: '16px',
                   color: 'black',
                   outline: 'none',
                   transition: 'all 0.3s ease',
-                  minHeight: '70px'
+                  height: '48px'
                 }}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = '#FF7043';
@@ -700,8 +830,19 @@ const OnboardingFlow: React.FC = () => {
             </>
           )}
 
-          {/* Step 4: License Creation */}
+          {/* Step 4: Terms & Conditions */}
           {currentStep === 4 && (
+            <>
+              <TermsAndConditionsStep
+                onAcceptanceChange={handleTermsAcceptance}
+                isAccepted={formData.termsAccepted}
+              />
+              <ErrorMessage error={errors.terms} />
+            </>
+          )}
+
+          {/* Step 5: License Creation */}
+          {currentStep === 5 && (
             <>
               <div style={{ textAlign: 'left' }}>
                 <p style={{ 
@@ -765,39 +906,39 @@ const OnboardingFlow: React.FC = () => {
                 backgroundColor: '#B8D4C7',
                 textAlign: 'center'
               }}>
-                <p style={{ fontWeight: 'bold', marginBottom: '5px' }}>Status: Ready to mint</p>
-                <p style={{ fontSize: '14px', color: '#666' }}>Gas Fee: ~$2.50 USD (Base network)</p>
+                <p style={{ fontWeight: 'bold', marginBottom: '15px' }}>
+                  Status: {formData.termsAccepted ? 'Ready to mint' : 'Terms acceptance required'}
+                </p>
+                <StandardButton
+                  onClick={handleMinting}
+                  disabled={isProcessing || !formData.termsAccepted}
+                  variant="primary"
+                  size="md"
+                  style={{ 
+                    opacity: (isProcessing || !formData.termsAccepted) ? 0.6 : 1,
+                    cursor: (isProcessing || !formData.termsAccepted) ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {isProcessing ? 'Minting...' : 'Mint License NFT'}
+                </StandardButton>
               </div>
+              <ErrorMessage error={errors.minting} />
             </>
           )}
 
-          {/* Step 5: Gateway Deployment */}
-          {currentStep === 5 && (
+          {/* Step 6: Gateway Deployment */}
+          {currentStep === 6 && (
             <>
-              <input
-                type="password"
-                placeholder="Cloudflare API Token"
-                value={formData.cloudflareToken}
-                onChange={(e) => handleInputChange('cloudflareToken', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '15px',
-                  border: '3px solid #FF7043',
-                  backgroundColor: '#FAF9F6',
-                  fontSize: '16px',
-                  color: 'black',
-                  outline: 'none',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#FF7043';
-                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255, 112, 67, 0.2)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '#FF7043';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              />
+              <div>
+                <input
+                  type="password"
+                  placeholder="Cloudflare API Token"
+                  value={formData.cloudflareToken}
+                  onChange={(e) => handleInputChange('cloudflareToken', e.target.value)}
+                  className="w-full px-0 py-2 text-[#FF7043] bg-transparent border-0 border-b focus:outline-none focus:border-orange-600 border-[#FF7043] placeholder-[#FF7043]"
+                />
+                <ErrorMessage error={errors.cloudflareToken} />
+              </div>
 
               <div style={{ textAlign: 'left' }}>
                 <p style={{ 
@@ -861,51 +1002,56 @@ const OnboardingFlow: React.FC = () => {
                 backgroundColor: '#B8D4C7',
                 textAlign: 'center'
               }}>
-                <p style={{ fontWeight: 'bold', marginBottom: '5px' }}>Deployment Time: ~30 seconds</p>
-                <p style={{ fontSize: '14px', color: '#666' }}>Global propagation: ~2 minutes</p>
+                <p style={{ fontWeight: 'bold', marginBottom: '15px' }}>Deployment Time: ~30 seconds</p>
+                <StandardButton
+                  onClick={handleDeployment}
+                  disabled={isProcessing}
+                  variant="primary"
+                  size="md"
+                  style={{ 
+                    opacity: isProcessing ? 0.6 : 1,
+                    cursor: isProcessing ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {isProcessing ? 'Deploying...' : 'Deploy to Cloudflare'}
+                </StandardButton>
               </div>
+              <ErrorMessage error={errors.deployment} />
             </>
           )}
 
-          {/* Step 6: Testing */}
-          {currentStep === 6 && (
+          {/* Step 7: Testing */}
+          {currentStep === 7 && (
             <>
-              <input
-                type="url"
-                placeholder="Test URL (e.g., https://your-domain.com/test-page)"
-                value={formData.testUrl}
-                onChange={(e) => handleInputChange('testUrl', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '15px',
-                  border: '3px solid #FF7043',
-                  backgroundColor: '#FAF9F6',
-                  fontSize: '16px',
-                  color: 'black',
-                  outline: 'none',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#FF7043';
-                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255, 112, 67, 0.2)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '#FF7043';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              />
+              <div>
+                <input
+                  type="url"
+                  placeholder="Test URL (e.g., https://your-domain.com/test-page)"
+                  value={formData.testUrl}
+                  onChange={(e) => handleInputChange('testUrl', e.target.value)}
+                  className="w-full px-0 py-2 text-[#FF7043] bg-transparent border-0 border-b focus:outline-none focus:border-orange-600 border-[#FF7043] placeholder-[#FF7043]"
+                />
+                <ErrorMessage error={errors.testUrl} />
+              </div>
               
               <StandardButton
+                onClick={handleTesting}
+                disabled={isProcessing}
                 variant="primary"
                 size="md"
+                style={{ 
+                  opacity: isProcessing ? 0.6 : 1,
+                  cursor: isProcessing ? 'not-allowed' : 'pointer'
+                }}
               >
-                Run Test
+                {isProcessing ? 'Testing...' : 'Run Test'}
               </StandardButton>
+              <ErrorMessage error={errors.testing} />
             </>
           )}
 
-          {/* Step 7: Success */}
-          {currentStep === 7 && (
+          {/* Step 8: Success */}
+          {currentStep === 8 && (
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -926,14 +1072,14 @@ const OnboardingFlow: React.FC = () => {
         </div>
 
         {/* Navigation Buttons */}
-        {currentStep < 7 && (
+        {currentStep < 8 && (
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             gap: '20px',
-            marginTop: currentStep === 2 || currentStep === 4 ? '30px' : '40px',
+            marginTop: currentStep === 2 || currentStep === 4 || currentStep === 5 ? '30px' : '40px',
             width: '70%',
-            margin: `${currentStep === 2 || currentStep === 4 ? '30px' : '40px'} auto 0 auto`
+            margin: `${currentStep === 2 || currentStep === 4 || currentStep === 5 ? '30px' : '40px'} auto 0 auto`
           }}>
             <StandardButton 
               onClick={handlePrevious}

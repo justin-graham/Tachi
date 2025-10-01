@@ -10,114 +10,372 @@ import {
 } from 'viem';
 import { base, baseSepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
+import { ethers } from 'ethers';
 import 'cross-fetch/polyfill';
 
-// Configuration interface
+/**
+ * Configuration interface for TachiSDK initialization
+ * 
+ * @interface TachiConfig
+ * @description Core configuration object for initializing the Tachi SDK with network,
+ * payment, and API settings required for pay-per-crawl functionality.
+ */
 export interface TachiConfig {
-  // API configuration
+  /** 
+   * Base URL for Tachi API endpoints (optional)
+   * @example 'https://api.tachi.ai' or 'http://localhost:3001' for local development
+   */
   apiUrl?: string;
+  
+  /** 
+   * API key for authenticated requests to Tachi services (optional)
+   * Obtained through crawler registration
+   */
   apiKey?: string;
   
-  // Network configuration
+  /** 
+   * Target blockchain network for payments
+   * @example 'base' for mainnet, 'base-sepolia' for testnet
+   */
   network: 'base' | 'base-sepolia';
+  
+  /** 
+   * RPC endpoint URL for blockchain interactions
+   * @example 'https://base-mainnet.g.alchemy.com/v2/YOUR-API-KEY'
+   */
   rpcUrl: string;
   
-  // Smart account configuration
+  /** 
+   * Smart account contract address (optional, for advanced usage)
+   * Used for smart account-based payment flows
+   */
   smartAccountAddress?: Address;
+  
+  /** 
+   * Private key for the crawler's wallet (required for payments)
+   * @example '0x1234567890abcdef...'
+   * @security Keep this secure and never log or expose
+   */
   ownerPrivateKey?: Hash;
   
-  // Payment configuration
+  /** 
+   * USDC token contract address on the target network
+   * @example '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' for Base mainnet
+   */
   usdcAddress: Address;
+  
+  /** 
+   * PaymentProcessor contract address for handling payments
+   * @example '0x742d35Cc6634C0532925a3b8D427E3c8e3e7e7e7'
+   */
   paymentProcessorAddress: Address;
   
-  // Request configuration
+  /** 
+   * User-Agent string for HTTP requests (optional)
+   * @default 'TachiSDK/1.0'
+   * @example 'MyCrawler/2.0 (+https://example.com/crawler-info)'
+   */
   userAgent?: string;
+  
+  /** 
+   * Request timeout in milliseconds (optional)
+   * @default 30000
+   */
   timeout?: number;
+  
+  /** 
+   * Maximum number of retry attempts for failed requests (optional)
+   * @default 3
+   */
   maxRetries?: number;
+  
+  /** 
+   * Blockchain client library preference (optional)
+   * @default false (uses Viem)
+   * @description If true, uses Ethers.js instead of Viem for blockchain interactions
+   */
+  useEthers?: boolean;
+  
+  /** 
+   * Enable debug logging (optional)
+   * @default false
+   * @description Enables detailed console logging for debugging purposes
+   */
+  debug?: boolean;
 }
 
-// Crawler registration data
+/**
+ * Crawler registration data for Tachi API registration
+ * 
+ * @interface CrawlerRegistration
+ * @description Data structure for registering a new crawler with the Tachi Protocol API
+ */
 export interface CrawlerRegistration {
+  /** 
+   * Display name for the crawler (optional)
+   * @example 'Research Bot' or 'Content Aggregator'
+   */
   name?: string;
+  
+  /** 
+   * Contact information for the crawler operator (optional)
+   * @example 'admin@company.com' or 'https://company.com/contact'
+   */
   contact?: string;
+  
+  /** 
+   * Brief description of the crawler's purpose (optional)
+   * @example 'Academic research crawler for AI training data'
+   */
   description?: string;
+  
+  /** 
+   * Name of the company or organization operating the crawler (optional)
+   * @example 'AI Research Labs Inc.'
+   */
   companyName?: string;
+  
+  /** 
+   * Type of entity operating the crawler (optional)
+   * @example 'startup' for startup companies, 'enterprise' for large organizations
+   */
   type?: 'individual' | 'startup' | 'enterprise';
 }
 
-// Payment information from 402 response
+/**
+ * Payment information extracted from HTTP 402 Payment Required responses
+ * 
+ * @interface PaymentInfo
+ * @description Contains all necessary payment details for processing publisher payments
+ */
 export interface PaymentInfo {
+  /** 
+   * Payment amount in human-readable format
+   * @example '1.50' for 1.50 USDC
+   */
   amount: string;
+  
+  /** 
+   * Currency type for the payment
+   * @example 'USDC'
+   */
   currency: string;
+  
+  /** 
+   * Blockchain network name
+   * @example 'Base' or 'Ethereum'
+   */
   network: string;
+  
+  /** 
+   * Blockchain network chain ID
+   * @example 8453 for Base mainnet, 84532 for Base Sepolia
+   */
   chainId: number;
+  
+  /** 
+   * Publisher's wallet address to receive payment
+   * @example '0x742d35Cc6634C0532925a3b8D427E3c8e3e7e7e7'
+   */
   recipient: Address;
+  
+  /** 
+   * Token contract address (USDC contract)
+   * @example '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
+   */
   tokenAddress: Address;
+  
+  /** 
+   * Optional NFT token ID for publisher's license (optional)
+   * Used when payment is tied to a specific publisher NFT
+   */
   tokenId?: string;
 }
 
-// Response from fetchWithTachi
+/**
+ * Response object returned by fetchWithTachi method
+ * 
+ * @interface TachiResponse
+ * @description Complete response data from a Tachi-enabled content fetch operation
+ */
 export interface TachiResponse {
+  /** 
+   * The fetched content as a string
+   * Can be HTML, JSON, text, or any other content type
+   */
   content: string;
+  
+  /** 
+   * HTTP status code from the final response
+   * @example 200 for success, 402 if payment was required initially
+   */
   statusCode: number;
+  
+  /** 
+   * HTTP response headers as key-value pairs
+   * @example { 'content-type': 'application/json', 'cache-control': 'no-cache' }
+   */
   headers: Record<string, string>;
+  
+  /** 
+   * Whether payment was required for this request
+   * @description true if a 402 response was encountered and payment was processed
+   */
   paymentRequired: boolean;
+  
+  /** 
+   * Amount paid for content access (optional)
+   * Only present if paymentRequired is true
+   * @example '1.50' for 1.50 USDC
+   */
   paymentAmount?: string;
+  
+  /** 
+   * Blockchain transaction hash for the payment (optional)
+   * Only present if paymentRequired is true
+   * @example '0x1234567890abcdef...'
+   */
   transactionHash?: string;
 }
 
-// Error types
+/**
+ * Base error class for all Tachi SDK errors
+ * 
+ * @class TachiError
+ * @extends Error
+ * @description Custom error class that includes error codes and additional details
+ */
 export class TachiError extends Error {
+  /**
+   * Create a new TachiError
+   * @param message - Human-readable error message
+   * @param code - Machine-readable error code for programmatic handling
+   * @param details - Additional error context or debugging information
+   */
   constructor(message: string, public code: string, public details?: any) {
     super(message);
     this.name = 'TachiError';
   }
 }
 
+/**
+ * Error class for payment-related failures
+ * 
+ * @class PaymentError
+ * @extends TachiError
+ * @description Thrown when blockchain payment transactions fail or when there are
+ * insufficient funds, invalid payment information, or payment verification issues
+ */
 export class PaymentError extends TachiError {
+  /**
+   * Create a new PaymentError
+   * @param message - Description of the payment failure
+   * @param details - Additional payment context (amounts, addresses, transaction info)
+   */
   constructor(message: string, details?: any) {
     super(message, 'PAYMENT_ERROR', details);
   }
 }
 
+/**
+ * Error class for network and HTTP request failures
+ * 
+ * @class NetworkError
+ * @extends TachiError
+ * @description Thrown when HTTP requests fail due to network issues, timeouts,
+ * or server errors unrelated to payment processing
+ */
 export class NetworkError extends TachiError {
+  /**
+   * Create a new NetworkError
+   * @param message - Description of the network failure
+   * @param details - Additional network context (URLs, response codes, retry info)
+   */
   constructor(message: string, details?: any) {
     super(message, 'NETWORK_ERROR', details);
   }
 }
 
-// USDC contract ABI
-const USDC_ABI = parseAbi([
+
+// Shared ABI strings for both Viem and Ethers
+const USDC_ABI_STRINGS = [
   'function transfer(address to, uint256 amount) external returns (bool)',
   'function balanceOf(address account) external view returns (uint256)',
   'function approve(address spender, uint256 amount) external returns (bool)',
   'function allowance(address owner, address spender) external view returns (uint256)',
   'function decimals() external view returns (uint8)',
-]);
+];
 
-// PaymentProcessor contract ABI
-const PAYMENT_PROCESSOR_ABI = parseAbi([
+const PAYMENT_PROCESSOR_ABI_STRINGS = [
   'function payPublisher(address publisher, uint256 amount) external',
   'function payPublisherByNFT(address crawlNFT, uint256 tokenId, uint256 amount) external',
   'function getUSDCTokenAddress() external view returns (address)',
   'event Payment(address indexed crawler, address indexed publisher, uint256 amount)',
-]);
+];
+
+// Viem parsed ABIs
+const USDC_ABI = parseAbi(USDC_ABI_STRINGS);
+const PAYMENT_PROCESSOR_ABI = parseAbi(PAYMENT_PROCESSOR_ABI_STRINGS);
 
 /**
- * Tachi SDK for AI crawlers
- * Handles pay-per-crawl protocol with automatic payment processing
+ * Main SDK class for Tachi Protocol pay-per-crawl functionality
+ * 
+ * @class TachiSDK
+ * @description The primary interface for AI crawlers to interact with Tachi Protocol.
+ * Provides automated payment processing for protected content, supporting both
+ * Viem and Ethers.js for blockchain interactions.
+ * 
+ * @example
+ * ```typescript
+ * const sdk = new TachiSDK({
+ *   network: 'base',
+ *   rpcUrl: 'https://base-mainnet.g.alchemy.com/v2/YOUR-KEY',
+ *   ownerPrivateKey: '0x...',
+ *   usdcAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+ *   paymentProcessorAddress: '0x742d35Cc6634C0532925a3b8D427E3c8e3e7e7e7'
+ * });
+ * 
+ * const result = await sdk.fetchWithTachi('https://protected-site.com/api/data');
+ * console.log(result.content);
+ * ```
  */
 class TachiSDK {
   private config: TachiConfig;
+  
+  // Viem clients
   private publicClient: any;
   private walletClient: any;
   private account: any;
+  
+  // Ethers clients
+  private ethersProvider: ethers.JsonRpcProvider | null = null;
+  private ethersSigner: ethers.Wallet | null = null;
 
+  /**
+   * Create a new TachiSDK instance
+   * 
+   * @param config - Configuration object with network, payment, and API settings
+   * 
+   * @example
+   * ```typescript
+   * const sdk = new TachiSDK({
+   *   network: 'base',
+   *   rpcUrl: process.env.BASE_RPC_URL,
+   *   ownerPrivateKey: process.env.CRAWLER_PRIVATE_KEY,
+   *   usdcAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+   *   paymentProcessorAddress: '0x742d35Cc6634C0532925a3b8D427E3c8e3e7e7e7',
+   *   userAgent: 'MyCrawler/1.0 (+https://mycompany.com/crawler)',
+   *   debug: true
+   * });
+   * ```
+   */
   constructor(config: TachiConfig) {
     this.config = {
       userAgent: 'TachiSDK/1.0',
       timeout: 30000,
       maxRetries: 3,
+      useEthers: false,
+      debug: false,
       ...config,
     };
 
@@ -126,29 +384,82 @@ class TachiSDK {
   }
 
   /**
-   * Initialize blockchain clients
+   * Internal debug logging helper
+   * @private
+   * @param args - Arguments to log to console when debug mode is enabled
    */
-  private initializeClients() {
-    const chain = this.config.network === 'base' ? base : baseSepolia;
-    
-    this.publicClient = createPublicClient({
-      chain,
-      transport: http(this.config.rpcUrl),
-    });
-
-    // Initialize wallet client if private key is provided
-    if (this.config.ownerPrivateKey) {
-      this.account = privateKeyToAccount(this.config.ownerPrivateKey);
-      this.walletClient = createWalletClient({
-        account: this.account,
-        chain,
-        transport: http(this.config.rpcUrl),
-      });
+  private log(...args: any[]) {
+    if (this.config.debug) {
+      console.log('[TachiSDK]', ...args);
     }
   }
 
   /**
-   * Main function to fetch content with automatic payment handling
+   * Initialize blockchain clients (both Viem and Ethers)
+   * @private
+   * @description Sets up the appropriate blockchain client based on configuration.
+   * Initializes either Viem or Ethers.js clients for contract interactions.
+   */
+  private initializeClients() {
+    if (this.config.useEthers) {
+      // Initialize Ethers clients
+      this.ethersProvider = new ethers.JsonRpcProvider(this.config.rpcUrl);
+      
+      if (this.config.ownerPrivateKey) {
+        this.ethersSigner = new ethers.Wallet(this.config.ownerPrivateKey, this.ethersProvider);
+      }
+    } else {
+      // Initialize Viem clients
+      const chain = this.config.network === 'base' ? base : baseSepolia;
+      
+      this.publicClient = createPublicClient({
+        chain,
+        transport: http(this.config.rpcUrl),
+      });
+
+      // Initialize wallet client if private key is provided
+      if (this.config.ownerPrivateKey) {
+        this.account = privateKeyToAccount(this.config.ownerPrivateKey);
+        this.walletClient = createWalletClient({
+          account: this.account,
+          chain,
+          transport: http(this.config.rpcUrl),
+        });
+      }
+    }
+  }
+
+  /**
+   * Fetch content from a URL with automatic payment processing
+   * 
+   * @param url - The URL to fetch content from
+   * @param options - Optional HTTP request configuration
+   * @param options.method - HTTP method (default: 'GET')
+   * @param options.headers - Additional HTTP headers to include
+   * @param options.body - Request body for POST/PUT requests
+   * 
+   * @returns Promise that resolves to TachiResponse with content and payment info
+   * 
+   * @throws {NetworkError} When HTTP requests fail due to network issues
+   * @throws {PaymentError} When payment processing fails
+   * 
+   * @example
+   * ```typescript
+   * // Simple GET request
+   * const result = await sdk.fetchWithTachi('https://api.example.com/data');
+   * 
+   * // POST request with custom headers
+   * const result = await sdk.fetchWithTachi('https://api.example.com/search', {
+   *   method: 'POST',
+   *   headers: { 'Content-Type': 'application/json' },
+   *   body: JSON.stringify({ query: 'AI research' })
+   * });
+   * 
+   * if (result.paymentRequired) {
+   *   console.log(`Paid ${result.paymentAmount} USDC for content`);
+   *   console.log(`Transaction: ${result.transactionHash}`);
+   * }
+   * ```
    */
   async fetchWithTachi(url: string, options?: {
     method?: string;
@@ -158,7 +469,7 @@ class TachiSDK {
     const { method = 'GET', headers = {}, body } = options || {};
 
     // Step 1: Initial request
-    console.log(`[TachiSDK] Fetching: ${url}`);
+    this.log(`Fetching: ${url}`);
     
     const initialResponse = await this.makeHttpRequest(url, {
       method,
@@ -179,15 +490,15 @@ class TachiSDK {
       };
     }
 
-    console.log('[TachiSDK] Payment required - processing payment...');
+    this.log('Payment required - processing payment...');
 
     // Step 2: Parse payment requirements
     const paymentInfo = await this.parsePaymentInfo(initialResponse);
-    console.log(`[TachiSDK] Payment info:`, paymentInfo);
+    this.log(`Payment info:`, paymentInfo);
 
     // Step 3: Process payment
     const transactionHash = await this.processPayment(paymentInfo);
-    console.log(`[TachiSDK] Payment sent: ${transactionHash}`);
+    this.log(`Payment sent: ${transactionHash}`);
 
     // Step 4: Retry request with payment proof
     const paidResponse = await this.makeHttpRequest(url, {
@@ -245,7 +556,7 @@ class TachiSDK {
 
       } catch (error) {
         lastError = error as Error;
-        console.log(`[TachiSDK] Request attempt ${attempt} failed:`, error);
+        this.log(`Request attempt ${attempt} failed:`, error);
 
         if (attempt === this.config.maxRetries) {
           throw new NetworkError(
@@ -303,9 +614,20 @@ class TachiSDK {
   }
 
   /**
-   * Process payment using wallet client
+   * Process payment using wallet client (Viem or Ethers)
    */
   private async processPayment(paymentInfo: PaymentInfo): Promise<string> {
+    if (this.config.useEthers) {
+      return this.processPaymentWithEthers(paymentInfo);
+    } else {
+      return this.processPaymentWithViem(paymentInfo);
+    }
+  }
+
+  /**
+   * Process payment using Viem
+   */
+  private async processPaymentWithViem(paymentInfo: PaymentInfo): Promise<string> {
     if (!this.walletClient || !this.account) {
       throw new PaymentError('Wallet client not initialized. Private key required for payments.');
     }
@@ -313,7 +635,7 @@ class TachiSDK {
     // Convert amount to wei (USDC has 6 decimals)
     const amountInWei = parseUnits(paymentInfo.amount, 6);
 
-    console.log(`[TachiSDK] Sending ${paymentInfo.amount} USDC to ${paymentInfo.recipient}`);
+    this.log(`Sending ${paymentInfo.amount} USDC to ${paymentInfo.recipient}`);
 
     try {
       // Check USDC balance
@@ -324,7 +646,7 @@ class TachiSDK {
         args: [this.account.address],
       });
 
-      console.log(`[TachiSDK] USDC balance: ${formatUnits(balance, 6)} USDC`);
+      this.log(`USDC balance: ${formatUnits(balance, 6)} USDC`);
 
       if (balance < amountInWei) {
         throw new PaymentError(
@@ -333,50 +655,52 @@ class TachiSDK {
         );
       }
 
-      // Check allowance
+      // Check allowance for PaymentProcessor
       const allowance = await this.publicClient.readContract({
         address: paymentInfo.tokenAddress,
         abi: USDC_ABI,
         functionName: 'allowance',
-        args: [this.account.address, paymentInfo.recipient],
+        args: [this.account.address, this.config.paymentProcessorAddress],
       });
 
-      // Approve if needed
+      // Approve PaymentProcessor if needed
       if (allowance < amountInWei) {
-        console.log('[TachiSDK] Approving PaymentProcessor to spend USDC...');
+        this.log('Approving PaymentProcessor to spend USDC...');
         
         const approveTx = await this.walletClient.writeContract({
           address: paymentInfo.tokenAddress,
           abi: USDC_ABI,
           functionName: 'approve',
-          args: [paymentInfo.recipient, amountInWei],
+          args: [this.config.paymentProcessorAddress, amountInWei],
         });
 
-        console.log(`[TachiSDK] Approval transaction: ${approveTx}`);
+        this.log(`Approval transaction: ${approveTx}`);
         
         // Wait for approval confirmation
         await this.publicClient.waitForTransactionReceipt({ hash: approveTx });
-        console.log('[TachiSDK] Approval confirmed');
+        this.log('Approval confirmed');
       }
 
       // Send payment via PaymentProcessor
       const paymentTx = await this.walletClient.writeContract({
-        address: paymentInfo.recipient,
+        address: this.config.paymentProcessorAddress,
         abi: PAYMENT_PROCESSOR_ABI,
         functionName: 'payPublisher',
-        args: [this.config.paymentProcessorAddress, amountInWei],
+        args: [paymentInfo.recipient, amountInWei],
       });
 
-      console.log(`[TachiSDK] Payment transaction: ${paymentTx}`);
+      this.log(`Payment transaction: ${paymentTx}`);
 
       // Wait for payment confirmation
       await this.publicClient.waitForTransactionReceipt({ hash: paymentTx });
-      console.log('[TachiSDK] Payment confirmed');
+      this.log('Payment confirmed');
 
       return paymentTx;
 
     } catch (error) {
-      console.error('[TachiSDK] Payment failed:', error);
+      if (this.config.debug) {
+        console.error('[TachiSDK] Payment failed:', error);
+      }
       throw new PaymentError(
         `Payment transaction failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         { paymentInfo, error }
@@ -385,9 +709,105 @@ class TachiSDK {
   }
 
   /**
-   * Get USDC balance for the account
+   * Process payment using Ethers
+   */
+  private async processPaymentWithEthers(paymentInfo: PaymentInfo): Promise<string> {
+    if (!this.ethersSigner || !this.ethersProvider) {
+      throw new PaymentError('Ethers signer not initialized. Private key required for payments.');
+    }
+
+    // Convert amount to wei (USDC has 6 decimals)
+    const amountInWei = ethers.parseUnits(paymentInfo.amount, 6);
+
+    this.log(`Sending ${paymentInfo.amount} USDC to ${paymentInfo.recipient}`);
+
+    try {
+      // Create contract instances
+      const usdcContract = new ethers.Contract(paymentInfo.tokenAddress, USDC_ABI_STRINGS, this.ethersSigner);
+      const paymentProcessorContract = new ethers.Contract(this.config.paymentProcessorAddress, PAYMENT_PROCESSOR_ABI_STRINGS, this.ethersSigner);
+
+      // Check USDC balance
+      const balance = await usdcContract.balanceOf(this.ethersSigner.address);
+      this.log(`USDC balance: ${ethers.formatUnits(balance, 6)} USDC`);
+
+      if (balance < amountInWei) {
+        throw new PaymentError(
+          `Insufficient USDC balance. Required: ${paymentInfo.amount}, Available: ${ethers.formatUnits(balance, 6)}`,
+          { required: paymentInfo.amount, available: ethers.formatUnits(balance, 6) }
+        );
+      }
+
+      // Check allowance for PaymentProcessor
+      const allowance = await usdcContract.allowance(this.ethersSigner.address, this.config.paymentProcessorAddress);
+
+      // Approve PaymentProcessor if needed
+      if (allowance < amountInWei) {
+        this.log('Approving PaymentProcessor to spend USDC...');
+        
+        const approveTx = await usdcContract.approve(this.config.paymentProcessorAddress, amountInWei);
+        this.log(`Approval transaction: ${approveTx.hash}`);
+        
+        // Wait for approval confirmation
+        await approveTx.wait();
+        this.log('Approval confirmed');
+      }
+
+      // Send payment via PaymentProcessor
+      const paymentTx = await paymentProcessorContract.payPublisher(paymentInfo.recipient, amountInWei);
+      this.log(`Payment transaction: ${paymentTx.hash}`);
+
+      // Wait for payment confirmation
+      await paymentTx.wait();
+      this.log('Payment confirmed');
+
+      return paymentTx.hash;
+
+    } catch (error) {
+      if (this.config.debug) {
+        console.error('[TachiSDK] Payment failed:', error);
+      }
+      throw new PaymentError(
+        `Payment transaction failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { paymentInfo, error }
+      );
+    }
+  }
+
+  /**
+   * Get the USDC balance for the configured wallet
+   * 
+   * @returns Promise that resolves to balance information in both wei and human-readable format
+   * @returns {object} balance - Balance information object
+   * @returns {bigint} balance.wei - Raw balance in wei (USDC has 6 decimals)
+   * @returns {string} balance.formatted - Human-readable balance (e.g., "150.50")
+   * 
+   * @throws {TachiError} When account is not initialized (private key required)
+   * 
+   * @example
+   * ```typescript
+   * const balance = await sdk.getUSDCBalance();
+   * console.log(`USDC Balance: ${balance.formatted} USDC`);
+   * console.log(`Raw balance: ${balance.wei} wei`);
+   * 
+   * // Check if sufficient balance for payment
+   * const requiredAmount = parseFloat('1.50'); // 1.50 USDC
+   * if (parseFloat(balance.formatted) >= requiredAmount) {
+   *   console.log('Sufficient balance for payment');
+   * }
+   * ```
    */
   async getUSDCBalance(): Promise<{ wei: bigint; formatted: string }> {
+    if (this.config.useEthers) {
+      return this.getUSDCBalanceWithEthers();
+    } else {
+      return this.getUSDCBalanceWithViem();
+    }
+  }
+
+  /**
+   * Get USDC balance using Viem
+   */
+  private async getUSDCBalanceWithViem(): Promise<{ wei: bigint; formatted: string }> {
     if (!this.account) {
       throw new TachiError('Account not initialized. Private key required.', 'CONFIG_ERROR');
     }
@@ -406,16 +826,67 @@ class TachiSDK {
   }
 
   /**
-   * Get account address
+   * Get USDC balance using Ethers
+   */
+  private async getUSDCBalanceWithEthers(): Promise<{ wei: bigint; formatted: string }> {
+    if (!this.ethersSigner || !this.ethersProvider) {
+      throw new TachiError('Ethers signer not initialized. Private key required.', 'CONFIG_ERROR');
+    }
+
+    const usdcContract = new ethers.Contract(this.config.usdcAddress, USDC_ABI_STRINGS, this.ethersProvider);
+    const balance = await usdcContract.balanceOf(this.ethersSigner.address);
+
+    return {
+      wei: balance,
+      formatted: ethers.formatUnits(balance, 6),
+    };
+  }
+
+  /**
+   * Get the wallet address associated with this SDK instance
+   * 
+   * @returns The wallet address if private key was provided, null otherwise
+   * 
+   * @example
+   * ```typescript
+   * const address = sdk.getAccountAddress();
+   * if (address) {
+   *   console.log(`Wallet address: ${address}`);
+   * } else {
+   *   console.log('No private key configured');
+   * }
+   * ```
    */
   getAccountAddress(): Address | null {
-    return this.account?.address || null;
+    if (this.config.useEthers) {
+      return this.ethersSigner?.address as Address || null;
+    } else {
+      return this.account?.address || null;
+    }
   }
 
   // === Tachi API Integration Methods ===
 
   /**
-   * Register crawler with Tachi API
+   * Register this crawler with the Tachi Protocol API
+   * 
+   * @param data - Optional crawler registration information
+   * @returns Promise that resolves to registration response with API key
+   * 
+   * @throws {Error} When registration fails due to network or validation errors
+   * 
+   * @example
+   * ```typescript
+   * const result = await sdk.registerCrawler({
+   *   name: 'Research Crawler',
+   *   contact: 'admin@university.edu',
+   *   description: 'Academic research data collection',
+   *   companyName: 'University Research Lab',
+   *   type: 'enterprise'
+   * });
+   * 
+   * console.log(`Registration successful! API Key: ${result.apiKey}`);
+   * ```
    */
   async registerCrawler(data: CrawlerRegistration = {}): Promise<any> {
     const apiUrl = this.config.apiUrl || 'http://localhost:3001';
@@ -605,7 +1076,30 @@ class TachiSDK {
 }
 
 /**
- * Convenience function for quick usage
+ * Convenience function for quick one-off content fetching without creating an SDK instance
+ * 
+ * @param url - The URL to fetch content from
+ * @param config - TachiSDK configuration object
+ * @param options - Optional HTTP request configuration
+ * @returns Promise that resolves to TachiResponse with content and payment info
+ * 
+ * @example
+ * ```typescript
+ * import { fetchWithTachi } from '@tachi/sdk-js';
+ * 
+ * const result = await fetchWithTachi(
+ *   'https://protected-api.com/data',
+ *   {
+ *     network: 'base',
+ *     rpcUrl: process.env.BASE_RPC_URL!,
+ *     ownerPrivateKey: process.env.CRAWLER_PRIVATE_KEY!,
+ *     usdcAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+ *     paymentProcessorAddress: '0x742d35Cc6634C0532925a3b8D427E3c8e3e7e7e7'
+ *   }
+ * );
+ * 
+ * console.log(result.content);
+ * ```
  */
 export async function fetchWithTachi(
   url: string, 
@@ -621,26 +1115,43 @@ export async function fetchWithTachi(
 }
 
 /**
- * Create a pre-configured SDK instance for Base mainnet
+ * Create a pre-configured SDK instance for any supported network
+ * 
+ * @param network - Network name ('base', 'base-sepolia')
+ * @param config - Configuration object
+ * @param useEthers - Whether to use Ethers.js instead of Viem
+ * @returns TachiSDK instance configured for the specified network
+ * 
+ * @example
+ * ```typescript
+ * const sdk = createNetworkSDK('base', {
+ *   rpcUrl: 'https://base-mainnet.g.alchemy.com/v2/YOUR-KEY',
+ *   ownerPrivateKey: process.env.CRAWLER_PRIVATE_KEY,
+ *   paymentProcessorAddress: '0x742d35Cc6634C0532925a3b8D427E3c8e3e7e7e7'
+ * });
+ * ```
  */
-export function createBaseSDK(config: Omit<TachiConfig, 'network' | 'usdcAddress'>): TachiSDK {
+export function createNetworkSDK(
+  network: 'base' | 'base-sepolia',
+  config: Omit<TachiConfig, 'network' | 'usdcAddress' | 'useEthers'>,
+  useEthers = false
+): TachiSDK {
+  const networkConfig = {
+    base: { usdcAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as Address },
+    'base-sepolia': { usdcAddress: '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as Address }
+  };
+
   return new TachiSDK({
     ...config,
-    network: 'base',
-    usdcAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    network,
+    usdcAddress: networkConfig[network].usdcAddress,
+    useEthers,
   });
 }
 
-/**
- * Create a pre-configured SDK instance for Base Sepolia testnet
- */
-export function createBaseSepoliaSDK(config: Omit<TachiConfig, 'network' | 'usdcAddress'>): TachiSDK {
-  return new TachiSDK({
-    ...config,
-    network: 'base-sepolia',
-    usdcAddress: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
-  });
-}
+// Backward compatibility aliases
+export const createBaseSDK = (config: Omit<TachiConfig, 'network' | 'usdcAddress'>) => createNetworkSDK('base', config);
+export const createBaseSepoliaSDK = (config: Omit<TachiConfig, 'network' | 'usdcAddress'>) => createNetworkSDK('base-sepolia', config);
 
 // Export types and classes
 export { TachiSDK };

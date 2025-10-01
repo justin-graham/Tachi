@@ -1,6 +1,6 @@
 # Cloudflare Gateway Deployment Guide
 
-This guide explains how to deploy the Tachi Pay-Per-Crawl gateway on Cloudflare Workers.
+This comprehensive guide explains how to deploy the Tachi Pay-Per-Crawl gateway on Cloudflare Workers with production-ready features including security hardening, monitoring, and performance optimization.
 
 ## Overview
 
@@ -14,10 +14,12 @@ The Cloudflare Gateway is a serverless edge function that:
 
 ## Prerequisites
 
-- Cloudflare account with Workers enabled
-- Base network RPC endpoint (Alchemy recommended)
-- Deployed Tachi contracts (PaymentProcessor, ProofOfCrawlLedger)
-- Private key for logging crawls (protocol owner)
+- **Cloudflare account** with Workers enabled (free tier sufficient)
+- **Base network RPC endpoint** (Alchemy or Base official RPC)
+- **Deployed Tachi contracts** - see [Contract Addresses](../../docs/CONTRACT_ADDRESSES.md)
+- **Private key** for logging crawls (dedicated wallet recommended)
+- **Basic knowledge** of Cloudflare Workers and environment variables
+- **USDC balance** for testing payments (testnet USDC available from faucets)
 
 ## Installation
 
@@ -28,16 +30,39 @@ The Cloudflare Gateway is a serverless edge function that:
    ```
 
 2. **Configure Environment Variables**
-   Update `wrangler.toml` with your contract addresses:
+   Create or update `wrangler.toml` with your contract addresses:
    ```toml
+   name = "tachi-gateway"
+   compatibility_date = "2024-01-01"
+   
    [vars]
+   # Network Configuration
    BASE_RPC_URL = "https://base-mainnet.alchemyapi.io/v2/YOUR-API-KEY"
+   ENVIRONMENT = "production" # or "development"
+   
+   # Contract Addresses (see docs/CONTRACT_ADDRESSES.md)
    PAYMENT_PROCESSOR_ADDRESS = "0x..." # Your deployed PaymentProcessor
-   PROOF_OF_CRAWL_LEDGER_ADDRESS = "0x..." # Your deployed ProofOfCrawlLedger
+   PROOF_OF_CRAWL_LEDGER_ADDRESS = "0x..." # Your deployed ProofOfCrawlLedger  
    USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" # Base USDC
+   
+   # Publisher Configuration
    PUBLISHER_ADDRESS = "0x..." # Publisher's wallet address
    CRAWL_TOKEN_ID = "1" # Publisher's CrawlNFT token ID
-   PRICE_USDC = "0.001" # Price per crawl in USDC
+   PRICE_USDC = "0.001" # Price per crawl in USDC (0.001 = $0.001)
+   
+   # Security Configuration
+   RATE_LIMIT_REQUESTS = "100" # Requests per minute per IP
+   MAX_REQUEST_SIZE = "10485760" # 10MB max request size
+   ENABLE_LOGGING = "true" # Enable security logging
+   
+   # Monitoring (optional)
+   SENTRY_DSN = "https://your-sentry-dsn@sentry.io/project"
+   BETTER_UPTIME_HEARTBEAT_URL = "https://betteruptime.com/api/v1/heartbeat/your-key"
+   
+   # KV Namespaces (for rate limiting and caching)
+   [[kv_namespaces]]
+   binding = "USED_TX_HASHES"
+   id = "your-kv-namespace-id"
    ```
 
 3. **Set Secrets**
@@ -94,20 +119,80 @@ The gateway detects the following AI crawlers by User-Agent:
 
 ## Deployment
 
-1. **Development Environment**
-   ```bash
-   wrangler dev --env development
+### 1. Pre-Deployment Setup
+
+**Create KV Namespace** (for rate limiting):
+```bash
+# Create KV namespace for storing used transaction hashes
+wrangler kv:namespace create "USED_TX_HASHES"
+# Copy the returned ID to your wrangler.toml
+```
+
+**Verify Configuration**:
+```bash
+# Check your configuration
+wrangler whoami
+wrangler kv:namespace list
+```
+
+### 2. Environment-Specific Deployment
+
+**Development Environment** (local testing):
+```bash
+# Start local development server
+wrangler dev --local
+
+# Test with sample requests
+curl -H "User-Agent: GPTBot/1.0" http://localhost:8787/test
+```
+
+**Staging Environment** (pre-production testing):
+```bash
+# Deploy to staging
+wrangler deploy --env staging
+
+# Run integration tests
+npm run test:gateway:staging
+```
+
+**Production Environment** (live deployment):
+```bash
+# Final production deployment
+wrangler deploy --env production
+
+# Verify deployment
+curl -H "User-Agent: GPTBot/1.0" https://your-worker.your-subdomain.workers.dev
+```
+
+### 3. Custom Domain Setup
+
+After deployment, configure your custom domain:
+
+1. **Add Custom Domain in Cloudflare Dashboard**:
+   - Navigate to Workers & Pages → Your Worker → Settings → Triggers
+   - Click "Add Custom Domain"
+   - Enter your domain (e.g., `gateway.yourdomain.com`)
+   - Follow DNS configuration instructions
+
+2. **Configure Route Patterns** (alternative to custom domain):
+   ```
+   yourdomain.com/*          # Protect entire domain
+   yourdomain.com/api/*      # Protect API endpoints only  
+   yourdomain.com/content/*  # Protect specific content paths
    ```
 
-2. **Staging Environment**
-   ```bash
-   wrangler deploy --env staging
-   ```
+### 4. Performance Testing
 
-3. **Production Environment**
-   ```bash
-   wrangler deploy --env production
-   ```
+```bash
+# Run quick load test (50 concurrent requests)
+npm run test:load:quick
+
+# Run comprehensive performance test
+npm run test:load:comprehensive
+
+# Monitor performance in production
+npm run test:performance:monitor
+```
 
 ## Domain Configuration
 
@@ -261,13 +346,139 @@ wrangler secret list
    - Scales automatically with demand
    - No server maintenance required
 
+## Security Features
+
+### Rate Limiting & DDoS Protection
+- **Built-in rate limiting**: 100 requests/minute per IP (configurable)
+- **Request size limits**: 10MB maximum (configurable)
+- **Cloudflare native DDoS protection**: Automatic traffic filtering
+- **KV-based tracking**: Prevents transaction replay attacks
+
+### Security Headers
+Automatically applied to all responses:
+```javascript
+{
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY', 
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  'Content-Security-Policy': "default-src 'self'"
+}
+```
+
+### Input Validation & Sanitization
+- **Header validation**: Sanitizes all incoming headers
+- **URL validation**: Prevents injection attacks
+- **Payment proof verification**: Validates transaction formats
+- **User-Agent parsing**: Secure AI crawler detection
+
+## Monitoring & Observability  
+
+### Real-Time Monitoring
+```bash
+# View live logs
+wrangler tail --env production
+
+# Monitor with filtering
+wrangler tail --format json | jq '.logs[] | select(.level == "error")'
+```
+
+### Performance Metrics
+Available in Cloudflare Dashboard:
+- **Request volume**: Requests per second/minute/hour
+- **Response times**: P50, P95, P99 latencies  
+- **Error rates**: 4xx/5xx response percentages
+- **Geographic distribution**: Request origins by country
+- **Cache hit rates**: Origin vs edge response ratios
+
+### Custom Analytics
+```javascript
+// Add custom analytics in your worker
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.request));
+  
+  // Track custom metrics
+  event.waitUntil(
+    logAnalytics({
+      userAgent: request.headers.get('User-Agent'),
+      crawlerType: detectCrawlerType(request),
+      paymentRequired: paymentWasRequired,
+      responseTime: Date.now() - startTime
+    })
+  );
+});
+```
+
+### Alerting Setup
+Configure alerts for:
+- **High error rates** (>5% 5xx responses)
+- **Payment failures** (>10% payment verification failures)  
+- **Performance degradation** (>2s P95 response time)
+- **Unusual traffic patterns** (10x normal volume)
+
+## Advanced Configuration
+
+### Multi-Publisher Setup
+Support multiple publishers with dynamic configuration:
+```javascript
+// Dynamic publisher detection
+const publisherConfig = await getPublisherByDomain(request.url);
+const pricing = publisherConfig.pricePerCrawl;
+const tokenId = publisherConfig.crawlTokenId;
+```
+
+### Custom Payment Models
+```javascript
+// Implement tiered pricing
+const pricing = {
+  'gptbot': 0.001,      // OpenAI
+  'claude': 0.0015,     // Anthropic  
+  'bingbot': 0.0005,    // Microsoft
+  'default': 0.001      // Others
+};
+```
+
+### Integration with Analytics Platforms
+```javascript
+// Google Analytics 4 integration
+await gtag('event', 'ai_crawler_payment', {
+  crawler_type: crawlerType,
+  payment_amount: paymentAmount,
+  publisher_domain: publisherDomain
+});
+
+// PostHog event tracking
+await posthog.capture('crawler_payment_processed', {
+  crawlerAddress: verification.crawlerAddress,
+  amount: paymentAmount,
+  domain: request.headers.get('Host')
+});
+```
+
 ## Integration with Dashboard
 
-The gateway is designed to work with the Tachi dashboard:
-1. Dashboard generates worker configuration
-2. Publisher deploys to their Cloudflare account
-3. Dashboard monitors payment and crawl statistics
-4. Real-time updates via blockchain events
+The gateway seamlessly integrates with the Tachi dashboard:
+
+### 1. **Automated Configuration Generation**
+- Dashboard generates complete `wrangler.toml` configuration
+- Pre-filled with publisher's domain, pricing, and license details
+- One-click copy for easy deployment
+
+### 2. **Real-Time Monitoring**
+- Dashboard displays live crawler activity from worker analytics
+- Payment statistics aggregated from blockchain events
+- Revenue tracking with USDC conversion rates
+
+### 3. **Configuration Management**
+- Update pricing and settings through dashboard
+- Automatic worker reconfiguration via Cloudflare API
+- A/B testing support for different pricing models
+
+### 4. **Analytics Integration**
+- Webhook notifications for successful payments
+- Crawler behavior analytics and insights
+- Revenue optimization recommendations
 
 ## Support
 

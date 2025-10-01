@@ -137,7 +137,7 @@ async function main() {
   
   // Deploy CrawlNFT
   console.log("\n📦 Deploying CrawlNFT...");
-  const CrawlNFTFactory = await hre.ethers.getContractFactory("src/CrawlNFT.sol:CrawlNFT");
+  const CrawlNFTFactory = await hre.ethers.getContractFactory("src/core/CrawlNFT.sol:CrawlNFT");
   const crawlNFT = await CrawlNFTFactory.deploy();
   await crawlNFT.waitForDeployment();
   
@@ -245,6 +245,17 @@ async function main() {
   console.log("2. Run the verification commands above");
   console.log("3. Test the contracts on the testnet");
   console.log("4. Update your frontend/gateway configuration");
+  
+  // Auto-propagate addresses to all components
+  try {
+    console.log("\n🔄 Auto-propagating addresses to all components...");
+    const { propagateAddresses } = await import("./propagate-addresses");
+    await propagateAddresses(networkName, chainId);
+    console.log("✅ Address propagation completed automatically!");
+  } catch (error) {
+    console.log(`⚠️ Address propagation failed: ${error}`);
+    console.log("You can run it manually with: npm run propagate-addresses");
+  }
   
   return deploymentResult;
 }

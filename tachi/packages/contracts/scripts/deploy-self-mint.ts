@@ -7,7 +7,7 @@ async function main() {
   console.log("Network:", network.name);
 
   // Get the contract factory from the self-mint file
-  const CrawlNFT = await ethers.getContractFactory("src/CrawlNFTSelfMint.sol:CrawlNFT");
+  const CrawlNFT = await ethers.getContractFactory("src/core/CrawlNFTSelfMint.sol:CrawlNFT");
   
   // Deploy the contract
   const crawlNFT = await CrawlNFT.deploy();

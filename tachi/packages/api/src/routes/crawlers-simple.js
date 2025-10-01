@@ -1,12 +1,14 @@
 import express from 'express';
-import { generateToken } from '../middleware/auth.js';
+import crypto from 'crypto';
+import { generateTokenPair } from '../middleware/auth-secure.js';
+import { validate, schemas } from '../middleware/validation.js';
 import { createLogger } from '../utils/logger.js';
 
 const router = express.Router();
 const logger = createLogger();
 
 // Register a new crawler/AI company (demo mode)
-router.post('/register', async (req, res) => {
+router.post('/register', validate(schemas.registerCrawler), async (req, res) => {
   try {
     const { 
       email = 'demo@crawler.com', 
@@ -14,22 +16,23 @@ router.post('/register', async (req, res) => {
       type = 'startup' 
     } = req.body;
 
+    const userId = crypto.randomUUID();
     const apiKey = 'tk_demo_' + Math.random().toString(36).substr(2, 9);
-    const token = generateToken('demo-crawler-' + Date.now(), type);
+    const tokens = generateTokenPair(userId, type);
     
     logger.info(`New crawler registered (demo): ${companyName} (${email})`);
     
     return res.status(201).json({
       message: 'Crawler registered successfully (demo mode)',
       crawler: {
-        id: 'demo-crawler-' + Date.now(),
+        id: userId,
         email,
         companyName,
         type,
         credits: type === 'individual' ? 100 : 1000
       },
       apiKey,
-      token,
+      ...tokens,
       demo: true
     });
   } catch (error) {
@@ -39,7 +42,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Authenticate crawler and get token (demo mode)
-router.post('/auth', async (req, res) => {
+router.post('/auth', validate(schemas.authCrawler), async (req, res) => {
   try {
     const { apiKey } = req.body;
 
@@ -47,15 +50,16 @@ router.post('/auth', async (req, res) => {
       return res.status(401).json({ error: 'Invalid API key' });
     }
 
-    const token = generateToken('demo-crawler-authenticated', 'startup');
+    const userId = crypto.randomUUID();
+    const tokens = generateTokenPair(userId, 'individual');
     
     logger.info(`Crawler authenticated (demo)`);
 
     res.json({
       message: 'Authentication successful (demo mode)',
-      token,
+      ...tokens,
       crawler: {
-        id: 'demo-crawler-authenticated',
+        id: userId,
         email: 'demo@crawler.com',
         companyName: 'Demo AI Company',
         type: 'startup',

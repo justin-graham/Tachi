@@ -95,7 +95,7 @@ async function main() {
     }
     // Deploy CrawlNFT
     console.log("\n📦 Deploying CrawlNFT...");
-    const CrawlNFTFactory = await hardhat_1.default.ethers.getContractFactory("src/CrawlNFT.sol:CrawlNFT");
+    const CrawlNFTFactory = await hardhat_1.default.ethers.getContractFactory("src/core/CrawlNFT.sol:CrawlNFT");
     const crawlNFT = await CrawlNFTFactory.deploy();
     await crawlNFT.waitForDeployment();
     const crawlNFTReceipt = await crawlNFT.deploymentTransaction()?.wait();

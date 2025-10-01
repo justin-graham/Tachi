@@ -21,7 +21,7 @@ async function main() {
   console.log(`👤 Publisher Address: ${publisherAddress}`);
 
   // Connect to the CrawlNFT contract (using self-mint version)
-  const CrawlNFT = await ethers.getContractFactory("src/CrawlNFTSelfMint.sol:CrawlNFT");
+  const CrawlNFT = await ethers.getContractFactory("src/core/CrawlNFTSelfMint.sol:CrawlNFT");
   const crawlNFT = CrawlNFT.attach(deploymentInfo.address);
 
   try {

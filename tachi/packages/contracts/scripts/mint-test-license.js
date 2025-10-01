@@ -51,7 +51,7 @@ async function main() {
     const publisherAddress = deployer.address;
     console.log(`👤 Publisher Address: ${publisherAddress}`);
     // Connect to the CrawlNFT contract (using self-mint version)
-    const CrawlNFT = await hardhat_1.ethers.getContractFactory("src/CrawlNFTSelfMint.sol:CrawlNFT");
+    const CrawlNFT = await hardhat_1.ethers.getContractFactory("src/core/CrawlNFTSelfMint.sol:CrawlNFT");
     const crawlNFT = CrawlNFT.attach(deploymentInfo.address);
     try {
         // Check if publisher already has a license

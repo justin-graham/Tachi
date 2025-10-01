@@ -7,25 +7,35 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createLogger } from './utils/logger.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { authenticateToken } from './middleware/auth.js';
+import { authenticateToken } from './middleware/auth-secure.js';
+import { sanitizeInput, validateCSP } from './middleware/validation.js';
+import { apiRateLimit } from './middleware/rate-limit-auth.js';
 
 // Route imports
 import publisherRoutes from './routes/publishers-simple.js';
 import crawlerRoutes from './routes/crawlers-simple.js';
 import contentRoutes from './routes/content-simple.js';
+import contentProtectionRoutes from './routes/content-protection-status.js';
+import paymentRoutes from './routes/payments.js';
+import databaseAdminRoutes from './routes/database-admin.js';
+import monitoringRoutes from './routes/monitoring.js';
+import authRoutes from './routes/auth-secure.js';
+import apiKeyRoutes from './routes/api-keys.js';
+import publisherVerificationRoutes from './routes/publisher-verification.js';
+import cdnRoutes, { cdnMiddleware } from './routes/cdn.js';
+import loadBalancerRoutes from './routes/load-balancer.js';
+import { loadBalancerMiddleware } from './middleware/load-balancer.js';
+import performanceRoutes from './routes/performance.js';
+import usageControlRoutes from './routes/usage-control.js';
+import licenseValidationRoutes from './routes/license-validation.js';
 
 // Get current directory for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables from the correct path
-dotenv.config({ path: '/Users/justin/Tachi/Tachi-1/tachi/packages/api/.env' });
+// Load environment variables
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
-// Debug environment loading
-console.log('JWT_SECRET loaded:', !!process.env.JWT_SECRET);
-console.log('JWT_SECRET value:', process.env.JWT_SECRET?.substring(0, 10) + '...');
-console.log('Working directory:', process.cwd());
-console.log('Env file path:', path.join(__dirname, '../.env'));
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -62,6 +72,16 @@ app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Load balancer middleware (applies in production)
+app.use(loadBalancerMiddleware);
+
+// CDN cache middleware for static assets
+app.use(cdnMiddleware);
+
+// Security validation middleware for all API routes
+app.use('/api', sanitizeInput);
+app.use('/api', validateCSP);
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
@@ -73,9 +93,21 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/api-keys', apiKeyRoutes);
+app.use('/api/publisher-verification', publisherVerificationRoutes);
 app.use('/api/publishers', publisherRoutes);
 app.use('/api/crawlers', crawlerRoutes);
 app.use('/api/content', crawlLimiter, contentRoutes);
+app.use('/api/content-protection', contentProtectionRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/database', databaseAdminRoutes);
+app.use('/api/monitoring', monitoringRoutes);
+app.use('/api/cdn', cdnRoutes);
+app.use('/api/load-balancer', loadBalancerRoutes);
+app.use('/api/performance', performanceRoutes);
+app.use('/api/usage-control', usageControlRoutes);
+app.use('/api/license', licenseValidationRoutes);
 
 // Legacy crawl endpoint (redirect to new API structure)
 app.get('/crawl/:domain/*', authenticateToken, async (req, res) => {
@@ -119,17 +151,105 @@ app.get('/api/docs', (req, res) => {
         pricing: 'GET /api/content/pricing/:domain',
         batch: 'POST /api/content/batch'
       },
+      contentProtection: {
+        urlSafetyCheck: 'POST /api/content-protection/url-safety-check',
+        stats: 'GET /api/content-protection/stats?timeframe=7d',
+        systemHealth: 'GET /api/content-protection/system-health',
+        config: 'GET /api/content-protection/config'
+      },
       payments: {
         createIntent: 'POST /api/payments/create-payment-intent',
         webhook: 'POST /api/payments/webhook',
-        history: 'GET /api/payments/history',
-        balance: 'GET /api/payments/balance',
-        setupPayout: 'POST /api/payments/setup-payout'
+        history: 'GET /api/payments/history?limit=50&offset=0&status=completed&timeframe=30d',
+        balance: 'GET /api/payments/balance?includeAnalytics=true',
+        setupPayout: 'POST /api/payments/setup-payout',
+        refund: 'POST /api/payments/refund',
+        analytics: 'GET /api/payments/analytics?timeframe=30d'
       },
       analytics: {
         crawler: 'GET /api/analytics/crawler/:id?period=7d',
         publisher: 'GET /api/analytics/publisher/:id?period=7d',
         platform: 'GET /api/analytics/platform?period=7d'
+      },
+      database: {
+        health: 'GET /api/database/health',
+        performance: 'GET /api/database/performance?timeframe=24h&metric=all',
+        slowQueries: 'GET /api/database/slow-queries?limit=50&priority=all',
+        maintenance: 'POST /api/database/maintenance',
+        backups: 'GET /api/database/backups',
+        createBackup: 'POST /api/database/backups',
+        dashboard: 'GET /api/database/dashboard'
+      },
+      monitoring: {
+        dashboard: 'GET /api/monitoring/dashboard',
+        metrics: 'GET /api/monitoring/metrics?timeframe=24h&component=all',
+        alerts: 'GET /api/monitoring/alerts?status=active&severity=all',
+        acknowledgeAlert: 'POST /api/monitoring/alerts/:alertId/acknowledge',
+        resolveAlert: 'POST /api/monitoring/alerts/:alertId/resolve',
+        analytics: 'GET /api/monitoring/analytics?timeframe=24h',
+        health: 'GET /api/monitoring/health?includeDiagnostics=false',
+        errors: 'GET /api/monitoring/errors?timeframe=24h&severity=all',
+        diagnostics: 'POST /api/monitoring/diagnostics',
+        status: 'GET /api/monitoring/status'
+      },
+      cdn: {
+        assets: 'GET /api/cdn/assets?filter=pattern&type=image',
+        asset: 'GET /api/cdn/asset/:path',
+        optimize: 'POST /api/cdn/optimize',
+        purge: 'POST /api/cdn/purge',
+        rebuildRegistry: 'POST /api/cdn/rebuild-registry',
+        url: 'GET /api/cdn/url/:path',
+        stats: 'GET /api/cdn/stats',
+        health: 'GET /api/cdn/health',
+        config: 'GET /api/cdn/config'
+      },
+      loadBalancer: {
+        stats: 'GET /api/load-balancer/stats',
+        health: 'GET /api/load-balancer/health',
+        servers: 'GET /api/load-balancer/servers',
+        healthCheck: 'POST /api/load-balancer/health-check',
+        config: 'GET /api/load-balancer/config',
+        sessions: 'GET /api/load-balancer/sessions',
+        clearSessions: 'POST /api/load-balancer/clear-sessions',
+        metrics: 'GET /api/load-balancer/metrics'
+      },
+      performance: {
+        health: 'GET /api/performance/health',
+        stats: 'GET /api/performance/stats',
+        loadTest: 'POST /api/performance/load-test',
+        stressTest: 'POST /api/performance/stress-test',
+        tests: 'GET /api/performance/tests?limit=50&offset=0',
+        activeTests: 'GET /api/performance/tests/active',
+        stopTest: 'POST /api/performance/tests/:testId/stop',
+        config: 'GET /api/performance/config',
+        systemMetrics: 'GET /api/performance/system-metrics?timeframe=1h',
+        customTest: 'POST /api/performance/custom-test'
+      },
+      usageControl: {
+        health: 'GET /api/usage-control/health',
+        stats: 'GET /api/usage-control/stats',
+        userUsage: 'GET /api/usage-control/user/:userId/usage?timeframe=24h',
+        userLimits: 'GET /api/usage-control/user/:userId/limits',
+        resetUser: 'POST /api/usage-control/user/:userId/reset',
+        activeRequests: 'GET /api/usage-control/active-requests',
+        config: 'GET /api/usage-control/config',
+        checkRateLimit: 'POST /api/usage-control/check-rate-limit',
+        checkQuota: 'POST /api/usage-control/check-quota',
+        queueStatus: 'GET /api/usage-control/queue-status',
+        metrics: 'GET /api/usage-control/metrics'
+      },
+      license: {
+        health: 'GET /api/license/health',
+        stats: 'GET /api/license/stats',
+        validate: 'POST /api/license/validate',
+        validateFeature: 'POST /api/license/validate-feature',
+        userLicense: 'GET /api/license/user/:userAddress',
+        userHistory: 'GET /api/license/user/:userAddress/history',
+        refresh: 'POST /api/license/refresh/:userAddress',
+        types: 'GET /api/license/types',
+        config: 'GET /api/license/config',
+        chains: 'GET /api/license/chains',
+        batchValidate: 'POST /api/license/batch-validate'
       }
     },
     authentication: {
