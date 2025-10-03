@@ -1,0 +1,134 @@
+/* BasierCircle font is now provided by BaseUI */
+
+.hero {
+  min-height: 100vh;
+  background: transparent;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8rem 2rem 4rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+
+
+
+.container {
+  width: 100%;
+  max-width: 900px;
+  position: relative;
+  z-index: 2;
+}
+
+.content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+}
+
+.mainTitle {
+  font-family: "Coinbase Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 500;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  color: #1A1A1A;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  margin: 0;
+  text-transform: none;
+  text-shadow: 0 0 1px rgba(82, 121, 111, 0.1);
+}
+
+.subtitle {
+  font-family: "Coinbase Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 300;
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  color: #1A1A1A;
+  font-style: italic;
+  line-height: 1.5;
+  max-width: 600px;
+  margin: 0;
+  text-shadow: 0 0 1px rgba(82, 121, 111, 0.05);
+}
+
+.logoSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  filter: drop-shadow(0 0 2px rgba(82, 121, 111, 0.1));
+}
+
+.logo {
+  opacity: 1;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.logo:hover {
+  transform: scale(1.05);
+}
+
+.tachiText {
+  font-family: "Coinbase Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 600;
+  font-size: clamp(2rem, 5vw, 4rem);
+  color: #1A1A1A;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
+  margin-top: -2rem;
+  text-shadow: 0 0 1px rgba(82, 121, 111, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero {
+    min-height: 90vh;
+    padding: 6rem 1rem 2rem 1rem;
+  }
+  
+  .content {
+    gap: 2.5rem;
+  }
+  
+  .mainTitle {
+    letter-spacing: 0.06em;
+  }
+  
+  .tachiText {
+    letter-spacing: 0.03em;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 4rem 1rem 2rem 1rem;
+  }
+  
+  .content {
+    gap: 2rem;
+  }
+  
+  .mainTitle {
+    letter-spacing: 0.04em;
+  }
+  
+  .tachiText {
+    letter-spacing: 0.02em;
+  }
+}

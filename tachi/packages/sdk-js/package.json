@@ -33,8 +33,6 @@
   "dependencies": {
     "@aa-sdk/core": "^4.50.1",
     "@tachi/contracts": "workspace:*",
-    "cross-fetch": "^4.1.0",
-    "ethers": "^6.0.0",
     "viem": "^2.37.9"
   }
 }

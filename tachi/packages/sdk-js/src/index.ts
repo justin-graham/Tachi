@@ -10,8 +10,7 @@ import {
 } from 'viem';
 import { base, baseSepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
-import { ethers } from 'ethers';
-import 'cross-fetch/polyfill';
+// Removed ethers and cross-fetch imports - using viem for all blockchain operations
 
 /**
  * Configuration interface for TachiSDK initialization
@@ -348,8 +347,7 @@ class TachiSDK {
   private account: any;
   
   // Ethers clients
-  private ethersProvider: ethers.JsonRpcProvider | null = null;
-  private ethersSigner: ethers.Wallet | null = null;
+  // Removed ethers providers - using viem publicClient and walletClient only
 
   /**
    * Create a new TachiSDK instance

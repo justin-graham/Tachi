@@ -91,3 +91,6 @@ typechain-types/
 
 # Cloudflare Workers
 .wrangler/
+
+# Sentry Config File
+.env.sentry-build-plugin

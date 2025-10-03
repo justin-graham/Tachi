@@ -34,6 +34,7 @@
     "pnpm": ">=8.0.0"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10",
     "baseui": "^15.0.0",
     "styletron-engine-atomic": "^1.6.2",
     "styletron-react": "^6.1.1"

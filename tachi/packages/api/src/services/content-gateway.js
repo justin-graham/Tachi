@@ -114,6 +114,39 @@ export class ContentGateway extends EventEmitter {
     }, 60000);
   }
 
+  /**
+   * Batch fetch multiple URLs for improved performance
+   * @param {Array} urls - Array of URLs to fetch
+   * @param {Object} options - Fetch options
+   * @returns {Promise<Array>} Array of results
+   */
+  async batchFetchContent(urls, options = {}) {
+    const batchSize = options.batchSize || 10;
+    const results = [];
+    
+    // Process URLs in batches to avoid overwhelming target servers
+    for (let i = 0; i < urls.length; i += batchSize) {
+      const batch = urls.slice(i, i + batchSize);
+      const batchPromises = batch.map(url => 
+        this.fetchContent(url, options).catch(error => ({
+          url,
+          error: error.message,
+          success: false
+        }))
+      );
+      
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
+      
+      // Small delay between batches to be respectful to target servers
+      if (i + batchSize < urls.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    
+    return results;
+  }
+
   async fetchContent(url, options = {}) {
     const requestId = this.generateRequestId();
     const startTime = Date.now();
@@ -128,9 +161,9 @@ export class ContentGateway extends EventEmitter {
       // Check rate limits
       await this.checkRateLimit(domain);
       
-      // Check cache first
+      // Check cache first with enhanced caching strategy
       const cacheKey = this.generateCacheKey(url, options);
-      const cachedContent = await this.cache.get(cacheKey);
+      const cachedContent = await this.getCachedContentWithFallback(cacheKey, url);
       
       if (cachedContent) {
         this.stats.cachedRequests++;
@@ -154,8 +187,8 @@ export class ContentGateway extends EventEmitter {
       // Validate content
       this.validateContent(content);
       
-      // Cache the content
-      await this.cacheContent(cacheKey, content);
+      // Cache the content with tiered caching
+      await this.cacheContentWithTiering(cacheKey, content, url);
       
       // Update statistics
       this.updateStats(true, Date.now() - startTime, content.body?.length || 0);
@@ -479,6 +512,62 @@ export class ContentGateway extends EventEmitter {
     const totalRequests = this.stats.successfulRequests + this.stats.failedRequests;
     this.stats.averageResponseTime = 
       ((this.stats.averageResponseTime * (totalRequests - 1)) + responseTime) / totalRequests;
+  }
+
+  /**
+   * Enhanced caching with fallback strategies
+   */
+  async getCachedContentWithFallback(cacheKey, url) {
+    try {
+      // Try primary cache first
+      const cachedContent = await this.cache.get(cacheKey);
+      if (cachedContent) return cachedContent;
+      
+      // Try domain-based cache for similar content
+      const domainKey = this.generateDomainCacheKey(url);
+      const domainCache = await this.cache.get(domainKey);
+      if (domainCache && this.isCacheStillValid(domainCache)) {
+        return domainCache;
+      }
+      
+      return null;
+    } catch (error) {
+      logger.warn('Cache retrieval failed', { url, error: error.message });
+      return null;
+    }
+  }
+
+  /**
+   * Tiered caching strategy for better performance
+   */
+  async cacheContentWithTiering(cacheKey, content, url) {
+    try {
+      const domain = new URL(url).hostname;
+      
+      // Cache at multiple levels
+      await Promise.allSettled([
+        // Main content cache (short TTL for fresh content)
+        this.cache.set(cacheKey, content, { ttl: 300 }), // 5 minutes
+        
+        // Domain cache (longer TTL for static resources)
+        this.cache.set(this.generateDomainCacheKey(url), content, { ttl: 3600 }), // 1 hour
+        
+        // Content type cache (for similar content patterns)
+        this.cache.set(`${domain}:${content.headers['content-type']}`, content, { ttl: 1800 }) // 30 minutes
+      ]);
+    } catch (error) {
+      logger.warn('Caching failed', { url, error: error.message });
+    }
+  }
+
+  generateDomainCacheKey(url) {
+    const parsedUrl = new URL(url);
+    return `domain:${parsedUrl.hostname}:${crypto.createHash('md5').update(parsedUrl.pathname).digest('hex')}`;
+  }
+
+  isCacheStillValid(cachedContent) {
+    const cacheAge = Date.now() - (cachedContent.timestamp || 0);
+    return cacheAge < 3600000; // 1 hour validity
   }
 
   generateRequestId() {

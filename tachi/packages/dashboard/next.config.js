@@ -1,5 +1,3 @@
-const { withSentryConfig } = require("@sentry/nextjs");
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   webpack: (config) => {
@@ -64,22 +62,4 @@ const nextConfig = {
   },
 };
 
-const sentryWebpackPluginOptions = {
-  // Additional config options for the Sentry webpack plugin
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  
-  // Only print logs for uploading source maps in CI
-  silent: !process.env.CI,
-  
-  // Upload source maps in production
-  widenClientFileUpload: true,
-  
-  // Hides source maps from generated client bundles
-  hideSourceMaps: true,
-  
-  // Automatically tree-shake Sentry logger statements
-  disableLogger: true,
-};
-
-module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions);
+module.exports = nextConfig;

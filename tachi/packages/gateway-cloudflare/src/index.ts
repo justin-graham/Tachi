@@ -55,13 +55,22 @@ interface Env {
   USDC_ADDRESS: string;
 
   /**
-   * Worker's private key for blockchain transactions (REQUIRED)
+   * Worker's private key for blockchain transactions (DEPRECATED)
    * @example '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
    * @security This key is used to sign crawl logging transactions. Keep secure!
    * @description Private key for the worker's wallet that logs crawl events on-chain.
    * Should have sufficient ETH for gas fees but doesn't need USDC.
+   * @deprecated Use WORKER_PRIVATE_KEY from Cloudflare Workers secrets instead
    */
-  PRIVATE_KEY: string;
+  PRIVATE_KEY?: string;
+  
+  /**
+   * Worker's signing private key from Cloudflare Workers secrets (RECOMMENDED)
+   * @security Stored securely in Cloudflare Workers secrets, not environment variables
+   * @description Private key for the worker's wallet that logs crawl events on-chain.
+   * Use: wrangler secret put WORKER_PRIVATE_KEY --env production
+   */
+  WORKER_PRIVATE_KEY?: string;
 
   /**
    * Publisher's crawl token (NFT) ID (REQUIRED)
@@ -191,19 +200,85 @@ function sanitizeString(input: string, maxLength: number = MAX_HEADER_LENGTH): s
 }
 
 /**
+ * Validate X-402-Payment header format and extract payment details
+ */
+function validatePaymentHeader(paymentHeader: string): { txHash: string; amount: string; valid: boolean } {
+  if (!paymentHeader || typeof paymentHeader !== 'string') {
+    return { txHash: '', amount: '', valid: false };
+  }
+  
+  // Expected format: "0x<txhash>,<amount>"
+  const parts = paymentHeader.split(',');
+  if (parts.length !== 2) {
+    return { txHash: '', amount: '', valid: false };
+  }
+  
+  const [txHash, amount] = parts;
+  
+  // Validate transaction hash format
+  if (!/^0x[a-fA-F0-9]{64}$/.test(txHash)) {
+    return { txHash: '', amount: '', valid: false };
+  }
+  
+  // Validate amount format (must be positive number)
+  if (!/^\d+(\.\d{1,6})?$/.test(amount) || parseFloat(amount) <= 0) {
+    return { txHash: '', amount: '', valid: false };
+  }
+  
+  return { txHash, amount, valid: true };
+}
+
+/**
+ * Check for replay attacks using KV store
+ */
+async function checkReplayProtection(txHash: string, env: Env): Promise<boolean> {
+  if (!env.USED_TX_HASHES) {
+    // If KV store not available, skip replay protection (dev mode)
+    return true;
+  }
+  
+  try {
+    const key = `tx:${txHash}`;
+    const existingTx = await env.USED_TX_HASHES.get(key);
+    
+    if (existingTx) {
+      // Transaction hash already used
+      return false;
+    }
+    
+    // Store transaction hash with 24 hour TTL
+    await env.USED_TX_HASHES.put(key, Date.now().toString(), { expirationTtl: 86400 });
+    return true;
+  } catch (error) {
+    // If KV operation fails, allow the request but log the error
+    console.error('Replay protection check failed:', error);
+    return true;
+  }
+}
+
+/**
  * Validate and sanitize request headers
  */
-function sanitizeHeaders(request: Request): SanitizedHeaders {
+function sanitizeHeaders(request: Request): SanitizedHeaders & { payment?: string } {
   const userAgent = sanitizeString(request.headers.get('User-Agent') || '', 500);
   const authorization = sanitizeString(request.headers.get('Authorization') || '', 200);
   const origin = request.headers.get('Origin');
   const referer = request.headers.get('Referer');
+  const payment = request.headers.get('X-402-Payment');
+  
+  // Validate payment header if present
+  let sanitizedPayment: string | undefined;
+  if (payment) {
+    const paymentValidation = validatePaymentHeader(payment);
+    sanitizedPayment = paymentValidation.valid ? payment : undefined;
+  }
   
   return {
     userAgent,
     authorization,
     origin: origin ? sanitizeString(origin, 255) : undefined,
-    referer: referer ? sanitizeString(referer, 500) : undefined
+    referer: referer ? sanitizeString(referer, 500) : undefined,
+    payment: sanitizedPayment
   };
 }
 
@@ -629,7 +704,12 @@ async function logCrawlOnChain(
 ): Promise<void> {
   try {
     // Create wallet client
-    const account = privateKeyToAccount(env.PRIVATE_KEY as Hash);
+    // Prefer Workers secret over environment variable for better security
+    const privateKey = env.WORKER_PRIVATE_KEY || env.PRIVATE_KEY;
+    if (!privateKey) {
+      throw new Error('Private key not found. Set WORKER_PRIVATE_KEY via: wrangler secret put WORKER_PRIVATE_KEY');
+    }
+    const account = privateKeyToAccount(privateKey as Hash);
     const walletClient = createWalletClient({
       account,
       chain: base,
@@ -749,16 +829,36 @@ export default {
         console.log(`AI crawler detected: ${headers.userAgent} from ${clientIP}`);
       }
 
-      // Check if authorization header is present
-      if (!headers.authorization) {
+      // Check for payment header (X-402-Payment) or authorization
+      const paymentHeader = headers.payment;
+      const authHeader = headers.authorization;
+      
+      if (!paymentHeader && !authHeader) {
         // No payment proof - return 402 Payment Required
         return createPaymentRequiredResponse(env);
       }
 
-      // Extract transaction hash from Authorization header
-      const txHash = extractTxHash(headers.authorization);
-      if (!txHash) {
-        return createErrorResponse('validation', 400, 'Invalid authorization format. Use: Bearer <transaction_hash>', env);
+      let txHash: string;
+      
+      // Prefer X-402-Payment header, fallback to Authorization
+      if (paymentHeader) {
+        const paymentValidation = validatePaymentHeader(paymentHeader);
+        if (!paymentValidation.valid) {
+          return createErrorResponse('validation', 400, 'Invalid X-402-Payment header format. Use: 0x<txhash>,<amount>', env);
+        }
+        txHash = paymentValidation.txHash;
+      } else {
+        // Extract transaction hash from Authorization header (legacy support)
+        txHash = extractTxHash(authHeader);
+        if (!txHash) {
+          return createErrorResponse('validation', 400, 'Invalid authorization format. Use: Bearer <transaction_hash>', env);
+        }
+      }
+
+      // Check for replay attacks
+      const replayCheck = await checkReplayProtection(txHash, env);
+      if (!replayCheck) {
+        return createErrorResponse('replay', 409, 'Transaction hash already used', env);
       }
 
       // Verify payment
