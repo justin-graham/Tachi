@@ -237,16 +237,30 @@ contract CrawlNFT is ERC721, Ownable {
 
         return super._update(to, tokenId, auth);
     }
+    
 
     /// @notice Override transferFrom to prevent transfers (soulbound)
     /// @dev Always reverts with TransferNotAllowed error
-    function transferFrom(address from, address to, uint256 tokenId) public virtual override {
+    function transferFrom(address from, address to, uint256 tokenId) public pure override {
         revert TransferNotAllowed();
     }
 
+
     /// @notice Override safeTransferFrom with data to prevent transfers (soulbound)
     /// @dev Always reverts with TransferNotAllowed error
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public virtual override {
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public pure override {
+        revert TransferNotAllowed();
+    }
+
+    /// @notice Override approve to prevent approvals (soulbound)
+    /// @dev Always reverts with TransferNotAllowed error
+    function approve(address to, uint256 tokenId) public pure override {
+        revert TransferNotAllowed();
+    }
+
+    /// @notice Override setApprovalForAll to prevent approvals (soulbound)
+    /// @dev Always reverts with TransferNotAllowed error
+    function setApprovalForAll(address operator, bool approved) public pure override {
         revert TransferNotAllowed();
     }
 
@@ -267,6 +281,9 @@ contract CrawlNFT is ERC721, Ownable {
 
         // Get the publisher address before burning
         address publisher = _licenseData[tokenId].publisher;
+        
+        // Security: Validate publisher address is not zero
+        if (publisher == address(0)) revert ZeroAddress();
 
         // Clear the publisher's token ID mapping
         _publisherTokenId[publisher] = 0;
@@ -276,5 +293,8 @@ contract CrawlNFT is ERC721, Ownable {
         delete _tokenTermsURI[tokenId];
 
         _burn(tokenId);
+        
+        // Emit event for audit trail
+        emit Transfer(publisher, address(0), tokenId);
     }
 }
