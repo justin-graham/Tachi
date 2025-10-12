@@ -1,0 +1,37 @@
+{
+  "name": "tachi-v2",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Pay-per-crawl protocol for AI training data",
+  "workspaces": [
+    "contracts",
+    "sdk",
+    "gateway",
+    "api",
+    "dashboard"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter dashboard dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "contracts:build": "pnpm --filter contracts build",
+    "contracts:deploy": "pnpm --filter contracts deploy",
+    "contracts:test": "pnpm --filter contracts test",
+    "api:dev": "pnpm --filter api dev",
+    "gateway:deploy": "pnpm --filter gateway deploy",
+    "sdk:build": "pnpm --filter sdk build",
+    "dashboard:dev": "pnpm --filter dashboard dev",
+    "dashboard:build": "pnpm --filter dashboard build"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.4.0"
+  }
+}

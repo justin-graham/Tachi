@@ -1,0 +1,6 @@
+packages:
+  - 'contracts'
+  - 'sdk'
+  - 'gateway'
+  - 'api'
+  - 'dashboard'

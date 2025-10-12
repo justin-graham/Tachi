@@ -1,0 +1,20 @@
+{
+  "name": "@tachi/sdk",
+  "version": "2.0.0",
+  "description": "TypeScript SDK for Tachi Protocol pay-per-crawl",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "echo \"Tests coming soon\""
+  },
+  "keywords": ["tachi", "web3", "ai", "crawler", "payment"],
+  "license": "MIT",
+  "dependencies": {
+    "viem": "^2.7.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
