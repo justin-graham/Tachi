@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       abi: CRAWL_NFT_ABI,
       functionName: 'hasLicense',
       args: [address as `0x${string}`]
-    });
+    } as any);
 
     let tokenId = null;
     if (hasLicense) {
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
         abi: CRAWL_NFT_ABI,
         functionName: 'publisherTokenId',
         args: [address as `0x${string}`]
-      });
+      } as any);
     }
 
     return NextResponse.json({

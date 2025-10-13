@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       abi: CRAWL_NFT_ABI,
       functionName: 'hasLicense',
       args: [publisher as `0x${string}`]
-    });
+    } as any);
 
     if (hasLicense) {
       return NextResponse.json({error: 'Publisher already has a license'}, {status: 400});
