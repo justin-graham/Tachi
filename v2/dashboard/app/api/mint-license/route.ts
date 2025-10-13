@@ -52,7 +52,8 @@ export async function POST(request: NextRequest) {
       address: process.env.NEXT_PUBLIC_CRAWL_NFT_ADDRESS as `0x${string}`,
       abi: CRAWL_NFT_ABI,
       functionName: 'mintLicense',
-      args: [publisher as `0x${string}`, termsURI]
+      args: [publisher as `0x${string}`, termsURI],
+      chain: base
     });
 
     // Wait for confirmation
