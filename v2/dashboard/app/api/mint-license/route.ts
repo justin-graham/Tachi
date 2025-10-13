@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
       abi: CRAWL_NFT_ABI,
       functionName: 'mintLicense',
       args: [publisher as `0x${string}`, termsURI],
+      account,
       chain: base
     });
 
