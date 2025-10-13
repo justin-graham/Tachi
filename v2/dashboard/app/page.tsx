@@ -3,25 +3,20 @@ export default function Home() {
     <div className="max-w-7xl mx-auto px-6 py-20">
       {/* Hero Section */}
       <div className="text-center mb-20">
-        <div className="inline-block mb-6">
-          <div className="stat-badge text-lg px-6 py-3">
-            TESTNET • BASE SEPOLIA
+        <div className="inline-flex items-center justify-center mb-6">
+          <div className="neo-card w-32 h-32 flex items-center justify-center p-4">
+            <img src="/TachiLogo1.png" alt="Tachi" className="w-full h-full object-contain" />
           </div>
         </div>
         <h1 className="text-6xl font-bold mb-6">
           Pay-Per-Crawl Protocol
         </h1>
         <p className="text-2xl opacity-70 max-w-3xl mx-auto mb-12">
-          Fair compensation for AI training data through blockchain micropayments.
-          <br />
-          Publishers protect content. AI companies pay in USDC. Everyone wins.
+          The standard for monetizing web content and powering the agentic economy. Publishers protect content. AI companies pay in stablecoin.
         </p>
         <div className="flex gap-4 justify-center">
-          <a href="/dashboard" className="neo-button neo-button-sage">
-            Open Dashboard →
-          </a>
-          <a href="https://github.com/yourusername/tachi" className="neo-button bg-white">
-            View on GitHub
+          <a href="/onboard" className="neo-button neo-button-sage">
+            Get Started
           </a>
         </div>
       </div>
@@ -34,68 +29,97 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <StepCard
             number="1"
-            title="Publisher Registers"
-            description="Create a Crawl License NFT with your pricing and terms. Deploy the gateway to protect your content."
+            title="Publishers Register"
+            description="Creators configure a Crawl License with your pricing and terms. Deploy the gateway to protect your content with a few clicks."
           />
           <StepCard
             number="2"
             title="AI Agent Pays"
-            description="SDK detects 402 Payment Required, automatically sends USDC payment on Base, and retrieves content."
+            description="When a crawler requests a page, it detects 402 Payment Required and automatically sends USDC payment on Base, and retrieves the content."
           />
           <StepCard
             number="3"
-            title="Everyone Verified"
-            description="Payment logged on-chain and in database. Publishers track revenue in real-time dashboard."
+            title="On-Chain Verified"
+            description="Payment logged where creators and AI agent developers can track data like revenue and crawler IDs on a real-time dashboard."
           />
         </div>
       </div>
 
-      {/* Features */}
+      {/* Introducing Tachi */}
       <div className="lab-divider mb-12"></div>
 
       <div className="mb-20">
-        <h2 className="text-4xl font-bold mb-12 text-center">Features</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FeatureCard
-            title="Sub-Cent Payments"
-            description="USDC micropayments on Base L2. $0.001 - $1.00 per request."
-            icon="💰"
-          />
-          <FeatureCard
-            title="Instant Settlement"
-            description="Payments settle in ~2 seconds on Base. No waiting periods."
-            icon="⚡"
-          />
-          <FeatureCard
-            title="Verifiable Logs"
-            description="Every crawl logged on-chain with immutable proof."
-            icon="📝"
-          />
-          <FeatureCard
-            title="Simple Integration"
-            description="3-line SDK. Works with any HTTP client or crawler."
-            icon="🔌"
-          />
+        <h2 className="text-4xl font-bold mb-6 text-center">Introducing Tachi</h2>
+        <p className="text-xl text-center max-w-4xl mx-auto mb-12 opacity-80">
+          <strong>The Web's Value Layer is Leaking.</strong> Over 60% of searches end up in zero clicks. Tachi lets content publishers get paid when AI agents crawl their sites, and enables developers to pay per access under clear terms. Every request settled in stablecoin on-chain.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Publishers Column */}
+          <div>
+            <h3 className="text-2xl font-bold mb-6"><strong>Publishers and Creators</strong></h3>
+            <div className="space-y-6">
+              <FeatureCard
+                title="Monetize AI Traffic"
+                description="73% of publishers are blocking AI crawlers. Instead of blocking bots outright, you can charge per request."
+                icon=""
+              />
+              <FeatureCard
+                title="Enforce Your Terms"
+                description="Define dynamic pricing and usage terms for your content."
+                icon=""
+              />
+            </div>
+          </div>
+
+          {/* Developers Column */}
+          <div>
+            <h3 className="text-2xl font-bold mb-6"><strong>AI Developers</strong></h3>
+            <div className="space-y-6">
+              <FeatureCard
+                title="Instant Access"
+                description="Micropayments in USDC on an immutable log eliminate legal uncertainties about using data."
+                icon=""
+              />
+              <FeatureCard
+                title="Simple Integration"
+                description="3-line SDK that works with any HTTP client or crawler."
+                icon=""
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Stats */}
+      {/* Scenarios */}
       <div className="lab-divider mb-12"></div>
 
-      <div className="text-center">
-        <h2 className="text-4xl font-bold mb-8">Built for Simplicity</h2>
-        <div className="grid grid-cols-3 gap-6 max-w-3xl mx-auto">
-          <div className="neo-card">
-            <div className="text-5xl font-bold mono-num text-coral">~1,900</div>
-            <div className="text-sm uppercase mt-2 opacity-60">Lines of Code</div>
+      <div className="mb-20 space-y-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          <div>
+            <p className="text-lg opacity-80 leading-relaxed">
+              <strong>Scenario:</strong> You run your content and AI crawlers arrive daily. Blocking them protects value but loses opportunity. With Tachi, you keep transactions frictionless and charge crawlers per request with instant USDC payment.
+            </p>
           </div>
-          <div className="neo-card">
-            <div className="text-5xl font-bold mono-num">3</div>
-            <div className="text-sm uppercase mt-2 opacity-60">Smart Contracts</div>
+          <div>
+            <CodeSnippet
+              title="Publisher Setup"
+              code={`<span style="color: #52796F">// Deploy gateway</span>\nnpx tachi deploy\n\n<span style="color: #52796F">// Set price: $0.01 per crawl</span>`}
+            />
           </div>
-          <div className="neo-card">
-            <div className="text-5xl font-bold mono-num">~2s</div>
-            <div className="text-sm uppercase mt-2 opacity-60">Payment Time</div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          <div className="order-2 md:order-1">
+            <CodeSnippet
+              title="Developer Integration"
+              code={`<span style="color: #FF7043">import</span> { TachiClient } <span style="color: #FF7043">from</span> <span style="color: #52796F">'tachi-sdk'</span>\n\n<span style="color: #FF7043">const</span> content = <span style="color: #FF7043">await</span> client.fetch(url)`}
+            />
+          </div>
+          <div className="order-1 md:order-2">
+            <p className="text-lg opacity-80 leading-relaxed">
+              <strong>Scenario:</strong> You're shipping an agent that needs quality data in real time. Today you hit a paywall, ToS risk, or total block. With Tachi, your agent pays and gets the content in seconds.
+            </p>
           </div>
         </div>
       </div>
@@ -118,9 +142,24 @@ function StepCard({number, title, description}: {number: string; title: string; 
 function FeatureCard({title, description, icon}: {title: string; description: string; icon: string}) {
   return (
     <div className="neo-card">
-      <div className="text-4xl mb-3">{icon}</div>
-      <h3 className="text-xl font-bold mb-2">{title}</h3>
+      {icon && <div className="text-4xl mb-3">{icon}</div>}
+      <h3 className="text-xl font-bold mb-2 text-coral">{title}</h3>
       <p className="text-sm opacity-70">{description}</p>
+    </div>
+  );
+}
+
+function CodeSnippet({title, code}: {title: string; code: string}) {
+  return (
+    <div className="neo-card">
+      <div className="flex items-center gap-2 mb-4">
+        <div style={{width: 12, height: 12, borderRadius: '50%', backgroundColor: '#FF5F56'}}></div>
+        <div style={{width: 12, height: 12, borderRadius: '50%', backgroundColor: '#FFBD2E'}}></div>
+        <div style={{width: 12, height: 12, borderRadius: '50%', backgroundColor: '#27C93F'}}></div>
+      </div>
+      <pre style={{margin: 0, fontFamily: 'monospace', fontSize: '0.875rem', lineHeight: 1.6, color: '#1A1A1A'}}>
+        <code dangerouslySetInnerHTML={{__html: code}}></code>
+      </pre>
     </div>
   );
 }

@@ -5,6 +5,7 @@
  * Demonstrates the complete pay-per-crawl flow
  */
 
+import 'dotenv/config';
 import {TachiSDK} from './sdk/dist/index.js';
 
 const COLORS = {
@@ -80,10 +81,10 @@ async function main() {
   step(2, 'Initializing Tachi SDK...');
 
   const sdk = new TachiSDK({
-    network: 'base-sepolia',
-    rpcUrl: process.env.BASE_SEPOLIA_RPC || 'https://sepolia.base.org',
-    privateKey: process.env.PRIVATE_KEY,
-    usdcAddress: process.env.USDC_BASE_SEPOLIA,
+    network: 'base',
+    rpcUrl: process.env.BASE_MAINNET_RPC || 'https://mainnet.base.org',
+    privateKey: `0x${process.env.PRIVATE_KEY}`,
+    usdcAddress: process.env.USDC_BASE_MAINNET,
     paymentProcessorAddress: process.env.PAYMENT_PROCESSOR_ADDRESS,
     debug: true
   });
@@ -101,7 +102,7 @@ async function main() {
   // Attempt to fetch protected content
   step(3, 'Requesting protected content...');
 
-  const gatewayUrl = process.env.GATEWAY_URL || 'https://gateway.tachi.workers.dev';
+  const gatewayUrl = process.env.GATEWAY_URL || 'https://tachi-gateway.jgrahamsport16.workers.dev';
   const contentPath = '/article/ai-training';
 
   info(`GET ${gatewayUrl}${contentPath}`);

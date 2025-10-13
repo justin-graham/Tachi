@@ -60,9 +60,12 @@ export default {
       return corsResponse();
     }
 
+    // Get publisher address from query param or use default
+    const publisherAddress = url.searchParams.get('publisher') || env.PUBLISHER_ADDRESS;
+
     // Health check
     if (url.pathname === '/health') {
-      return jsonResponse({status: 'ok', service: 'Tachi Gateway', version: '2.0'});
+      return jsonResponse({status: 'ok', service: 'Tachi Gateway', version: '2.0', publisher: publisherAddress});
     }
 
     // List available content
@@ -83,7 +86,7 @@ export default {
 
     if (!paymentTxHash) {
       // No payment - return 402 Payment Required
-      return paymentRequiredResponse(env, url.pathname);
+      return paymentRequiredResponse(env, url.pathname, publisherAddress);
     }
 
     // Verify payment transaction
@@ -104,7 +107,7 @@ export default {
       await logCrawl({
         txHash: paymentTxHash,
         path: url.pathname,
-        publisherAddress: env.PUBLISHER_ADDRESS,
+        publisherAddress,
         crawlerAddress: verification.crawlerAddress,
         amount: verification.amount,
         env
@@ -292,7 +295,7 @@ function getContent(path: string): (typeof CONTENT_STORE)[string] | null {
 /**
  * Return 402 Payment Required response
  */
-function paymentRequiredResponse(env: Env, path: string): Response {
+function paymentRequiredResponse(env: Env, path: string, publisherAddress: string): Response {
   const priceInWei = Math.floor(parseFloat(env.PRICE_PER_REQUEST) * 1e6).toString();
 
   return new Response(
@@ -305,7 +308,7 @@ function paymentRequiredResponse(env: Env, path: string): Response {
         step3: 'Retry request with payment proof'
       },
       payment: {
-        recipient: env.PUBLISHER_ADDRESS,
+        recipient: publisherAddress,
         amount: env.PRICE_PER_REQUEST,
         amountWei: priceInWei,
         token: 'USDC',
@@ -321,7 +324,7 @@ function paymentRequiredResponse(env: Env, path: string): Response {
       headers: {
         'Content-Type': 'application/json',
         'X-Tachi-Price': priceInWei,
-        'X-Tachi-Recipient': env.PUBLISHER_ADDRESS,
+        'X-Tachi-Recipient': publisherAddress,
         'X-Tachi-Token': '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // USDC Base Sepolia
         'X-Tachi-Chain-Id': '84532',
         'Access-Control-Allow-Origin': '*',

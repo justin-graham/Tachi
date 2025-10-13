@@ -1,5 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
+import {Providers} from './providers';
+import {WalletButton} from './components/WalletButton';
 
 export const metadata: Metadata = {
   title: 'Tachi v2 - Publisher Dashboard',
@@ -10,40 +12,38 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en">
       <body>
-        <div className="page-header">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold mb-1">
-                <span className="text-coral">TACHI</span> v2
-              </h1>
-              <p className="text-sm opacity-80">Publisher Dashboard — Pay-Per-Crawl Protocol</p>
-            </div>
-            <div className="text-right">
-              <div className="stat-badge">TESTNET</div>
-            </div>
-          </div>
-        </div>
-
-        <nav className="bg-white border-b-[3px] border-black relative z-10">
+        <Providers>
+        <nav className="bg-paper border-b-[3px] border-black relative z-10">
           <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex gap-6">
-              <NavLink href="/dashboard">Dashboard</NavLink>
-              <NavLink href="/dashboard/requests">Requests</NavLink>
-              <NavLink href="/dashboard/revenue">Revenue</NavLink>
-              <NavLink href="/dashboard/settings">Settings</NavLink>
+            <div className="flex items-center justify-between">
+              <div className="flex gap-6">
+                <NavLink href="/dashboard">Dashboard</NavLink>
+                <NavLink href="/dashboard/requests">Requests</NavLink>
+                <NavLink href="/dashboard/revenue">Revenue</NavLink>
+                <NavLink href="/dashboard/settings">Settings</NavLink>
+              </div>
+              <WalletButton />
             </div>
           </div>
         </nav>
 
-        <main className="relative z-0">{children}</main>
+          <main className="relative z-0">{children}</main>
 
-        <footer className="mt-20 bg-black text-white py-8 border-t-[3px] border-black">
-          <div className="max-w-7xl mx-auto px-6 text-center">
-            <p className="text-sm">
-              Built with ❤️ on Base L2 • MIT License • {new Date().getFullYear()}
-            </p>
-          </div>
-        </footer>
+          <footer className="mt-20 bg-paper border-t-[3px] border-black pt-12 pb-48 relative overflow-hidden">
+            <div className="max-w-7xl mx-auto px-6 relative z-10">
+              <div className="flex justify-between items-start">
+                <a href="/onboard" className="neo-button neo-button-sage">Get Started</a>
+                <div className="flex gap-6">
+                  <a href="#" className="font-bold text-black hover:text-coral transition-colors">Docs</a>
+                  <a href="#" className="font-bold text-black hover:text-coral transition-colors">Legal</a>
+                </div>
+              </div>
+            </div>
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 text-[20rem] font-bold opacity-5 leading-none pointer-events-none" style={{fontFamily: 'Coinbase Display'}}>
+              tachi
+            </div>
+          </footer>
+        </Providers>
       </body>
     </html>
   );

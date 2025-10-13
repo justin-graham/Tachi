@@ -8,9 +8,13 @@
     "start": "next start"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.75.0",
+    "@tanstack/react-query": "^5.90.2",
     "next": "15.1.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "viem": "^2.38.1",
+    "wagmi": "^2.18.0"
   },
   "devDependencies": {
     "@types/node": "^20",

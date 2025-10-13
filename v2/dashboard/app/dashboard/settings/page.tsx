@@ -1,10 +1,40 @@
 'use client';
 
-import {useState} from 'react';
+import {useAccount} from 'wagmi';
+import {useState, useEffect} from 'react';
+import {useRouter} from 'next/navigation';
 
 export default function SettingsPage() {
+  const {address, isConnected} = useAccount();
+  const router = useRouter();
   const [price, setPrice] = useState('0.01');
   const [saved, setSaved] = useState(false);
+  const [tokenId, setTokenId] = useState<string | null>(null);
+  const [domain, setDomain] = useState<string>('');
+
+  useEffect(() => {
+    if (!isConnected) {
+      router.push('/');
+      return;
+    }
+    checkLicense();
+  }, [address, isConnected]);
+
+  const checkLicense = async () => {
+    try {
+      const res = await fetch(`/api/check-license?address=${address}`);
+      const data = await res.json();
+      if (data.hasLicense) {
+        setTokenId(data.tokenId);
+        setDomain(data.domain || 'example.com');
+        setPrice(data.price || '0.01');
+      } else {
+        router.push('/onboard');
+      }
+    } catch (err) {
+      console.error('Failed to check license:', err);
+    }
+  };
 
   const handleSave = () => {
     // Mock save - replace with actual API call
@@ -75,19 +105,9 @@ export default function SettingsPage() {
                 Publisher Address
               </label>
               <div className="neo-input bg-paper font-mono text-sm break-all">
-                0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb
+                {address || 'Not connected'}
               </div>
               <p className="text-xs opacity-60 mt-1">Your wallet address for receiving payments</p>
-            </div>
-
-            <div>
-              <label className="block text-sm uppercase tracking-wide font-bold mb-2 text-sage">
-                Domain
-              </label>
-              <div className="neo-input bg-paper font-mono text-sm">
-                example.com
-              </div>
-              <p className="text-xs opacity-60 mt-1">Your registered domain</p>
             </div>
 
             <div>
@@ -95,9 +115,19 @@ export default function SettingsPage() {
                 License NFT ID
               </label>
               <div className="neo-input bg-paper font-mono text-sm">
-                #1234
+                #{tokenId || 'Loading...'}
               </div>
               <p className="text-xs opacity-60 mt-1">Your Crawl License NFT token ID</p>
+            </div>
+
+            <div>
+              <label className="block text-sm uppercase tracking-wide font-bold mb-2 text-sage">
+                Network
+              </label>
+              <div className="neo-input bg-paper font-mono text-sm">
+                Base Mainnet
+              </div>
+              <p className="text-xs opacity-60 mt-1">Your gateway is deployed on Base L2</p>
             </div>
           </div>
         </div>
@@ -133,24 +163,44 @@ export default function SettingsPage() {
           <div className="lab-divider"></div>
 
           <div>
-            <h4 className="text-lg font-bold mb-3">Sample Code</h4>
-            <div className="neo-card bg-black text-white font-mono text-sm overflow-x-auto">
-              <pre>{`// Example protected content route
-app.get('/api/data', async (req, res) => {
-  const gateway = 'https://gateway.tachi.workers.dev';
-  const auth = req.headers.authorization;
+            <h4 className="text-lg font-bold mb-3">Publisher Integration</h4>
+            <p className="text-sm opacity-60 mb-4">Add this code to protect your content routes</p>
+            <div className="neo-card">
+              <div className="flex items-center gap-2 mb-4">
+                <div style={{width: 12, height: 12, borderRadius: '50%', backgroundColor: '#FF5F56'}}></div>
+                <div style={{width: 12, height: 12, borderRadius: '50%', backgroundColor: '#FFBD2E'}}></div>
+                <div style={{width: 12, height: 12, borderRadius: '50%', backgroundColor: '#27C93F'}}></div>
+              </div>
+              <pre style={{margin: 0, fontFamily: 'monospace', fontSize: '0.875rem', lineHeight: 1.6, color: '#1A1A1A', whiteSpace: 'pre-wrap'}}>
+                <code dangerouslySetInnerHTML={{__html: `<span style="color: #6A9955">// Protect your content with Tachi Gateway</span>
+<span style="color: #FF7043">const</span> GATEWAY = <span style="color: #52796F">'https://gateway.tachi.workers.dev'</span>;
+<span style="color: #FF7043">const</span> PUBLISHER = <span style="color: #52796F">'${address || '0x...'}'</span>;
+<span style="color: #FF7043">const</span> TOKEN_ID = <span style="color: #52796F">'${tokenId || '1'}'</span>;
 
-  const response = await fetch(gateway + '/dataset', {
-    headers: { Authorization: auth }
+app.get(<span style="color: #52796F">'/api/protected'</span>, <span style="color: #FF7043">async</span> (req, res) => {
+  <span style="color: #6A9955">// Verify payment via gateway</span>
+  <span style="color: #FF7043">const</span> verified = <span style="color: #FF7043">await</span> fetch(\`\${GATEWAY}/verify\`, {
+    method: <span style="color: #52796F">'POST'</span>,
+    headers: { <span style="color: #52796F">'Content-Type'</span>: <span style="color: #52796F">'application/json'</span> },
+    body: JSON.stringify({
+      publisher: PUBLISHER,
+      tokenId: TOKEN_ID,
+      authorization: req.headers.authorization
+    })
   });
 
-  if (response.status === 402) {
-    return res.status(402).json(await response.json());
+  <span style="color: #FF7043">if</span> (!verified.ok) {
+    <span style="color: #FF7043">return</span> res.status(<span style="color: #B5CEA8">402</span>).json({
+      error: <span style="color: #52796F">'Payment Required'</span>,
+      price: <span style="color: #52796F">'${price || '0.01'}'</span>,
+      currency: <span style="color: #52796F">'USDC'</span>
+    });
   }
 
-  const data = await response.json();
-  res.json(data);
-});`}</pre>
+  <span style="color: #6A9955">// Payment verified, return content</span>
+  res.json({ data: <span style="color: #52796F">'Your protected content'</span> });
+});`}}></code>
+              </pre>
             </div>
           </div>
         </div>

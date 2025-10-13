@@ -1,7 +1,0 @@
-{
-  "network": "base-sepolia",
-  "crawlNFTAddress": "0xa974E189038f5b0dEcEbfCe7B0A108824acF3813",
-  "crawlNFTStartBlock": 15000000,
-  "paymentProcessorAddress": "0x0000000000000000000000000000000000000000",
-  "paymentProcessorStartBlock": 15000000
-}

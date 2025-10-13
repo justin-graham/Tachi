@@ -1,6 +1,8 @@
 'use client';
 
 import {useEffect, useState} from 'react';
+import {useAccount} from 'wagmi';
+import {useRouter} from 'next/navigation';
 
 interface CrawlRequest {
   id: string;
@@ -12,27 +14,19 @@ interface CrawlRequest {
 }
 
 export default function RequestsPage() {
+  const {address, isConnected} = useAccount();
+  const router = useRouter();
   const [requests, setRequests] = useState<CrawlRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    const publisherAddress = process.env.NEXT_PUBLIC_PUBLISHER_ADDRESS || '';
-
-    fetch(`${apiUrl}/api/dashboard/requests/${publisherAddress}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setRequests(data.requests);
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch requests:', err);
-        setRequests([]);
-        setLoading(false);
-      });
-  }, []);
+    if (!isConnected) {
+      router.push('/');
+      return;
+    }
+    setRequests([]);
+    setLoading(false);
+  }, [address, isConnected]);
 
   if (loading) {
     return (
@@ -73,40 +67,49 @@ export default function RequestsPage() {
       </div>
 
       {/* Request Table */}
-      <div className="neo-card p-0 overflow-hidden">
-        <table className="neo-table">
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>Path</th>
-              <th>Crawler</th>
-              <th>Amount</th>
-              <th>Tx Hash</th>
-            </tr>
-          </thead>
-          <tbody>
-            {requests.map((req) => (
-              <tr key={req.id}>
-                <td className="mono-num">{formatTime(req.timestamp)}</td>
-                <td className="font-mono text-sm">{req.path}</td>
-                <td className="font-mono text-xs opacity-60">
-                  {req.crawlerAddress.slice(0, 6)}...{req.crawlerAddress.slice(-4)}
-                </td>
-                <td className="font-bold mono-num">${req.amount}</td>
-                <td>
-                  <a
-                    href={`https://sepolia.basescan.org/tx/${req.txHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-mono text-xs text-coral hover:underline"
-                  >
-                    {req.txHash}
-                  </a>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="neo-card">
+        {requests.length > 0 ? (
+          <div className="p-0 overflow-hidden -m-6">
+            <table className="neo-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Path</th>
+                  <th>Crawler</th>
+                  <th>Amount</th>
+                  <th>Tx Hash</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map((req) => (
+                  <tr key={req.id}>
+                    <td className="mono-num">{formatTime(req.timestamp)}</td>
+                    <td className="font-mono text-sm">{req.path}</td>
+                    <td className="font-mono text-xs opacity-60">
+                      {req.crawlerAddress.slice(0, 6)}...{req.crawlerAddress.slice(-4)}
+                    </td>
+                    <td className="font-bold mono-num">${req.amount}</td>
+                    <td>
+                      <a
+                        href={`https://sepolia.basescan.org/tx/${req.txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-xs text-coral hover:underline"
+                      >
+                        {req.txHash}
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-lg font-bold mb-2">No Requests Yet</p>
+            <p className="text-sm opacity-60">Request logs will appear here once crawlers access your content</p>
+          </div>
+        )}
       </div>
 
       {/* Export Button */}

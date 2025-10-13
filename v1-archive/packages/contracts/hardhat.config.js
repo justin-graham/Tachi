@@ -1,1 +1,0 @@
-scripts/config/hardhat.config.js

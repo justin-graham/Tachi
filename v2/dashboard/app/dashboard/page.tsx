@@ -1,6 +1,8 @@
 'use client';
 
+import {useAccount} from 'wagmi';
 import {useEffect, useState} from 'react';
+import {useRouter} from 'next/navigation';
 
 interface DashboardStats {
   todayRequests: number;
@@ -8,49 +10,57 @@ interface DashboardStats {
   totalRequests: number;
   totalRevenue: string;
   avgPrice: string;
-  activePublishers: number;
+  yesterdayRequests?: number;
+  recentActivity?: Array<{time: string; path: string; amount: string}>;
 }
 
 export default function DashboardPage() {
+  const {address, isConnected} = useAccount();
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasLicense, setHasLicense] = useState(false);
 
   useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    const publisherAddress = process.env.NEXT_PUBLIC_PUBLISHER_ADDRESS || '';
+    if (!isConnected) {
+      router.push('/');
+      return;
+    }
+    checkLicenseAndFetchData();
+  }, [address, isConnected]);
 
-    fetch(`${apiUrl}/api/dashboard/stats/${publisherAddress}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setStats(data.stats);
-        } else {
-          // Fallback to mock data if API fails
-          setStats({
-            todayRequests: 0,
-            todayRevenue: '0.00',
-            totalRequests: 0,
-            totalRevenue: '0.00',
-            avgPrice: '0.01',
-            activePublishers: 0
-          });
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch stats:', err);
-        // Fallback to empty data
-        setStats({
-          todayRequests: 0,
-          todayRevenue: '0.00',
-          totalRequests: 0,
-          totalRevenue: '0.00',
-          avgPrice: '0.01',
-          activePublishers: 0
-        });
-        setLoading(false);
+  const checkLicenseAndFetchData = async () => {
+    try {
+      // Check license first
+      const licenseRes = await fetch(`/api/check-license?address=${address}`);
+      const licenseData = await licenseRes.json();
+
+      if (!licenseData.hasLicense) {
+        router.push('/onboard');
+        return;
+      }
+
+      setHasLicense(true);
+
+      // Fetch dashboard stats from Supabase
+      const statsRes = await fetch(`/api/dashboard-stats?address=${address}`);
+      const statsData = await statsRes.json();
+
+      setStats(statsData);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to load dashboard:', error);
+      // Fallback to zero stats
+      setStats({
+        todayRequests: 0,
+        todayRevenue: '0.00',
+        totalRequests: 0,
+        totalRevenue: '0.00',
+        avgPrice: '0.00'
       });
-  }, []);
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -75,7 +85,9 @@ export default function DashboardPage() {
         <StatCard
           label="Today's Requests"
           value={stats?.todayRequests.toString() || '0'}
-          trend="+12%"
+          trend={stats?.todayRequests && stats?.yesterdayRequests
+            ? `${stats.todayRequests > stats.yesterdayRequests ? '+' : ''}${(((stats.todayRequests - stats.yesterdayRequests) / (stats.yesterdayRequests || 1)) * 100).toFixed(0)}%`
+            : undefined}
           color="coral"
         />
         <StatCard
@@ -118,27 +130,34 @@ export default function DashboardPage() {
       <div>
         <h3 className="text-2xl font-bold mb-6">Recent Activity</h3>
         <div className="neo-card">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b-2 border-black">
-                <th className="text-left py-3 uppercase text-sm font-bold">Time</th>
-                <th className="text-left py-3 uppercase text-sm font-bold">Path</th>
-                <th className="text-right py-3 uppercase text-sm font-bold">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              <ActivityRow time="2m ago" path="/article/ai-training" amount="$0.01" />
-              <ActivityRow time="5m ago" path="/dataset/financial-news" amount="$0.01" />
-              <ActivityRow time="8m ago" path="/api/market-data" amount="$0.01" />
-              <ActivityRow time="12m ago" path="/article/ai-training" amount="$0.01" />
-              <ActivityRow time="15m ago" path="/dataset/financial-news" amount="$0.01" />
-            </tbody>
-          </table>
-          <div className="mt-4 text-center">
-            <a href="/dashboard/requests" className="neo-button neo-button-sage inline-block">
-              View All Requests →
-            </a>
-          </div>
+          {stats?.recentActivity && stats.recentActivity.length > 0 ? (
+            <>
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b-2 border-black">
+                    <th className="text-left py-3 uppercase text-sm font-bold">Time</th>
+                    <th className="text-left py-3 uppercase text-sm font-bold">Path</th>
+                    <th className="text-right py-3 uppercase text-sm font-bold">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.recentActivity.map((activity, idx) => (
+                    <ActivityRow key={idx} time={activity.time} path={activity.path} amount={activity.amount} />
+                  ))}
+                </tbody>
+              </table>
+              <div className="mt-4 text-center">
+                <a href="/dashboard/requests" className="neo-button neo-button-sage inline-block">
+                  View All Requests →
+                </a>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-lg font-bold mb-2">No Activity Yet</p>
+              <p className="text-sm opacity-60">Requests will appear here once crawlers start accessing your content.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
