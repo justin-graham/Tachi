@@ -1,13 +1,12 @@
 'use client';
 
 import {useAccount} from 'wagmi';
-import {useRouter, useSearchParams} from 'next/navigation';
-import {useEffect, useState} from 'react';
+import {useRouter} from 'next/navigation';
+import {useEffect, useState, Suspense} from 'react';
 
-export default function SetupCompletePage() {
+function SetupCompleteContent() {
   const {address, isConnected} = useAccount();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [copied, setCopied] = useState('');
 
   useEffect(() => {
@@ -199,5 +198,13 @@ const result = await sdk.fetch('${publisherGatewayUrl}/your-content');`;
         </a>
       </div>
     </div>
+  );
+}
+
+export default function SetupCompletePage() {
+  return (
+    <Suspense fallback={<div className="max-w-4xl mx-auto px-6 py-12 text-center"><div className="spinner"></div></div>}>
+      <SetupCompleteContent />
+    </Suspense>
   );
 }
