@@ -1,8 +1,8 @@
 'use client';
 
-import {useAccount} from 'wagmi';
 import {useEffect, useState} from 'react';
 import {useRouter} from 'next/navigation';
+import {useHydrationSafeAddress} from '../hooks/useHydrationSafeAddress';
 
 interface DashboardStats {
   todayRequests: number;
@@ -15,7 +15,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const {address, isConnected} = useAccount();
+  const {address, isConnected} = useHydrationSafeAddress();
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,8 +76,8 @@ export default function DashboardPage() {
     <div className="max-w-7xl mx-auto px-6 py-12">
       {/* Page Title */}
       <div className="mb-8">
-        <h2 className="text-4xl font-bold mb-2">Overview</h2>
-        <p className="text-lg opacity-70">Real-time metrics for your protected content</p>
+        <h2 className="text-3xl md:text-4xl font-bold mb-2">Overview</h2>
+        <p className="text-base md:text-lg opacity-70">Real-time metrics for your protected content</p>
       </div>
 
       {/* Stats Grid */}

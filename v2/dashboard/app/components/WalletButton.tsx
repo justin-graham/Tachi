@@ -1,18 +1,16 @@
 'use client';
 
-import {useAccount, useConnect, useDisconnect} from 'wagmi';
-import {useEffect, useState} from 'react';
+import {useConnect, useDisconnect} from 'wagmi';
+import {useState} from 'react';
+import {useHydrationSafeAddress} from '../hooks/useHydrationSafeAddress';
 
 export function WalletButton() {
-  const {address, isConnected} = useAccount();
+  const {address, isConnected, isHydrated} = useHydrationSafeAddress();
   const {connect, connectors} = useConnect();
   const {disconnect} = useDisconnect();
-  const [mounted, setMounted] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) {
+  if (!isHydrated) {
     return <button className="neo-button bg-gray-200 cursor-not-allowed" disabled>Loading...</button>;
   }
 

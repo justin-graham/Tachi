@@ -38,6 +38,8 @@ CREATE TABLE payments (
   publisher_address TEXT NOT NULL,
   amount DECIMAL(18, 6) NOT NULL,
   timestamp TIMESTAMP NOT NULL,
+  onchain_logged BOOLEAN DEFAULT false,
+  onchain_tx TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -49,6 +51,8 @@ CREATE TABLE crawl_logs (
   publisher_address TEXT NOT NULL,
   crawler_address TEXT,
   timestamp TIMESTAMP NOT NULL,
+  onchain_logged BOOLEAN DEFAULT false,
+  onchain_tx TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
 

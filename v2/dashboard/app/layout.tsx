@@ -16,10 +16,12 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         <nav className="bg-paper border-b-[3px] border-black relative z-10">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex gap-6">
+              <div className="flex gap-3 md:gap-6 overflow-x-auto">
+                <NavLink href="/directory">Directory</NavLink>
                 <NavLink href="/dashboard">Dashboard</NavLink>
                 <NavLink href="/dashboard/requests">Requests</NavLink>
                 <NavLink href="/dashboard/revenue">Revenue</NavLink>
+                <NavLink href="/dashboard/integration">Integration</NavLink>
                 <NavLink href="/dashboard/settings">Settings</NavLink>
               </div>
               <WalletButton />

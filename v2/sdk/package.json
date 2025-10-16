@@ -1,16 +1,47 @@
 {
-  "name": "@tachi/sdk",
+  "name": "@tachiprotocol/sdk",
   "version": "2.0.0",
-  "description": "TypeScript SDK for Tachi Protocol pay-per-crawl",
+  "description": "TypeScript SDK for Tachi Protocol - pay-per-crawl access with automatic USDC micropayments",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
+    "prepublishOnly": "npm run build",
     "test": "echo \"Tests coming soon\""
   },
-  "keywords": ["tachi", "web3", "ai", "crawler", "payment"],
+  "keywords": [
+    "tachi",
+    "web3",
+    "ai",
+    "crawler",
+    "payment",
+    "usdc",
+    "base",
+    "l2",
+    "micropayments",
+    "training-data",
+    "pay-per-crawl"
+  ],
+  "author": "Tachi Protocol",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tachiprotocol/tachi.git",
+    "directory": "v2/sdk"
+  },
+  "homepage": "https://tachi.ai",
+  "bugs": {
+    "url": "https://github.com/tachiprotocol/tachi/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "viem": "^2.7.0"
   },

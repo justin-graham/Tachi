@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {useAccount} from 'wagmi';
+import {useHydrationSafeAddress} from '../../hooks/useHydrationSafeAddress';
 import {useRouter} from 'next/navigation';
 
 interface RevenueData {
@@ -11,7 +11,7 @@ interface RevenueData {
 }
 
 export default function RevenuePage() {
-  const {address, isConnected} = useAccount();
+  const {address, isConnected} = useHydrationSafeAddress();
   const router = useRouter();
   const [revenueData, setRevenueData] = useState<RevenueData[]>([]);
   const [loading, setLoading] = useState(true);

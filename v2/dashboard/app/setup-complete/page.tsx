@@ -1,11 +1,11 @@
 'use client';
 
-import {useAccount} from 'wagmi';
 import {useRouter} from 'next/navigation';
 import {useEffect, useState, Suspense} from 'react';
+import {useHydrationSafeAddress} from '../hooks/useHydrationSafeAddress';
 
 function SetupCompleteContent() {
-  const {address, isConnected} = useAccount();
+  const {address, isConnected, isHydrated} = useHydrationSafeAddress();
   const router = useRouter();
   const [copied, setCopied] = useState('');
 
@@ -16,7 +16,7 @@ function SetupCompleteContent() {
   }, [isConnected, router]);
 
   const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || 'https://tachi-gateway.jgrahamsport16.workers.dev';
-  const publisherGatewayUrl = `${gatewayUrl}?publisher=${address}`;
+  const publisherGatewayUrl = `${gatewayUrl}?publisher=${isHydrated && address ? address : '0x...'}`;
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);

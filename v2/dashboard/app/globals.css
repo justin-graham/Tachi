@@ -248,3 +248,18 @@ body::before {
 .bg-coral { background: var(--color-coral); }
 .bg-sage { background: var(--color-sage); }
 .bg-paper { background: var(--color-paper); }
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .neo-card {
+    box-shadow: 4px 4px 0 var(--color-black);
+    padding: 1rem;
+  }
+  .neo-card:hover {
+    box-shadow: 5px 5px 0 var(--color-black);
+  }
+  .neo-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}

@@ -1,11 +1,11 @@
 'use client';
 
-import {useAccount} from 'wagmi';
 import {useState, useEffect} from 'react';
 import {useRouter} from 'next/navigation';
+import {useHydrationSafeAddress} from '../../hooks/useHydrationSafeAddress';
 
 export default function SettingsPage() {
-  const {address, isConnected} = useAccount();
+  const {address, isConnected, isHydrated} = useHydrationSafeAddress();
   const router = useRouter();
   const [price, setPrice] = useState('0.01');
   const [saved, setSaved] = useState(false);
@@ -105,7 +105,7 @@ export default function SettingsPage() {
                 Publisher Address
               </label>
               <div className="neo-input bg-paper font-mono text-sm break-all">
-                {address || 'Not connected'}
+                {isHydrated ? (address || 'Not connected') : 'Loading...'}
               </div>
               <p className="text-xs opacity-60 mt-1">Your wallet address for receiving payments</p>
             </div>

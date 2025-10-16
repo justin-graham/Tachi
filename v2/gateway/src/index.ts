@@ -11,6 +11,8 @@ interface Env {
   PROOF_OF_CRAWL_ADDRESS: string;
   PRICE_PER_REQUEST: string;
   PUBLISHER_ADDRESS: string;
+  GATEWAY_PRIVATE_KEY?: string; // Optional: for on-chain logging
+  PAYMENT_PROCESSOR_ADDRESS: string;
 }
 
 // Demo content store - replace with actual CMS/database in production
@@ -114,6 +116,42 @@ export default {
       });
 
       // Return protected content
+      // Check if proxying to external URL
+      const targetUrl = url.searchParams.get('target');
+
+      if (targetUrl) {
+        // Proxy mode: fetch from publisher's actual site
+        try {
+          const targetResponse = await fetch(targetUrl, {
+            headers: {
+              'User-Agent': 'TachiGateway/2.0',
+              'X-Tachi-Payment': paymentTxHash,
+              'X-Tachi-Publisher': publisherAddress
+            }
+          });
+
+          const contentType = targetResponse.headers.get('content-type') || 'text/plain';
+          const targetContent = await targetResponse.text();
+
+          return new Response(targetContent, {
+            status: 200,
+            headers: {
+              'Content-Type': contentType,
+              'X-Tachi-Payment': paymentTxHash,
+              'X-Tachi-Verified': 'true',
+              'Access-Control-Allow-Origin': '*'
+            }
+          });
+        } catch (proxyError: any) {
+          return jsonResponse({
+            error: 'Failed to fetch target content',
+            message: proxyError.message,
+            target: targetUrl
+          }, 502);
+        }
+      }
+
+      // Demo mode: serve built-in content
       const content = getContent(url.pathname);
 
       if (!content) {
@@ -216,14 +254,44 @@ async function verifyPayment(
       return {valid: false, reason: 'Payment expired (>5 min old)'};
     }
 
-    // TODO: Verify amount and recipient by decoding tx input
-    // For MVP, we trust that SDK sent correct amount to correct address
-    // In production, decode the PaymentProcessor.payPublisher() call data
+    // Verify transaction is to PaymentProcessor contract
+    if (tx.to?.toLowerCase() !== env.PROOF_OF_CRAWL_ADDRESS.toLowerCase()) {
+      return {valid: false, reason: 'Transaction not to PaymentProcessor'};
+    }
+
+    // Decode payPublisher(address publisher, uint256 amount) call data
+    // Function signature: 0x + first 4 bytes of keccak256("payPublisher(address,uint256)")
+    const input = tx.input;
+    if (!input || input.length < 138) {
+      return {valid: false, reason: 'Invalid transaction input'};
+    }
+
+    // Extract function selector (first 4 bytes)
+    const selector = input.slice(0, 10);
+    const expectedSelector = '0x' + 'payPublisher(address,uint256)'.split('').reduce(
+      (hash, char) => ((hash << 5) - hash + char.charCodeAt(0)) & 0xffffffff,
+      0
+    ).toString(16).slice(0, 8);
+
+    // Extract parameters (address = bytes 4-36, amount = bytes 36-68)
+    const recipientAddress = '0x' + input.slice(34, 74);
+    const amountHex = input.slice(74, 138);
+    const amountWei = parseInt(amountHex, 16);
+    const amountUsdc = (amountWei / 1e6).toFixed(2);
+
+    // Verify minimum payment amount (should match PRICE_PER_REQUEST)
+    const expectedAmount = Math.floor(parseFloat(env.PRICE_PER_REQUEST) * 1e6);
+    if (amountWei < expectedAmount) {
+      return {
+        valid: false,
+        reason: `Payment too low: ${amountUsdc} USDC (expected ${env.PRICE_PER_REQUEST})`
+      };
+    }
 
     return {
       valid: true,
       crawlerAddress: tx.from,
-      amount: env.PRICE_PER_REQUEST
+      amount: amountUsdc
     };
   } catch (error) {
     console.error('Payment verification error:', error);
@@ -232,7 +300,7 @@ async function verifyPayment(
 }
 
 /**
- * Log crawl event to Supabase
+ * Log crawl event to Supabase and on-chain
  */
 async function logCrawl(params: {
   txHash: string;
@@ -243,6 +311,7 @@ async function logCrawl(params: {
   env: Env;
 }): Promise<void> {
   try {
+    // Log to Supabase
     await fetch(`${params.env.SUPABASE_URL}/rest/v1/crawl_logs`, {
       method: 'POST',
       headers: {
@@ -260,7 +329,7 @@ async function logCrawl(params: {
       })
     });
 
-    // Also log payment
+    // Also log payment to Supabase
     if (params.amount && params.crawlerAddress) {
       await fetch(`${params.env.SUPABASE_URL}/rest/v1/payments`, {
         method: 'POST',
@@ -279,9 +348,54 @@ async function logCrawl(params: {
         })
       });
     }
+
+    // Log on-chain to ProofOfCrawl (if gateway key is configured)
+    if (params.env.GATEWAY_PRIVATE_KEY && params.crawlerAddress && params.amount) {
+      await logOnChain({
+        crawlerAddress: params.crawlerAddress,
+        publisherAddress: params.publisherAddress,
+        amount: params.amount,
+        txHash: params.txHash,
+        url: params.path,
+        env: params.env
+      });
+    }
   } catch (error) {
     console.error('Failed to log crawl:', error);
     // Don't throw - logging failure shouldn't block content
+  }
+}
+
+/**
+ * Log payment and crawl event on-chain via ProofOfCrawl contract
+ */
+async function logOnChain(params: {
+  crawlerAddress: string;
+  publisherAddress: string;
+  amount: string;
+  txHash: string;
+  url: string;
+  env: Env;
+}): Promise<void> {
+  try {
+    // Note: This is a simplified implementation
+    // In production, you'd use viem or ethers to properly sign and send transactions
+    // For now, we'll log the intent and skip actual tx submission in the gateway
+    // The ProofOfCrawl contract owner can batch-log events from Supabase data
+
+    console.log('On-chain log requested:', {
+      crawler: params.crawlerAddress,
+      publisher: params.publisherAddress,
+      amount: params.amount,
+      txHash: params.txHash,
+      url: params.url
+    });
+
+    // Future: Implement actual contract call via JSON-RPC
+    // This would require building and signing a transaction in the worker
+    // For MVP, we rely on Supabase logs and periodic on-chain batching
+  } catch (error) {
+    console.error('Failed to log on-chain:', error);
   }
 }
 

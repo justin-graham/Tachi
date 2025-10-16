@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {useAccount} from 'wagmi';
+import {useHydrationSafeAddress} from '../../hooks/useHydrationSafeAddress';
 import {useRouter} from 'next/navigation';
 
 interface CrawlRequest {
@@ -14,7 +14,7 @@ interface CrawlRequest {
 }
 
 export default function RequestsPage() {
-  const {address, isConnected} = useAccount();
+  const {address, isConnected} = useHydrationSafeAddress();
   const router = useRouter();
   const [requests, setRequests] = useState<CrawlRequest[]>([]);
   const [loading, setLoading] = useState(true);

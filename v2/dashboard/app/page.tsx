@@ -8,10 +8,10 @@ export default function Home() {
             <img src="/TachiLogo1.png" alt="Tachi" className="w-full h-full object-contain" />
           </div>
         </div>
-        <h1 className="text-6xl font-bold mb-6">
+        <h1 className="text-4xl md:text-6xl font-bold mb-6">
           Pay-Per-Crawl Protocol
         </h1>
-        <p className="text-2xl opacity-70 max-w-3xl mx-auto mb-12">
+        <p className="text-lg md:text-2xl opacity-70 max-w-3xl mx-auto mb-12">
           The standard for monetizing web content and powering the agentic economy. Publishers protect content. AI companies pay in stablecoin.
         </p>
         <div className="flex gap-4 justify-center">
@@ -25,7 +25,7 @@ export default function Home() {
       <div className="lab-divider mb-12"></div>
 
       <div className="mb-20">
-        <h2 className="text-4xl font-bold mb-12 text-center">How It Works</h2>
+        <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">How It Works</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <StepCard
             number="1"
@@ -49,8 +49,8 @@ export default function Home() {
       <div className="lab-divider mb-12"></div>
 
       <div className="mb-20">
-        <h2 className="text-4xl font-bold mb-6 text-center">Introducing Tachi</h2>
-        <p className="text-xl text-center max-w-4xl mx-auto mb-12 opacity-80">
+        <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center">Introducing Tachi</h2>
+        <p className="text-base md:text-xl text-center max-w-4xl mx-auto mb-12 opacity-80">
           <strong>The Web's Value Layer is Leaking.</strong> Over 60% of searches end up in zero clicks. Tachi lets content publishers get paid when AI agents crawl their sites, and enables developers to pay per access under clear terms. Every request settled in stablecoin on-chain.
         </p>
 

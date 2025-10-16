@@ -1,11 +1,11 @@
 'use client';
 
-import {useAccount} from 'wagmi';
 import {useState, useEffect} from 'react';
 import {useRouter} from 'next/navigation';
+import {useHydrationSafeAddress} from '../hooks/useHydrationSafeAddress';
 
 export default function OnboardPage() {
-  const {address, isConnected} = useAccount();
+  const {address, isConnected, isHydrated} = useHydrationSafeAddress();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -91,8 +91,8 @@ export default function OnboardPage() {
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
       <div className="text-center mb-12">
-        <h1 className="text-5xl font-bold mb-4">Protect Your Content</h1>
-        <p className="text-xl opacity-70">
+        <h1 className="text-3xl md:text-5xl font-bold mb-4">Protect Your Content</h1>
+        <p className="text-lg md:text-xl opacity-70">
           Get your license and start earning from AI crawlers in minutes.
         </p>
       </div>
@@ -106,7 +106,7 @@ export default function OnboardPage() {
             Your Wallet Address
           </label>
           <div className="neo-input bg-paper font-mono text-sm break-all">
-            {address}
+            {isHydrated ? address : 'Loading...'}
           </div>
           <p className="text-xs opacity-60 mt-1">This address will receive all payments</p>
         </div>
