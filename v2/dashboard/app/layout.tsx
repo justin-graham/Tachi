@@ -4,8 +4,12 @@ import {Providers} from './providers';
 import {WalletButton} from './components/WalletButton';
 
 export const metadata: Metadata = {
-  title: 'Tachi v2 - Publisher Dashboard',
-  description: 'Pay-per-crawl protocol for AI training data'
+  title: 'Tachi',
+  description: 'Pay-per-crawl protocol for AI training data',
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  }
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
