@@ -41,7 +41,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
                 </div>
               </div>
             </div>
-            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 text-[20rem] font-bold opacity-5 leading-none pointer-events-none" style={{fontFamily: 'Coinbase Display'}}>
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 text-[8rem] sm:text-[12rem] md:text-[16rem] lg:text-[20rem] font-bold opacity-5 leading-none pointer-events-none" style={{fontFamily: 'Coinbase Display'}}>
               tachi
             </div>
           </footer>
