@@ -13,7 +13,7 @@ const config = createConfig({
     injected(),
     metaMask(),
     coinbaseWallet({appName: 'Tachi Protocol'}),
-    walletConnect({projectId: '8c4b3c1e5d8f4a2b9e6f3c7d1a4b5e8f'}) // Generic project ID
+    walletConnect({projectId: 'b313188c97e71154b1918ade83440e04'}) // Tachi project ID
   ],
   transports: {
     [base.id]: http(),
