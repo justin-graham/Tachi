@@ -8,14 +8,19 @@
     "deploy": "wrangler deploy",
     "deploy:production": "wrangler deploy --env production"
   },
-  "keywords": ["tachi", "cloudflare", "worker", "gateway"],
+  "keywords": [
+    "tachi",
+    "cloudflare",
+    "worker",
+    "gateway"
+  ],
   "license": "MIT",
   "dependencies": {
     "viem": "^2.7.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20231121.0",
-    "wrangler": "^3.22.0",
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "wrangler": "^4.45.0"
   }
 }
