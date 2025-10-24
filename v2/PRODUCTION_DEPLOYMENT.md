@@ -8,9 +8,9 @@
 ## ✅ What's Already Deployed
 
 ### Smart Contracts (Base Mainnet)
-- **CrawlNFT:** [`0x02e0fDc8656dd07Ad55651E36E1C1667E1f572ED`](https://basescan.org/address/0x02e0fDc8656dd07Ad55651E36E1C1667E1f572ED)
-- **PaymentProcessor:** [`0xf00976864d9dD3c0AE788f44f38bB84022B61a04`](https://basescan.org/address/0xf00976864d9dD3c0AE788f44f38bB84022B61a04)
-- **ProofOfCrawl:** [`0xb3f214dCC142b960aC82814325aD4f9181cfdBe6`](https://basescan.org/address/0xb3f214dCC142b960aC82814325aD4f9181cfdBe6)
+- **CrawlNFT:** [`0x4fA86C0bAD6AB64009445de6EE8462Bc31A4b347`](https://basescan.org/address/0x4fA86C0bAD6AB64009445de6EE8462Bc31A4b347)
+- **PaymentProcessor:** [`0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA`](https://basescan.org/address/0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA)
+- **ProofOfCrawl:** [`0x72a604278918abeBa4EE5f2C403b0350920A98ca`](https://basescan.org/address/0x72a604278918abeBa4EE5f2C403b0350920A98ca)
 - **License NFT:** Minted ✅ (Token ID: 1)
 - **Network:** Base Mainnet (Chain ID: 8453)
 
@@ -162,9 +162,9 @@ cast call 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 "balanceOf(address)(uint256
 - **Your Wallet:** https://basescan.org/address/0xEE785221C4389E21c3473f8dC2E16ea373B70d0D
 
 ### Contract Addresses
-- **CrawlNFT:** https://basescan.org/address/0x02e0fDc8656dd07Ad55651E36E1C1667E1f572ED
-- **PaymentProcessor:** https://basescan.org/address/0xf00976864d9dD3c0AE788f44f38bB84022B61a04
-- **ProofOfCrawl:** https://basescan.org/address/0xb3f214dCC142b960aC82814325aD4f9181cfdBe6
+- **CrawlNFT:** https://basescan.org/address/0x4fA86C0bAD6AB64009445de6EE8462Bc31A4b347
+- **PaymentProcessor:** https://basescan.org/address/0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA
+- **ProofOfCrawl:** https://basescan.org/address/0x72a604278918abeBa4EE5f2C403b0350920A98ca
 
 ---
 

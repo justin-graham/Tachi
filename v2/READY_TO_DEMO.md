@@ -12,8 +12,8 @@
 - **USDC Balance:** 10 USDC (enough for 1000 test requests!)
 
 ### 2. Smart Contracts Deployed
-- **CrawlNFT:** `0xf00976864d9dD3c0AE788f44f38bB84022B61a04`
-- **PaymentProcessor:** `0xb3f214dCC142b960aC82814325aD4f9181cfdBe6`
+- **CrawlNFT:** `0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA`
+- **PaymentProcessor:** `0x72a604278918abeBa4EE5f2C403b0350920A98ca`
 - **ProofOfCrawl:** `0xE39F3d4c5bE182d93C64BD08E21596522D9557D2`
 - **Network:** Base Sepolia
 - **Deployer:** Your wallet (you own all contracts)
@@ -149,7 +149,7 @@ wrangler secret put BASE_RPC_URL
 # Paste: https://sepolia.base.org
 
 wrangler secret put CRAWL_NFT_ADDRESS
-# Paste: 0xf00976864d9dD3c0AE788f44f38bB84022B61a04
+# Paste: 0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA
 
 wrangler secret put PROOF_OF_CRAWL_ADDRESS
 # Paste: 0xE39F3d4c5bE182d93C64BD08E21596522D9557D2
@@ -192,8 +192,8 @@ GATEWAY_URL=https://tachi-gateway.your-subdomain.workers.dev
 ## 🔗 Important Links
 
 ### Deployed Contracts (Base Sepolia)
-- **CrawlNFT:** https://sepolia.basescan.org/address/0xf00976864d9dD3c0AE788f44f38bB84022B61a04
-- **PaymentProcessor:** https://sepolia.basescan.org/address/0xb3f214dCC142b960aC82814325aD4f9181cfdBe6
+- **CrawlNFT:** https://sepolia.basescan.org/address/0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA
+- **PaymentProcessor:** https://sepolia.basescan.org/address/0x72a604278918abeBa4EE5f2C403b0350920A98ca
 - **ProofOfCrawl:** https://sepolia.basescan.org/address/0xE39F3d4c5bE182d93C64BD08E21596522D9557D2
 
 ### Your Wallet

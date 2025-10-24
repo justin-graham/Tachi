@@ -394,7 +394,7 @@ await client.writeContract({
   }],
   functionName: 'approve',
   args: [
-    '0xf00976864d9dD3c0AE788f44f38bB84022B61a04', // PaymentProcessor
+    '0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA', // PaymentProcessor
     BigInt(1000000) // 1 USDC (6 decimals)
   ]
 });

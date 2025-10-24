@@ -19,9 +19,9 @@ A **complete, deployable** pay-per-crawl protocol that lets publishers earn from
 
 **Deployed at:**
 ```
-CrawlNFT: 0x02e0fDc8656dd07Ad55651E36E1C1667E1f572ED
-PaymentProcessor: 0xf00976864d9dD3c0AE788f44f38bB84022B61a04
-ProofOfCrawl: 0xb3f214dCC142b960aC82814325aD4f9181cfdBe6
+CrawlNFT: 0x4fA86C0bAD6AB64009445de6EE8462Bc31A4b347
+PaymentProcessor: 0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA
+ProofOfCrawl: 0x72a604278918abeBa4EE5f2C403b0350920A98ca
 ```
 
 ### 2. Gateway (Cloudflare Worker) ✅
@@ -158,7 +158,7 @@ ProofOfCrawl: 0xb3f214dCC142b960aC82814325aD4f9181cfdBe6
 
 | Component | Status | URL |
 |-----------|--------|-----|
-| Smart Contracts | ✅ Deployed | [BaseScan](https://basescan.org/address/0x02e0fDc8656dd07Ad55651E36E1C1667E1f572ED) |
+| Smart Contracts | ✅ Deployed | [BaseScan](https://basescan.org/address/0x4fA86C0bAD6AB64009445de6EE8462Bc31A4b347) |
 | Gateway | ✅ Live | https://tachi-gateway.jgrahamsport16.workers.dev |
 | Dashboard | 🟡 Ready | Deploy with `vercel` |
 | Database | ✅ Live | Supabase project active |

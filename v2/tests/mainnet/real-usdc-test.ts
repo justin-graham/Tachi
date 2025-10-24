@@ -19,7 +19,7 @@ import {base} from 'viem/chains';
 
 // Contract addresses on Base Mainnet
 const USDC_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-const PAYMENT_PROCESSOR_ADDRESS = '0xf00976864d9dD3c0AE788f44f38bB84022B61a04';
+const PAYMENT_PROCESSOR_ADDRESS = '0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA';
 const PUBLISHER_ADDRESS = '0xEE785221C4389E21c3473f8dC2E16ea373B70d0D'; // Example publisher
 
 // Test configuration

@@ -21,7 +21,7 @@ const sdk = new TachiSDK({
   rpcUrl: 'https://mainnet.base.org',
   privateKey: process.env.PRIVATE_KEY as `0x${string}`,
   usdcAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  paymentProcessorAddress: '0xf00976864d9dD3c0AE788f44f38bB84022B61a04'
+  paymentProcessorAddress: '0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA'
 });
 
 // Fetch with automatic payment
@@ -135,11 +135,11 @@ const sdk = new TachiSDK({
 
 ### Base Mainnet
 - USDC: `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
-- PaymentProcessor: `0xf00976864d9dD3c0AE788f44f38bB84022B61a04`
+- PaymentProcessor: `0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA`
 
 ### Base Sepolia (Testnet)
 - USDC: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
-- PaymentProcessor: `0xf00976864d9dD3c0AE788f44f38bB84022B61a04`
+- PaymentProcessor: `0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA`
 
 ## Examples
 

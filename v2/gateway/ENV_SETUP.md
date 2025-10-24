@@ -17,9 +17,9 @@ The gateway requires 8 environment variables to function correctly:
 | `SUPABASE_URL` | Supabase project URL | `https://abc123.supabase.co` |
 | `SUPABASE_KEY` | Supabase anon/service key | `eyJhbGciOiJIUzI1NiIsInR5cCI6...` |
 | `BASE_RPC_URL` | Base Mainnet RPC endpoint | `https://mainnet.base.org` |
-| `CRAWL_NFT_ADDRESS` | CrawlNFT contract address | `0x02e0fDc8656dd07Ad55651E36E1C1667E1f572ED` |
-| `PROOF_OF_CRAWL_ADDRESS` | ProofOfCrawl contract | `0xb3f214dCC142b960aC82814325aD4f9181cfdBe6` |
-| `PAYMENT_PROCESSOR_ADDRESS` | PaymentProcessor contract | `0xf00976864d9dD3c0AE788f44f38bB84022B61a04` |
+| `CRAWL_NFT_ADDRESS` | CrawlNFT contract address | `0x4fA86C0bAD6AB64009445de6EE8462Bc31A4b347` |
+| `PROOF_OF_CRAWL_ADDRESS` | ProofOfCrawl contract | `0x72a604278918abeBa4EE5f2C403b0350920A98ca` |
+| `PAYMENT_PROCESSOR_ADDRESS` | PaymentProcessor contract | `0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA` |
 | `PRICE_PER_REQUEST` | Default price in USDC | `0.01` |
 | `PUBLISHER_ADDRESS` | Default publisher wallet | `0xYourPublisherAddress` |
 
@@ -31,18 +31,18 @@ The gateway requires 8 environment variables to function correctly:
 
 ```bash
 # Deployed contract addresses
-CRAWL_NFT_ADDRESS=0x02e0fDc8656dd07Ad55651E36E1C1667E1f572ED
-PROOF_OF_CRAWL_ADDRESS=0xb3f214dCC142b960aC82814325aD4f9181cfdBe6
-PAYMENT_PROCESSOR_ADDRESS=0xf00976864d9dD3c0AE788f44f38bB84022B61a04
+CRAWL_NFT_ADDRESS=0x4fA86C0bAD6AB64009445de6EE8462Bc31A4b347
+PROOF_OF_CRAWL_ADDRESS=0x72a604278918abeBa4EE5f2C403b0350920A98ca
+PAYMENT_PROCESSOR_ADDRESS=0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA
 
 # USDC on Base Mainnet
 USDC_ADDRESS=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
 ```
 
 **Verify contracts on BaseScan:**
-- CrawlNFT: [basescan.org/address/0x02e0fDc8656dd07Ad55651E36E1C1667E1f572ED](https://basescan.org/address/0x02e0fDc8656dd07Ad55651E36E1C1667E1f572ED)
-- ProofOfCrawl: [basescan.org/address/0xb3f214dCC142b960aC82814325aD4f9181cfdBe6](https://basescan.org/address/0xb3f214dCC142b960aC82814325aD4f9181cfdBe6)
-- PaymentProcessor: [basescan.org/address/0xf00976864d9dD3c0AE788f44f38bB84022B61a04](https://basescan.org/address/0xf00976864d9dD3c0AE788f44f38bB84022B61a04)
+- CrawlNFT: [basescan.org/address/0x4fA86C0bAD6AB64009445de6EE8462Bc31A4b347](https://basescan.org/address/0x4fA86C0bAD6AB64009445de6EE8462Bc31A4b347)
+- ProofOfCrawl: [basescan.org/address/0x72a604278918abeBa4EE5f2C403b0350920A98ca](https://basescan.org/address/0x72a604278918abeBa4EE5f2C403b0350920A98ca)
+- PaymentProcessor: [basescan.org/address/0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA](https://basescan.org/address/0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA)
 
 ---
 

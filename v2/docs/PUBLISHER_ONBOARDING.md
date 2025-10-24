@@ -143,7 +143,7 @@ curl https://tachi-gateway.com/your-content
 # }
 
 # 2. Pay via PaymentProcessor contract
-cast send 0xf00976864d9dD3c0AE788f44f38bB84022B61a04 \
+cast send 0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA \
   "payPublisher(address,uint256)" \
   0xYOUR_ADDRESS \
   10000 \
@@ -313,7 +313,7 @@ Use any wallet app (MetaMask, Coinbase Wallet, etc.) to send USDC to:
 
 Make sure you completed the onboarding transaction. Check:
 ```bash
-cast call 0x02e0fDc8656dd07Ad55651E36E1C1667E1f572ED \
+cast call 0x4fA86C0bAD6AB64009445de6EE8462Bc31A4b347 \
   "balanceOf(address)(uint256)" \
   0xYOUR_ADDRESS \
   --rpc-url https://mainnet.base.org

@@ -150,7 +150,7 @@ cast call 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 \
 # 2. Approve USDC spending
 cast send 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 \
   "approve(address,uint256)" \
-  0xf00976864d9dD3c0AE788f44f38bB84022B61a04 \
+  0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA \
   1000000 \
   --private-key $PRIVATE_KEY \
   --rpc-url https://mainnet.base.org
@@ -352,14 +352,14 @@ curl https://YOUR_PROJECT.supabase.co/rest/v1/ \
 
 ```bash
 # 1. Test contract call
-cast call 0xf00976864d9dD3c0AE788f44f38bB84022B61a04 \
+cast call 0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA \
   "payPublisher(address,uint256)" \
   0xPUBLISHER_ADDRESS \
   1000000 \
   --rpc-url https://mainnet.base.org
 
 # 2. Check contract code
-cast code 0xf00976864d9dD3c0AE788f44f38bB84022B61a04 \
+cast code 0xF09C29E5d3a12c0A766e6Dc65E2cb42CCf080abA \
   --rpc-url https://mainnet.base.org
 
 # 3. Simulate transaction

@@ -358,7 +358,7 @@ Or run the updated schema: [database/schema.sql](database/schema.sql)
 ## 🔗 Quick Links
 
 - **Live Gateway:** https://tachi-gateway.jgrahamsport16.workers.dev
-- **Contracts (BaseScan):** https://basescan.org/address/0x02e0fDc8656dd07Ad55651E36E1C1667E1f572ED
+- **Contracts (BaseScan):** https://basescan.org/address/0x4fA86C0bAD6AB64009445de6EE8462Bc31A4b347
 - **Dashboard (Deploy):** `cd dashboard && vercel`
 - **SDK (Publish):** `cd sdk && npm publish --access public`
 - **Batch Logger:** `node scripts/batch-log-onchain.mjs`

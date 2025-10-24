@@ -34,3 +34,4 @@ deployments/
 # Testing
 coverage
 .turbo
+.vercel
