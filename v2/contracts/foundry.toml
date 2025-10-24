@@ -8,6 +8,8 @@ optimizer_runs = 200
 via_ir = true
 remappings = ["@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/"]
 fs_permissions = [{access = "read-write", path = "./deployments"}]
+# Load environment variables from root .env file
+env_file = "../.env"
 
 [profile.default.fmt]
 line_length = 100

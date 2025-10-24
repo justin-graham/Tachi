@@ -1,7 +1,7 @@
 'use client';
 
-import {useEffect, useState} from 'react';
-import {useRouter} from 'next/navigation';
+import {Suspense, useEffect, useState} from 'react';
+import {useRouter, useSearchParams} from 'next/navigation';
 import {useHydrationSafeAddress} from '../hooks/useHydrationSafeAddress';
 
 interface DashboardStats {
@@ -14,20 +14,29 @@ interface DashboardStats {
   recentActivity?: Array<{time: string; path: string; amount: string}>;
 }
 
-export default function DashboardPage() {
-  const {address, isConnected} = useHydrationSafeAddress();
+function DashboardContent() {
+  const {address, isConnected, isHydrated} = useHydrationSafeAddress();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasLicense, setHasLicense] = useState(false);
+  const [showSetupModal, setShowSetupModal] = useState(false);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!isConnected) {
       router.push('/');
       return;
     }
     checkLicenseAndFetchData();
-  }, [address, isConnected]);
+  }, [address, isConnected, isHydrated]);
+
+  useEffect(() => {
+    if (searchParams.get('setup') === 'complete') {
+      setShowSetupModal(true);
+    }
+  }, [searchParams]);
 
   const checkLicenseAndFetchData = async () => {
     try {
@@ -74,6 +83,55 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
+      {/* Setup Success Modal */}
+      {showSetupModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="neo-card max-w-lg w-full blueprint-corner">
+            <div className="text-center mb-6">
+              <div className="text-5xl mb-4">🎉</div>
+              <h3 className="text-3xl font-bold mb-2">License Minted!</h3>
+              <p className="text-lg opacity-70">Your publisher account is ready</p>
+            </div>
+
+            <div className="neo-card bg-paper mb-6">
+              <h4 className="font-bold mb-3">Next Steps:</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex gap-2">
+                  <span className="text-coral font-bold">1.</span>
+                  <span>Verify your domain (add DNS TXT record)</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-coral font-bold">2.</span>
+                  <span>Get your integration code</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-coral font-bold">3.</span>
+                  <span>Test the payment flow</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowSetupModal(false);
+                  router.push('/dashboard/integration');
+                }}
+                className="neo-button neo-button-sage flex-1"
+              >
+                Complete Setup →
+              </button>
+              <button
+                onClick={() => setShowSetupModal(false)}
+                className="neo-button"
+              >
+                Later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Page Title */}
       <div className="mb-8">
         <h2 className="text-3xl md:text-4xl font-bold mb-2">Overview</h2>
@@ -203,5 +261,13 @@ function ActivityRow({time, path, amount}: {time: string; path: string; amount: 
       <td className="py-3 font-mono text-sm">{path}</td>
       <td className="py-3 text-right font-bold mono-num">{amount}</td>
     </tr>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }

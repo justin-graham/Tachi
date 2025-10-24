@@ -1,17 +1,23 @@
 import {Router} from 'express';
 import {supabase} from '../db.js';
 import crypto from 'crypto';
+import {validateCrawlerRegistration} from '../utils/validation.js';
 
 export const crawlersRouter = Router();
 
 // Register a new crawler
 crawlersRouter.post('/register', async (req, res) => {
   try {
-    const {name, email, walletAddress} = req.body;
-
-    if (!name || !email || !walletAddress) {
-      return res.status(400).json({error: 'Missing required fields'});
+    // Validate input
+    const validation = validateCrawlerRegistration(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: validation.errors
+      });
     }
+
+    const {name, email, walletAddress} = req.body;
 
     // Generate API key
     const apiKey = 'tk_' + crypto.randomBytes(24).toString('hex');

@@ -15,6 +15,9 @@ interface Env {
   PAYMENT_PROCESSOR_ADDRESS: string;
 }
 
+// Rate limiting (in-memory, per worker instance)
+const rateLimitStore = new Map<string, {count: number; resetTime: number}>();
+
 // Demo content store - replace with actual CMS/database in production
 const CONTENT_STORE: Record<string, {title: string; content: string; type: string}> = {
   '/article/ai-training': {
@@ -62,6 +65,17 @@ export default {
       return corsResponse();
     }
 
+    // Rate limiting (100 req/min per IP)
+    const clientIP = request.headers.get('cf-connecting-ip') || 'unknown';
+    const rateLimit = checkRateLimit(clientIP, 100, 60000);
+    if (!rateLimit.allowed) {
+      return jsonResponse({
+        error: 'Rate limit exceeded',
+        message: `Too many requests. Try again in ${rateLimit.retryAfter} seconds.`,
+        limit: 100
+      }, 429);
+    }
+
     // Get publisher address from query param or use default
     const publisherAddress = url.searchParams.get('publisher') || env.PUBLISHER_ADDRESS;
 
@@ -80,6 +94,24 @@ export default {
           price: env.PRICE_PER_REQUEST
         }))
       });
+    }
+
+    // Check publisher domain verification for proxy mode
+    const targetUrl = url.searchParams.get('target');
+    if (targetUrl) {
+      try {
+        const domain = new URL(targetUrl).hostname.replace(/^www\./, '');
+        const verifyRes = await fetch(
+          `${env.SUPABASE_URL}/rest/v1/publishers?wallet_address=eq.${publisherAddress}&domain=eq.${domain}&select=domain_verified`,
+          {headers: {apikey: env.SUPABASE_KEY, Authorization: `Bearer ${env.SUPABASE_KEY}`}}
+        );
+        const publishers = await verifyRes.json();
+        if (!publishers?.[0]?.domain_verified) {
+          return jsonResponse({error: 'Domain not verified', message: 'Add TXT record: tachi-verify=' + publisherAddress.toLowerCase()}, 403);
+        }
+      } catch (e) {
+        return jsonResponse({error: 'Invalid target URL'}, 400);
+      }
     }
 
     // Check for payment proof
@@ -255,7 +287,7 @@ async function verifyPayment(
     }
 
     // Verify transaction is to PaymentProcessor contract
-    if (tx.to?.toLowerCase() !== env.PROOF_OF_CRAWL_ADDRESS.toLowerCase()) {
+    if (tx.to?.toLowerCase() !== env.PAYMENT_PROCESSOR_ADDRESS.toLowerCase()) {
       return {valid: false, reason: 'Transaction not to PaymentProcessor'};
     }
 
@@ -266,12 +298,14 @@ async function verifyPayment(
       return {valid: false, reason: 'Invalid transaction input'};
     }
 
-    // Extract function selector (first 4 bytes)
+    // Extract and validate function selector (first 4 bytes)
+    // keccak256("payPublisher(address,uint256)") = 0xf7260d3e...
     const selector = input.slice(0, 10);
-    const expectedSelector = '0x' + 'payPublisher(address,uint256)'.split('').reduce(
-      (hash, char) => ((hash << 5) - hash + char.charCodeAt(0)) & 0xffffffff,
-      0
-    ).toString(16).slice(0, 8);
+    const expectedSelector = '0xf7260d3e';
+
+    if (selector !== expectedSelector) {
+      return {valid: false, reason: 'Invalid function (expected payPublisher)'};
+    }
 
     // Extract parameters (address = bytes 4-36, amount = bytes 36-68)
     const recipientAddress = '0x' + input.slice(34, 74);
@@ -473,4 +507,24 @@ function corsResponse(): Response {
       'Access-Control-Max-Age': '86400'
     }
   });
+}
+
+/**
+ * Check rate limit for identifier
+ */
+function checkRateLimit(identifier: string, maxRequests: number, windowMs: number): {allowed: boolean; retryAfter?: number} {
+  const now = Date.now();
+  let entry = rateLimitStore.get(identifier);
+
+  if (!entry || entry.resetTime < now) {
+    rateLimitStore.set(identifier, {count: 1, resetTime: now + windowMs});
+    return {allowed: true};
+  }
+
+  if (entry.count >= maxRequests) {
+    return {allowed: false, retryAfter: Math.ceil((entry.resetTime - now) / 1000)};
+  }
+
+  entry.count++;
+  return {allowed: true};
 }

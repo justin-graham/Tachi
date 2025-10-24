@@ -1,5 +1,6 @@
 import {Router} from 'express';
 import {supabase} from '../db.js';
+import {isValidAddress} from '../utils/validation.js';
 
 export const dashboardRouter = Router();
 
@@ -7,6 +8,10 @@ export const dashboardRouter = Router();
 dashboardRouter.get('/stats/:publisherAddress', async (req, res) => {
   try {
     const {publisherAddress} = req.params;
+
+    if (!isValidAddress(publisherAddress)) {
+      return res.status(400).json({error: 'Invalid publisher address'});
+    }
 
     // Get today's stats
     const todayStart = new Date();
@@ -54,6 +59,11 @@ dashboardRouter.get('/stats/:publisherAddress', async (req, res) => {
 dashboardRouter.get('/requests/:publisherAddress', async (req, res) => {
   try {
     const {publisherAddress} = req.params;
+
+    if (!isValidAddress(publisherAddress)) {
+      return res.status(400).json({error: 'Invalid publisher address'});
+    }
+
     const limit = parseInt((req.query.limit as string) || '50');
 
     const {data, error} = await supabase
@@ -92,6 +102,11 @@ dashboardRouter.get('/requests/:publisherAddress', async (req, res) => {
 dashboardRouter.get('/revenue/:publisherAddress', async (req, res) => {
   try {
     const {publisherAddress} = req.params;
+
+    if (!isValidAddress(publisherAddress)) {
+      return res.status(400).json({error: 'Invalid publisher address'});
+    }
+
     const days = parseInt((req.query.days as string) || '7');
 
     // Get payments for last N days

@@ -11,6 +11,8 @@ export default function OnboardPage() {
   const [error, setError] = useState('');
   const [hasLicense, setHasLicense] = useState<boolean | null>(null);
   const [formData, setFormData] = useState({
+    name: '',
+    email: '',
     domain: '',
     price: '0.01'
   });
@@ -47,6 +49,8 @@ export default function OnboardPage() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           publisher: address,
+          name: formData.name,
+          email: formData.email,
           domain: formData.domain,
           price: formData.price
         })
@@ -58,8 +62,8 @@ export default function OnboardPage() {
         throw new Error(data.error || 'Failed to mint license');
       }
 
-      // Success! Redirect to setup complete page
-      router.push('/setup-complete');
+      // Success! Redirect to dashboard with setup complete flag
+      router.push('/dashboard?setup=complete');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -82,7 +86,10 @@ export default function OnboardPage() {
     return (
       <div className="max-w-2xl mx-auto px-6 py-20 text-center">
         <div className="neo-card">
-          <p className="text-lg">Checking your license status...</p>
+          <div className="flex flex-col items-center gap-4">
+            <div className="spinner"></div>
+            <p className="text-lg">Checking your license status...</p>
+          </div>
         </div>
       </div>
     );
@@ -109,6 +116,39 @@ export default function OnboardPage() {
             {isHydrated ? address : 'Loading...'}
           </div>
           <p className="text-xs opacity-60 mt-1">This address will receive all payments</p>
+        </div>
+
+        {/* Name */}
+        <div className="mb-6">
+          <label className="block text-sm uppercase tracking-wide font-bold mb-2">
+            Publisher Name <span className="text-coral">*</span>
+          </label>
+          <input
+            type="text"
+            placeholder="Your Name or Company"
+            value={formData.name}
+            onChange={(e) => setFormData({...formData, name: e.target.value})}
+            className="neo-input w-full"
+            required
+          />
+        </div>
+
+        {/* Email */}
+        <div className="mb-6">
+          <label className="block text-sm uppercase tracking-wide font-bold mb-2">
+            Email <span className="text-coral">*</span>
+          </label>
+          <input
+            type="email"
+            placeholder="you@example.com"
+            value={formData.email}
+            onChange={(e) => setFormData({...formData, email: e.target.value})}
+            className="neo-input w-full"
+            required
+          />
+          <p className="text-xs opacity-60 mt-1">
+            For important updates about your account
+          </p>
         </div>
 
         {/* Domain */}

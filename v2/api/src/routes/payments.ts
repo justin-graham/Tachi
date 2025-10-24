@@ -1,16 +1,22 @@
 import {Router} from 'express';
 import {supabase} from '../db.js';
+import {validatePaymentLog, isValidAddress} from '../utils/validation.js';
 
 export const paymentsRouter = Router();
 
 // Log a payment
 paymentsRouter.post('/log', async (req, res) => {
   try {
-    const {txHash, crawlerAddress, publisherAddress, amount} = req.body;
-
-    if (!txHash || !crawlerAddress || !publisherAddress || !amount) {
-      return res.status(400).json({error: 'Missing required fields'});
+    // Validate input
+    const validation = validatePaymentLog(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: validation.errors
+      });
     }
+
+    const {txHash, crawlerAddress, publisherAddress, amount} = req.body;
 
     // Check if payment already logged
     const {data: existing} = await supabase
@@ -61,6 +67,14 @@ paymentsRouter.post('/log', async (req, res) => {
 paymentsRouter.get('/', async (req, res) => {
   try {
     const {publisherAddress, crawlerAddress, limit = 50} = req.query;
+
+    // Validate addresses if provided
+    if (publisherAddress && !isValidAddress(publisherAddress as string)) {
+      return res.status(400).json({error: 'Invalid publisher address'});
+    }
+    if (crawlerAddress && !isValidAddress(crawlerAddress as string)) {
+      return res.status(400).json({error: 'Invalid crawler address'});
+    }
 
     let query = supabase.from('payments').select('*').order('timestamp', {ascending: false}).limit(Number(limit));
 

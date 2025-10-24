@@ -1,6 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
+import {env} from './env.js';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -8,14 +6,22 @@ import {publishersRouter} from './routes/publishers.js';
 import {crawlersRouter} from './routes/crawlers.js';
 import {paymentsRouter} from './routes/payments.js';
 import {dashboardRouter} from './routes/dashboard.js';
+import {rateLimit} from './middleware/rateLimit.js';
+import {optionalAuth} from './middleware/auth.js';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = parseInt(env.PORT);
 
 // Middleware
 app.use(helmet());
-app.use(cors({origin: process.env.CORS_ORIGINS?.split(',') || '*'}));
+app.use(cors({origin: env.CORS_ORIGINS?.split(',') || '*'}));
 app.use(express.json());
+
+// Rate limiting (applies to all routes)
+app.use(rateLimit(60, 60000)); // 60 requests per minute
+
+// Optional auth (attaches user if authenticated)
+app.use(optionalAuth);
 
 // Health check
 app.get('/health', (_req, res) => {

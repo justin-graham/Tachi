@@ -8,10 +8,11 @@ CREATE TABLE publishers (
   name TEXT NOT NULL,
   email TEXT NOT NULL,
   wallet_address TEXT NOT NULL,
-  price_per_request DECIMAL(10, 6) DEFAULT 0.01,
+  price_per_request DECIMAL(10, 6) DEFAULT 0.01 CHECK (price_per_request >= 0),
   status TEXT DEFAULT 'active',
-  total_earnings DECIMAL(18, 6) DEFAULT 0,
-  total_requests INTEGER DEFAULT 0,
+  domain_verified BOOLEAN DEFAULT false,
+  total_earnings DECIMAL(18, 6) DEFAULT 0 CHECK (total_earnings >= 0),
+  total_requests INTEGER DEFAULT 0 CHECK (total_requests >= 0),
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -24,8 +25,8 @@ CREATE TABLE crawlers (
   wallet_address TEXT NOT NULL,
   api_key TEXT UNIQUE NOT NULL,
   status TEXT DEFAULT 'active',
-  total_spent DECIMAL(18, 6) DEFAULT 0,
-  total_requests INTEGER DEFAULT 0,
+  total_spent DECIMAL(18, 6) DEFAULT 0 CHECK (total_spent >= 0),
+  total_requests INTEGER DEFAULT 0 CHECK (total_requests >= 0),
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -36,7 +37,7 @@ CREATE TABLE payments (
   tx_hash TEXT UNIQUE NOT NULL,
   crawler_address TEXT NOT NULL,
   publisher_address TEXT NOT NULL,
-  amount DECIMAL(18, 6) NOT NULL,
+  amount DECIMAL(18, 6) NOT NULL CHECK (amount > 0),
   timestamp TIMESTAMP NOT NULL,
   onchain_logged BOOLEAN DEFAULT false,
   onchain_tx TEXT,

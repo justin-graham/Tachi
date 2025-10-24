@@ -13,7 +13,11 @@
   "scripts": {
     "dev": "pnpm --filter dashboard dev",
     "build": "pnpm -r build",
-    "test": "pnpm -r test",
+    "test": "tsx --test tests/**/*.test.ts",
+    "test:integration": "tsx --test tests/integration/*.test.ts",
+    "test:smoke": "tsx --test tests/smoke/*.test.ts",
+    "test:mainnet": "tsx tests/mainnet/real-usdc-test.ts",
+    "test:all": "pnpm test && pnpm -r test",
     "contracts:build": "pnpm --filter contracts build",
     "contracts:deploy": "pnpm --filter contracts deploy",
     "contracts:test": "pnpm --filter contracts test",
@@ -32,6 +36,7 @@
     "@typescript-eslint/parser": "^7.0.0",
     "eslint": "^8.57.0",
     "prettier": "^3.3.0",
+    "tsx": "^4.20.6",
     "typescript": "^5.4.0"
   }
 }

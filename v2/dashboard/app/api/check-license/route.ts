@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     const client = createPublicClient({
       chain: base,
-      transport: http()
+      transport: http('https://mainnet.base.org')
     });
 
     const hasLicense = await client.readContract({

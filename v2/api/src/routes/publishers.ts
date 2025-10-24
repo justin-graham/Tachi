@@ -1,16 +1,22 @@
 import {Router} from 'express';
 import {supabase} from '../db.js';
+import {validatePublisherRegistration, validatePublisherUpdate} from '../utils/validation.js';
 
 export const publishersRouter = Router();
 
 // Register a new publisher
 publishersRouter.post('/register', async (req, res) => {
   try {
-    const {domain, name, email, pricePerRequest, walletAddress} = req.body;
-
-    if (!domain || !name || !email || !walletAddress) {
-      return res.status(400).json({error: 'Missing required fields'});
+    // Validate input
+    const validation = validatePublisherRegistration(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: validation.errors
+      });
     }
+
+    const {domain, name, email, pricePerRequest, walletAddress} = req.body;
 
     // Check if domain already exists
     const {data: existing} = await supabase
@@ -46,14 +52,21 @@ publishersRouter.post('/register', async (req, res) => {
   }
 });
 
-// Get all publishers
-publishersRouter.get('/', async (_req, res) => {
+// Get all publishers (optionally filter by wallet)
+publishersRouter.get('/', async (req, res) => {
   try {
-    const {data, error} = await supabase
+    const {wallet} = req.query;
+
+    let query = supabase
       .from('publishers')
       .select('id, domain, name, price_per_request, wallet_address, total_earnings, total_requests')
-      .eq('status', 'active')
-      .order('created_at', {ascending: false});
+      .eq('status', 'active');
+
+    if (wallet) {
+      query = query.eq('wallet_address', wallet);
+    }
+
+    const {data, error} = await query.order('created_at', {ascending: false});
 
     if (error) throw error;
 
@@ -85,6 +98,15 @@ publishersRouter.get('/:id', async (req, res) => {
 // Update publisher
 publishersRouter.patch('/:id', async (req, res) => {
   try {
+    // Validate input
+    const validation = validatePublisherUpdate(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: validation.errors
+      });
+    }
+
     const {pricePerRequest, name, email} = req.body;
     const updates: any = {};
 

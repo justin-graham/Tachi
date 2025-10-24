@@ -11,19 +11,20 @@ interface RevenueData {
 }
 
 export default function RevenuePage() {
-  const {address, isConnected} = useHydrationSafeAddress();
+  const {address, isConnected, isHydrated} = useHydrationSafeAddress();
   const router = useRouter();
   const [revenueData, setRevenueData] = useState<RevenueData[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalRevenue, setTotalRevenue] = useState(0);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!isConnected) {
       router.push('/');
       return;
     }
     fetchRevenueData();
-  }, [address, isConnected]);
+  }, [address, isConnected, isHydrated]);
 
   const fetchRevenueData = async () => {
     try {

@@ -14,19 +14,20 @@ interface CrawlRequest {
 }
 
 export default function RequestsPage() {
-  const {address, isConnected} = useHydrationSafeAddress();
+  const {address, isConnected, isHydrated} = useHydrationSafeAddress();
   const router = useRouter();
   const [requests, setRequests] = useState<CrawlRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!isConnected) {
       router.push('/');
       return;
     }
     setRequests([]);
     setLoading(false);
-  }, [address, isConnected]);
+  }, [address, isConnected, isHydrated]);
 
   if (loading) {
     return (

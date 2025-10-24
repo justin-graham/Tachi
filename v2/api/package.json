@@ -5,9 +5,9 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --import dotenv/config src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node --import dotenv/config dist/index.js"
+    "start": "node dist/index.js"
   },
   "keywords": ["tachi", "api", "express", "supabase"],
   "license": "MIT",
