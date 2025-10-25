@@ -3,11 +3,17 @@ import {createWalletClient, http, parseAbi, createPublicClient} from 'viem';
 import {base} from 'viem/chains';
 import {privateKeyToAccount} from 'viem/accounts';
 import {getAdminPrivateKey} from '@/lib/secrets';
+import {createClient} from '@supabase/supabase-js';
 
 const CRAWL_NFT_ABI = parseAbi([
   'function mintLicense(address publisher, string calldata termsURI) external',
   'function hasLicense(address) external view returns (bool)'
 ]);
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,26 +70,19 @@ export async function POST(request: NextRequest) {
     await publicClient.waitForTransactionReceipt({hash});
 
     // Create publisher record in database
-    try {
-      const apiUrl = process.env.API_URL || 'http://localhost:3001';
-      const registerRes = await fetch(`${apiUrl}/api/publishers/register`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          domain,
-          name,
-          email,
-          walletAddress: publisher,
-          pricePerRequest: parseFloat(price || '0.01')
-        })
+    const {error: dbError} = await supabase
+      .from('publishers')
+      .insert({
+        domain,
+        name,
+        email,
+        wallet_address: publisher.toLowerCase(),
+        price_per_request: parseFloat(price || '0.01'),
+        status: 'active'
       });
 
-      if (!registerRes.ok) {
-        console.error('Failed to register publisher in database:', await registerRes.text());
-        // Don't fail the whole request if DB registration fails
-      }
-    } catch (dbError) {
-      console.error('Database registration error:', dbError);
+    if (dbError) {
+      console.error('Failed to create publisher record:', dbError);
       // Don't fail the whole request if DB registration fails
     }
 
