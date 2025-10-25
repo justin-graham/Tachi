@@ -190,40 +190,40 @@ export default function IntegrationPage() {
         <div className="space-y-8">
           {/* Progress Tracker */}
           <div className="neo-card blueprint-corner">
-            <div className="flex flex-wrap items-center gap-2 md:gap-4">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between gap-1">
+              <div className="flex flex-col items-center gap-1">
                 <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold ${hasLicense ? 'bg-sage text-white' : 'bg-white'}`}>
                   {hasLicense ? '✓' : '1'}
                 </div>
-                <span className={`font-bold text-sm md:text-base ${hasLicense ? 'text-sage' : ''}`}>Register</span>
+                <span className={`font-bold text-xs ${hasLicense ? 'text-sage' : ''}`}>Register</span>
               </div>
-              <div className="hidden md:block h-px bg-black flex-1 max-w-[30px]"></div>
-              <div className="flex items-center gap-2">
+              <div className="h-px bg-black flex-1 max-w-[40px]"></div>
+              <div className="flex flex-col items-center gap-1">
                 <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold ${hasDomain ? 'bg-sage text-white' : domainVerified === false && domainInput ? 'bg-coral text-white' : 'bg-white'}`}>
                   {hasDomain ? '✓' : '2'}
                 </div>
-                <span className={`font-bold text-sm md:text-base ${hasDomain ? 'text-sage' : ''}`}>Verify</span>
+                <span className={`font-bold text-xs ${hasDomain ? 'text-sage' : ''}`}>Verify</span>
               </div>
-              <div className="hidden md:block h-px bg-black flex-1 max-w-[30px]"></div>
-              <div className="flex items-center gap-2">
+              <div className="h-px bg-black flex-1 max-w-[40px]"></div>
+              <div className="flex flex-col items-center gap-1">
                 <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold ${hasProtection ? 'bg-sage text-white' : 'bg-white'}`}>
                   {hasProtection ? '✓' : '3'}
                 </div>
-                <span className={`font-bold text-sm md:text-base ${hasProtection ? 'text-sage' : ''}`}>Protect</span>
+                <span className={`font-bold text-xs ${hasProtection ? 'text-sage' : ''}`}>Protect</span>
               </div>
-              <div className="hidden md:block h-px bg-black flex-1 max-w-[30px]"></div>
-              <div className="flex items-center gap-2">
+              <div className="h-px bg-black flex-1 max-w-[40px]"></div>
+              <div className="flex flex-col items-center gap-1">
                 <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold ${hasTested ? 'bg-sage text-white' : 'bg-white'}`}>
                   {hasTested ? '✓' : '4'}
                 </div>
-                <span className={`font-bold text-sm md:text-base ${hasTested ? 'text-sage' : ''}`}>Test</span>
+                <span className={`font-bold text-xs ${hasTested ? 'text-sage' : ''}`}>Test</span>
               </div>
-              <div className="hidden md:block h-px bg-black flex-1 max-w-[30px]"></div>
-              <div className="flex items-center gap-2">
+              <div className="h-px bg-black flex-1 max-w-[40px]"></div>
+              <div className="flex flex-col items-center gap-1">
                 <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold ${isLive ? 'bg-sage text-white' : 'bg-white'}`}>
                   {isLive ? '✓' : '5'}
                 </div>
-                <span className={`font-bold text-sm md:text-base ${isLive ? 'text-sage' : ''}`}>Live</span>
+                <span className={`font-bold text-xs ${isLive ? 'text-sage' : ''}`}>Live</span>
               </div>
             </div>
           </div>
