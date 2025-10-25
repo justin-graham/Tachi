@@ -75,7 +75,7 @@ export default function IntegrationPage() {
 
     try {
       // Simulate test request to gateway
-      const testUrl = `${gatewayUrl}?publisher=${address}`;
+      const testUrl = `${gatewayUrl}/article/ai-training?publisher=${address}`;
       const res = await fetch(testUrl);
       const data = await res.json();
 
