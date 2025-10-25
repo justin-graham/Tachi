@@ -333,7 +333,11 @@ export default function IntegrationPage() {
                         TACHI_PRICE_PER_REQUEST = {price}
                       </div>
                     </li>
-                    <li>5. Add route: <code className="bg-white px-2 py-1 border border-black">{domain || 'yourdomain.com'}/*</code></li>
+                    <li>5. Add route:
+                      <div className="neo-card bg-white mt-2 font-mono text-xs">
+                        {domain || 'yourdomain.com'}/*
+                      </div>
+                    </li>
                     <li>6. Click Deploy</li>
                   </ol>
                 </div>
