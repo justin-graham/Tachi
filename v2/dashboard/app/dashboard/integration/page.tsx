@@ -60,7 +60,7 @@ export default function IntegrationPage() {
         setDomain(domainInput);
         setVerifyError('');
       } else {
-        setVerifyError(data.message || 'Verification failed. Please check your DNS records.');
+        setVerifyError(data.message || data.error || 'Verification failed. Please check your DNS records.');
       }
     } catch (err: any) {
       setVerifyError(err.message);
