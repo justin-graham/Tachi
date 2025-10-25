@@ -12,6 +12,7 @@ export default function IntegrationPage() {
   const [domainVerified, setDomainVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState('');
+  const [protectionDeployed, setProtectionDeployed] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
   const [price, setPrice] = useState('0.01');
@@ -158,8 +159,9 @@ export default function IntegrationPage() {
   // Progress calculation
   const hasLicense = !!address;
   const hasDomain = domainVerified;
+  const hasProtection = protectionDeployed;
   const hasTested = testResult?.success === true;
-  const isLive = hasLicense && hasDomain && hasTested;
+  const isLive = hasLicense && hasDomain && hasProtection && hasTested;
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
@@ -188,33 +190,40 @@ export default function IntegrationPage() {
         <div className="space-y-8">
           {/* Progress Tracker */}
           <div className="neo-card blueprint-corner">
-            <div className="flex flex-wrap items-center gap-4 md:gap-8">
+            <div className="flex flex-wrap items-center gap-2 md:gap-4">
               <div className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold ${hasLicense ? 'bg-sage text-white' : 'bg-white'}`}>
                   {hasLicense ? '✓' : '1'}
                 </div>
-                <span className={`font-bold ${hasLicense ? 'text-sage' : ''}`}>Register</span>
+                <span className={`font-bold text-sm md:text-base ${hasLicense ? 'text-sage' : ''}`}>Register</span>
               </div>
-              <div className="hidden md:block h-px bg-black flex-1 max-w-[40px]"></div>
+              <div className="hidden md:block h-px bg-black flex-1 max-w-[30px]"></div>
               <div className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold ${hasDomain ? 'bg-sage text-white' : domainVerified === false && domainInput ? 'bg-coral text-white' : 'bg-white'}`}>
                   {hasDomain ? '✓' : '2'}
                 </div>
-                <span className={`font-bold ${hasDomain ? 'text-sage' : ''}`}>Verify Domain</span>
+                <span className={`font-bold text-sm md:text-base ${hasDomain ? 'text-sage' : ''}`}>Verify</span>
               </div>
-              <div className="hidden md:block h-px bg-black flex-1 max-w-[40px]"></div>
+              <div className="hidden md:block h-px bg-black flex-1 max-w-[30px]"></div>
+              <div className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold ${hasProtection ? 'bg-sage text-white' : 'bg-white'}`}>
+                  {hasProtection ? '✓' : '3'}
+                </div>
+                <span className={`font-bold text-sm md:text-base ${hasProtection ? 'text-sage' : ''}`}>Protect</span>
+              </div>
+              <div className="hidden md:block h-px bg-black flex-1 max-w-[30px]"></div>
               <div className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold ${hasTested ? 'bg-sage text-white' : 'bg-white'}`}>
-                  {hasTested ? '✓' : '3'}
+                  {hasTested ? '✓' : '4'}
                 </div>
-                <span className={`font-bold ${hasTested ? 'text-sage' : ''}`}>Test</span>
+                <span className={`font-bold text-sm md:text-base ${hasTested ? 'text-sage' : ''}`}>Test</span>
               </div>
-              <div className="hidden md:block h-px bg-black flex-1 max-w-[40px]"></div>
+              <div className="hidden md:block h-px bg-black flex-1 max-w-[30px]"></div>
               <div className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold ${isLive ? 'bg-sage text-white' : 'bg-white'}`}>
-                  {isLive ? '✓' : '4'}
+                  {isLive ? '✓' : '5'}
                 </div>
-                <span className={`font-bold ${isLive ? 'text-sage' : ''}`}>Live</span>
+                <span className={`font-bold text-sm md:text-base ${isLive ? 'text-sage' : ''}`}>Live</span>
               </div>
             </div>
           </div>
@@ -289,7 +298,74 @@ export default function IntegrationPage() {
             )}
           </div>
 
-          {/* Section B: Gateway URL */}
+          {/* Section B: Deploy Protection */}
+          <div className={`neo-card ${domainVerified && !protectionDeployed ? 'border-4 border-coral' : 'blueprint-corner'}`}>
+            <div className="flex items-start justify-between mb-4">
+              <h3 className="text-2xl font-bold">
+                {protectionDeployed ? '✓ Protection Deployed' : 'Step 3: Deploy AI Crawler Protection'}
+              </h3>
+              {protectionDeployed && <span className="bg-sage text-white px-3 py-1 text-sm font-bold border-2 border-black">COMPLETE</span>}
+            </div>
+
+            {!protectionDeployed ? (
+              <>
+                <p className="mb-4 opacity-70">Deploy a Cloudflare Worker to enforce payment for AI crawlers accessing your domain.</p>
+
+                <div className="neo-card bg-paper mb-4">
+                  <h4 className="font-bold mb-2">What This Does:</h4>
+                  <ul className="text-sm space-y-1 opacity-90">
+                    <li>• Detects AI crawlers (GPTBot, Claude, Perplexity, etc.)</li>
+                    <li>• Returns 402 Payment Required if no payment proof</li>
+                    <li>• Validates payments via Tachi before serving content</li>
+                    <li>• Regular users access your site normally</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-3 mb-6">
+                  <div className="text-sm font-bold">Quick Setup (2 minutes):</div>
+                  <ol className="text-sm space-y-2 opacity-90">
+                    <li>1. Download worker template: <a href="/cloudflare-worker-template.js" download className="text-coral font-bold underline">cloudflare-worker-template.js</a></li>
+                    <li>2. Go to <a href="https://dash.cloudflare.com" target="_blank" rel="noopener noreferrer" className="text-coral font-bold underline">Cloudflare Dashboard</a></li>
+                    <li>3. Create new Worker, paste template code</li>
+                    <li>4. Set environment variables:
+                      <div className="neo-card bg-white mt-2 font-mono text-xs">
+                        TACHI_PUBLISHER_ADDRESS = {isHydrated ? address : 'your-address'}<br/>
+                        TACHI_PRICE_PER_REQUEST = {price}
+                      </div>
+                    </li>
+                    <li>5. Add route: <code className="bg-white px-2 py-1 border border-black">{domain || 'yourdomain.com'}/*</code></li>
+                    <li>6. Click Deploy</li>
+                  </ol>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setProtectionDeployed(true)}
+                    className="neo-button neo-button-sage"
+                  >
+                    ✓ Mark as Deployed
+                  </button>
+                  <button
+                    onClick={() => setProtectionDeployed(true)}
+                    className="neo-button"
+                  >
+                    Skip for Now
+                  </button>
+                </div>
+
+                <p className="text-xs opacity-60 mt-4">
+                  💡 Without protection, AI crawlers can bypass payment by accessing your site directly. Deploy the worker to enforce payment.
+                </p>
+              </>
+            ) : (
+              <div className="neo-card bg-sage text-white">
+                <p className="font-bold">Protection is active on {domain || domainInput}</p>
+                <p className="text-sm mt-1 opacity-90">AI crawlers are now required to pay via Tachi gateway</p>
+              </div>
+            )}
+          </div>
+
+          {/* Section C: Gateway URL */}
           <div className="neo-card">
             <h3 className="text-2xl font-bold mb-4">Your Gateway URL</h3>
             <p className="mb-4 opacity-70">AI crawlers will use this URL to access your protected content</p>
@@ -334,7 +410,7 @@ export default function IntegrationPage() {
 
           {/* Section D: Test Integration */}
           <div className="neo-card border-4 border-black">
-            <h3 className="text-2xl font-bold mb-4">Step 3: Test Your Setup</h3>
+            <h3 className="text-2xl font-bold mb-4">Step 4: Test Your Setup</h3>
             <p className="mb-4 opacity-70">Verify your gateway is configured correctly</p>
 
             <button
