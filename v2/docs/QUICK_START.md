@@ -39,13 +39,13 @@ Your content is now protected! Crawlers will automatically pay per request.
 ### 1. Install SDK
 
 ```bash
-npm install @tachi/sdk
+npm install @tachiprotocol/sdk
 ```
 
 ### 2. Use It
 
 ```typescript
-import {TachiSDK} from '@tachi/sdk';
+import {TachiSDK} from '@tachiprotocol/sdk';
 
 const sdk = new TachiSDK({
   network: 'base',

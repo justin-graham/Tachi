@@ -10,10 +10,19 @@ interface RevenueData {
   requests: number;
 }
 
+interface TopContentItem {
+  path: string;
+  title: string;
+  revenue: string;
+  requests: number;
+  percentage: number;
+}
+
 export default function RevenuePage() {
   const {address, isConnected, isHydrated} = useHydrationSafeAddress();
   const router = useRouter();
   const [revenueData, setRevenueData] = useState<RevenueData[]>([]);
+  const [topContent, setTopContent] = useState<TopContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalRevenue, setTotalRevenue] = useState(0);
 
@@ -28,17 +37,24 @@ export default function RevenuePage() {
 
   const fetchRevenueData = async () => {
     try {
-      const res = await fetch(`/api/dashboard-stats?address=${address}`);
-      const data = await res.json();
+      const [statsRes, topContentRes] = await Promise.all([
+        fetch(`/api/dashboard-stats?address=${address}`),
+        fetch(`/api/top-content?address=${address}`)
+      ]);
+
+      const statsData = await statsRes.json();
+      const topContentData = await topContentRes.json();
 
       // For now, use empty revenue data until we have a proper revenue endpoint
       // This prevents the TypeError while maintaining the UI
       setRevenueData([]);
-      setTotalRevenue(parseFloat(data.totalRevenue || '0'));
+      setTotalRevenue(parseFloat(statsData.totalRevenue || '0'));
+      setTopContent(topContentData.topContent || []);
       setLoading(false);
     } catch (err) {
       console.error('Failed to fetch revenue:', err);
       setRevenueData([]);
+      setTopContent([]);
       setTotalRevenue(0);
       setLoading(false);
     }
@@ -126,29 +142,27 @@ export default function RevenuePage() {
 
       <div>
         <h3 className="text-2xl font-bold mb-6">Top Content by Revenue</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <ContentCard
-            title="AI Training Article"
-            path="/article/ai-training"
-            revenue="12.34"
-            requests={1234}
-            percentage={45}
-          />
-          <ContentCard
-            title="Financial News Dataset"
-            path="/dataset/financial-news"
-            revenue="8.92"
-            requests={892}
-            percentage={32}
-          />
-          <ContentCard
-            title="Market Data API"
-            path="/api/market-data"
-            revenue="6.80"
-            requests={680}
-            percentage={23}
-          />
-        </div>
+        {topContent.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {topContent.slice(0, 9).map((item) => (
+              <ContentCard
+                key={item.path}
+                title={item.title}
+                path={item.path}
+                revenue={item.revenue}
+                requests={item.requests}
+                percentage={item.percentage}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="neo-card text-center py-12">
+            <p className="text-lg font-bold mb-2">No Content Data Yet</p>
+            <p className="text-sm opacity-60">
+              Top performing content will appear here once you start receiving payments
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

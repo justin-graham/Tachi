@@ -20,8 +20,21 @@ export default function IntegrationPage() {
   useEffect(() => {
     if (address) {
       loadPublisherData();
+      loadIntegrationProgress();
     }
   }, [address]);
+
+  // Save integration progress to localStorage whenever state changes
+  useEffect(() => {
+    if (!address) return;
+    const progress = {
+      domainVerified,
+      protectionDeployed,
+      domain,
+      price
+    };
+    localStorage.setItem(`tachi_integration_${address.toLowerCase()}`, JSON.stringify(progress));
+  }, [domainVerified, protectionDeployed, domain, price, address]);
 
   const loadPublisherData = async () => {
     try {
@@ -32,6 +45,21 @@ export default function IntegrationPage() {
       if (data.domainVerified) setDomainVerified(true);
     } catch (err) {
       console.error('Failed to load publisher data:', err);
+    }
+  };
+
+  const loadIntegrationProgress = () => {
+    try {
+      const saved = localStorage.getItem(`tachi_integration_${address.toLowerCase()}`);
+      if (saved) {
+        const progress = JSON.parse(saved);
+        if (progress.domainVerified !== undefined) setDomainVerified(progress.domainVerified);
+        if (progress.protectionDeployed !== undefined) setProtectionDeployed(progress.protectionDeployed);
+        if (progress.domain) setDomain(progress.domain);
+        if (progress.price) setPrice(progress.price);
+      }
+    } catch (err) {
+      console.error('Failed to load integration progress:', err);
     }
   };
 

@@ -1,6 +1,6 @@
 {
   "name": "@tachiprotocol/sdk",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "TypeScript SDK for Tachi Protocol - pay-per-crawl access with automatic USDC micropayments",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

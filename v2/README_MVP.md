@@ -162,7 +162,7 @@ ProofOfCrawl: 0x72a604278918abeBa4EE5f2C403b0350920A98ca
 | Gateway | ✅ Live | https://tachi-gateway.jgrahamsport16.workers.dev |
 | Dashboard | 🟡 Ready | Deploy with `vercel` |
 | Database | ✅ Live | Supabase project active |
-| SDK | ✅ Published | `npm install @tachi/sdk` |
+| SDK | ✅ Published | `npm install @tachiprotocol/sdk` |
 
 ---
 

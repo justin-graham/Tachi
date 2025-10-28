@@ -58,6 +58,30 @@ export default function SettingsPage() {
     }
   };
 
+  const handleDeactivate = async () => {
+    if (!confirm('Are you sure you want to deactivate your license? You can reactivate it anytime.')) {
+      return;
+    }
+    try {
+      const res = await fetch('/api/update-publisher-status', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({address, status: 'inactive'})
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        alert(`Failed to deactivate: ${error.error}`);
+        return;
+      }
+
+      alert('License deactivated successfully');
+      router.push('/');
+    } catch (err: any) {
+      alert(`Error deactivating license: ${err.message}`);
+    }
+  };
+
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
@@ -177,9 +201,8 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Danger Zone */}
+        {/* License Management */}
         <div className="neo-card border-coral lg:col-span-2">
-          <h3 className="text-2xl font-bold mb-4 text-coral">Danger Zone</h3>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div className="font-bold mb-1">Deactivate License</div>
@@ -187,7 +210,10 @@ export default function SettingsPage() {
                 Temporarily disable your publisher license. You can reactivate it anytime.
               </p>
             </div>
-            <button className="neo-button bg-white text-coral border-coral whitespace-nowrap">
+            <button
+              onClick={handleDeactivate}
+              className="neo-button bg-white text-coral border-coral whitespace-nowrap"
+            >
               Deactivate
             </button>
           </div>

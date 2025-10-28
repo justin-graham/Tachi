@@ -6,7 +6,7 @@
  */
 
 import 'dotenv/config';
-import {TachiSDK} from './sdk/dist/index.js';
+import {TachiSDK} from '@tachiprotocol/sdk';
 
 const COLORS = {
   reset: '\x1b[0m',
