@@ -6,7 +6,7 @@ import {Footer} from './components/Footer';
 
 export const metadata: Metadata = {
   title: 'Tachi',
-  description: 'Pay-per-crawl protocol for AI training data',
+  description: 'Pay-per-crawl Protocol',
   icons: {
     icon: '/icon.png',
     apple: '/icon.png',

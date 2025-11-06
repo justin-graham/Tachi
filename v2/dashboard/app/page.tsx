@@ -12,7 +12,7 @@ export default function Home() {
           Pay-Per-Crawl Protocol
         </h1>
         <p className="text-lg md:text-2xl opacity-70 max-w-3xl mx-auto mb-12">
-          The standard for monetizing web content and powering the agentic economy. Publishers protect content. AI companies pay in stablecoin.
+          Let publishers sell their content to AI agents.
         </p>
         <div className="flex gap-4 justify-center">
           <a href="/onboard" className="neo-button neo-button-sage">
@@ -29,18 +29,18 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <StepCard
             number="1"
-            title="Publishers Register"
-            description="Creators configure a Crawl License with your pricing and terms. Deploy the gateway to protect your content with a few clicks."
+            title="Publishers Set Terms"
+            description="Set your full customizable terms and pricing. Protect your content with a few clicks."
           />
           <StepCard
             number="2"
             title="AI Agent Pays"
-            description="When a crawler requests a page, it detects 402 Payment Required and automatically sends USDC payment on Base, and retrieves the content."
+            description="When a crawler requests a page, it detects 402 Payment Required and automatically sends payment."
           />
           <StepCard
             number="3"
-            title="On-Chain Verified"
-            description="Payment logged where creators and AI agent developers can track data like revenue and crawler IDs on a real-time dashboard."
+            title="Transparency & Control"
+            description="Every access and payment is publicly logged so you can see when and how often your content is crawled."
           />
         </div>
       </div>
@@ -51,7 +51,7 @@ export default function Home() {
       <div className="mb-20">
         <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center">Introducing Tachi</h2>
         <p className="text-base md:text-xl text-center max-w-4xl mx-auto mb-12 opacity-80">
-          <strong>The Web's Value Layer is Leaking.</strong> Over 60% of searches end up in zero clicks. Tachi lets content publishers get paid when AI agents crawl their sites, and enables developers to pay per access under clear terms. Every request settled in stablecoin on-chain.
+          <strong>The Web's Value Layer is Leaking.</strong> Over 60% of searches end up in zero clicks. Tachi makes it easy for a publisher to add a few lines of code to their website to automatically charge AI agents a tiny fee each time an agent accesses a page.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
