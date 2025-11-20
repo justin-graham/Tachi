@@ -1,10 +1,12 @@
 'use client';
 
 import {useState, useEffect} from 'react';
+import {useRouter} from 'next/navigation';
 import {useHydrationSafeAddress} from '../../hooks/useHydrationSafeAddress';
 
 export default function IntegrationPage() {
-  const {address, isHydrated} = useHydrationSafeAddress();
+  const {address, isConnected, isHydrated} = useHydrationSafeAddress();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'publisher' | 'crawler'>('publisher');
   const [copied, setCopied] = useState(false);
   const [domain, setDomain] = useState('');
@@ -18,11 +20,18 @@ export default function IntegrationPage() {
   const [price, setPrice] = useState('0.01');
 
   useEffect(() => {
+    if (!isHydrated) return;
+
+    if (!isConnected) {
+      router.push('/');
+      return;
+    }
+
     if (address) {
       loadPublisherData();
       loadIntegrationProgress();
     }
-  }, [address]);
+  }, [address, isConnected, isHydrated]);
 
   // Save integration progress to localStorage whenever state changes
   useEffect(() => {
@@ -190,6 +199,17 @@ export default function IntegrationPage() {
   const hasProtection = protectionDeployed;
   const hasTested = testResult?.success === true;
   const isLive = hasLicense && hasDomain && hasProtection && hasTested;
+
+  // Show loading state while checking authentication
+  if (!isHydrated || !isConnected) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="neo-card">
+          <p className="text-center">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
