@@ -11,6 +11,8 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const [tokenId, setTokenId] = useState<string | null>(null);
   const [domain, setDomain] = useState<string>('');
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [apiKeyCopied, setApiKeyCopied] = useState(false);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -29,6 +31,7 @@ export default function SettingsPage() {
         setTokenId(data.tokenId);
         setDomain(data.domain || 'example.com');
         setPrice(data.price || '0.01');
+        setApiKey(data.apiKey || null);
       } else {
         router.push('/onboard');
       }
@@ -79,6 +82,38 @@ export default function SettingsPage() {
       router.push('/');
     } catch (err: any) {
       alert(`Error deactivating license: ${err.message}`);
+    }
+  };
+
+  const handleGenerateApiKey = async () => {
+    if (apiKey && !confirm('This will invalidate your existing API key. Continue?')) {
+      return;
+    }
+    try {
+      const res = await fetch('/api/generate-api-key', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({address})
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        alert(`Failed to generate API key: ${error.error}`);
+        return;
+      }
+
+      const data = await res.json();
+      setApiKey(data.apiKey);
+    } catch (err: any) {
+      alert(`Error generating API key: ${err.message}`);
+    }
+  };
+
+  const handleCopyApiKey = () => {
+    if (apiKey) {
+      navigator.clipboard.writeText(apiKey);
+      setApiKeyCopied(true);
+      setTimeout(() => setApiKeyCopied(false), 2000);
     }
   };
 
@@ -180,6 +215,72 @@ export default function SettingsPage() {
               </div>
               <p className="text-xs opacity-60 mt-1">Your gateway is deployed on Base L2</p>
             </div>
+          </div>
+        </div>
+
+        {/* x402 Middleware Integration */}
+        <div className="neo-card lg:col-span-2 blueprint-corner">
+          <h3 className="text-2xl font-bold mb-6">x402 Middleware Integration</h3>
+
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm uppercase tracking-wide font-bold mb-2 text-sage">
+                API Key
+              </label>
+              {apiKey ? (
+                <div className="flex gap-2">
+                  <div className="neo-input bg-paper font-mono text-sm break-all flex-1">
+                    {apiKey}
+                  </div>
+                  <button
+                    onClick={handleCopyApiKey}
+                    className="neo-button whitespace-nowrap"
+                  >
+                    {apiKeyCopied ? '✓ Copied!' : 'Copy'}
+                  </button>
+                  <button
+                    onClick={handleGenerateApiKey}
+                    className="neo-button whitespace-nowrap"
+                  >
+                    Regenerate
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleGenerateApiKey}
+                  className="neo-button"
+                >
+                  Generate API Key
+                </button>
+              )}
+              <p className="text-xs opacity-60 mt-1">Use this key in your middleware to authenticate payment logging</p>
+            </div>
+
+            {apiKey && (
+              <div className="neo-card bg-black text-green-400">
+                <div className="text-sm font-bold mb-3">NEXT.JS MIDDLEWARE (6 lines)</div>
+                <pre className="text-xs overflow-x-auto">
+{`// middleware.ts
+import { tachiX402 } from '@tachiprotocol/nextjs';
+
+export default tachiX402({
+  apiKey: '${apiKey}',
+  wallet: '${address}',
+  price: '$${price}'
+});
+
+export const config = {
+  matcher: '/premium/:path*'
+};`}
+                </pre>
+                <div className="mt-4 text-sm">
+                  <div className="font-bold mb-2">INSTALLATION:</div>
+                  <div className="neo-card bg-paper text-black">
+                    <code>npm install @tachiprotocol/nextjs</code>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

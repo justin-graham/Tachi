@@ -4,6 +4,68 @@ import {validatePaymentLog, isValidAddress} from '../utils/validation.js';
 
 export const paymentsRouter = Router();
 
+// Log a payment from middleware (x402)
+paymentsRouter.post('/middleware-log', async (req, res) => {
+  try {
+    const {apiKey, txHash, amount, crawler, path} = req.body;
+
+    if (!apiKey) {
+      return res.status(400).json({error: 'API key required'});
+    }
+
+    // Get publisher by API key
+    const {data: publisher, error: pubError} = await supabase
+      .from('publishers')
+      .select('id, wallet_address')
+      .eq('api_key', apiKey)
+      .single();
+
+    if (pubError || !publisher) {
+      return res.status(401).json({error: 'Invalid API key'});
+    }
+
+    // Check if payment already logged
+    if (txHash && txHash !== 'unknown') {
+      const {data: existing} = await supabase
+        .from('payments')
+        .select('id')
+        .eq('tx_hash', txHash)
+        .single();
+
+      if (existing) {
+        return res.status(200).json({success: true, message: 'Payment already logged'});
+      }
+    }
+
+    // Log payment
+    const {error: insertError} = await supabase
+      .from('payments')
+      .insert({
+        tx_hash: txHash || `middleware-${Date.now()}-${Math.random()}`,
+        crawler_address: crawler || 'unknown',
+        publisher_address: publisher.wallet_address,
+        amount: amount || '0',
+        timestamp: new Date().toISOString(),
+        path: path || null
+      });
+
+    if (insertError) throw insertError;
+
+    // Update publisher total earnings
+    if (amount && amount !== '0') {
+      await supabase.rpc('increment_publisher_earnings', {
+        p_wallet_address: publisher.wallet_address,
+        p_amount: amount
+      });
+    }
+
+    res.json({success: true});
+  } catch (error: any) {
+    console.error('Middleware payment logging error:', error);
+    res.status(500).json({error: 'Failed to log payment', message: error.message});
+  }
+});
+
 // Log a payment
 paymentsRouter.post('/log', async (req, res) => {
   try {

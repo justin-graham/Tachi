@@ -1,6 +1,7 @@
 packages:
   - 'contracts'
-  - 'sdk'
-  - 'gateway'
   - 'api'
   - 'dashboard'
+  - 'packages/core'
+  - 'packages/nextjs'
+  - 'packages/express'

@@ -1,11 +1,17 @@
 import {NextRequest, NextResponse} from 'next/server';
 import {createPublicClient, http, parseAbi} from 'viem';
 import {base} from 'viem/chains';
+import {createClient} from '@supabase/supabase-js';
 
 const CRAWL_NFT_ABI = parseAbi([
   'function hasLicense(address) external view returns (bool)',
   'function publisherTokenId(address) external view returns (uint256)'
 ]);
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,6 +35,8 @@ export async function GET(request: NextRequest) {
     } as any);
 
     let tokenId = null;
+    let publisherData = null;
+
     if (hasLicense) {
       tokenId = await client.readContract({
         address: process.env.NEXT_PUBLIC_CRAWL_NFT_ADDRESS as `0x${string}`,
@@ -36,11 +44,23 @@ export async function GET(request: NextRequest) {
         functionName: 'publisherTokenId',
         args: [address as `0x${string}`]
       } as any);
+
+      // Get publisher details from database
+      const {data} = await supabase
+        .from('publishers')
+        .select('domain, price_per_request, api_key')
+        .eq('wallet_address', address.toLowerCase())
+        .single();
+
+      publisherData = data;
     }
 
     return NextResponse.json({
       hasLicense,
-      tokenId: tokenId ? tokenId.toString() : null
+      tokenId: tokenId ? tokenId.toString() : null,
+      domain: publisherData?.domain || null,
+      price: publisherData?.price_per_request?.toString() || '0.01',
+      apiKey: publisherData?.api_key || null
     });
   } catch (error: any) {
     console.error('Check license error:', error);

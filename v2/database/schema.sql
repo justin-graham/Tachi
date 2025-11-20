@@ -13,6 +13,8 @@ CREATE TABLE publishers (
   domain_verified BOOLEAN DEFAULT false,
   total_earnings DECIMAL(18, 6) DEFAULT 0 CHECK (total_earnings >= 0),
   total_requests INTEGER DEFAULT 0 CHECK (total_requests >= 0),
+  api_key VARCHAR(64) UNIQUE,
+  api_key_created_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -39,6 +41,7 @@ CREATE TABLE payments (
   publisher_address TEXT NOT NULL,
   amount DECIMAL(18, 6) NOT NULL CHECK (amount > 0),
   timestamp TIMESTAMP NOT NULL,
+  path TEXT,
   onchain_logged BOOLEAN DEFAULT false,
   onchain_tx TEXT,
   created_at TIMESTAMP DEFAULT NOW()
@@ -60,10 +63,12 @@ CREATE TABLE crawl_logs (
 -- Indexes for performance
 CREATE INDEX idx_publishers_domain ON publishers(domain);
 CREATE INDEX idx_publishers_wallet ON publishers(wallet_address);
+CREATE INDEX idx_publishers_api_key ON publishers(api_key);
 CREATE INDEX idx_crawlers_wallet ON crawlers(wallet_address);
 CREATE INDEX idx_payments_tx_hash ON payments(tx_hash);
 CREATE INDEX idx_payments_publisher ON payments(publisher_address);
 CREATE INDEX idx_payments_crawler ON payments(crawler_address);
+CREATE INDEX idx_payments_path ON payments(path);
 CREATE INDEX idx_crawl_logs_publisher ON crawl_logs(publisher_address);
 CREATE INDEX idx_crawl_logs_timestamp ON crawl_logs(timestamp);
 

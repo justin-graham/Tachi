@@ -1,0 +1,35 @@
+{
+  "name": "@tachiprotocol/express",
+  "version": "3.0.0",
+  "description": "Express middleware adapter for Tachi x402 payments",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "express",
+    "middleware",
+    "x402",
+    "payments",
+    "tachi"
+  ],
+  "author": "Tachi Protocol",
+  "license": "MIT",
+  "peerDependencies": {
+    "express": ">=4.0.0"
+  },
+  "dependencies": {
+    "@tachiprotocol/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.0.0",
+    "express": "^4.18.0",
+    "typescript": "^5.3.3"
+  }
+}
